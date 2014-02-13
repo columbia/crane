@@ -1,3 +1,6 @@
 [submodule "xtern"]
 	path = xtern
 	url = git://github.com/columbia/xtern.git
+[submodule "concoord"]
+	path = concoord
+	url = git://github.com/denizalti/concoord.git

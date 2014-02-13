@@ -1,0 +1,3 @@
+[submodule "xtern"]
+	path = xtern
+	url = git://github.com/columbia/xtern.git

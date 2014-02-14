@@ -1,0 +1,21 @@
+#!/bin/bash
+export OMP_NUM_THREADS=4
+pushd ./NPB3.3.1-MZ/NPB3.3-MZ-MPI/bin
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so mpirun -np 1 bt-mz.A.1
+sleep 2;
+LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so mpirun -np 1 bt-mz.A.1
+sleep 2;
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so mpirun -np 2 bt-mz.A.2
+sleep 2;
+LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so mpirun -np 2 bt-mz.A.2
+sleep 2;
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so mpirun -np 4 bt-mz.A.4
+sleep 2;
+LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so mpirun -np 4 bt-mz.A.4
+sleep 2;
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so mpirun -np 8 bt-mz.A.8
+sleep 2;
+LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so mpirun -np 16 bt-mz.A.16
+sleep 2;
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so mpirun -np 16 bt-mz.A.16
+popd

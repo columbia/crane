@@ -1,0 +1,37 @@
+#!/bin/bash
+ARCH=`uname -m`
+
+if [ ! -d $XTERN_ROOT ]; then
+        echo "XTERN_ROOT is not defined"
+        exit 1
+fi
+
+if [ ! -f NPB3.3.1-MZ.tar.gz ]; then
+    wget https://www.dropbox.com/s/ms8n47fcn731dob/NPB3.3.1-MZ.tar.gz
+fi
+
+if [ ! -f $XTERN_ROOT/apps/openmp/install/bin/gfortran ]; then
+    echo "please recompile \$XTERN_ROOT/apps/openmp/mk with fortran available"
+   # exit 1
+fi
+
+
+
+# clean up
+rm -rf NPB3.3.1-MZ
+tar zxvf NPB3.3.1-MZ.tar.gz
+
+cp make.def ./NPB3.3.1-MZ/NPB3.3.1-MZ-MPI/config/
+cp suite.def ./NPB3.3.1-MZ/NPB3.3.1-MZ-MPI/config/
+
+pushd NPB3.3.1-MZ/NPB3.3.1-MZ-MPI
+if [ "$ARCH" == "x86_64" ]; then
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libstdc++.a
+else
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libstdc++.a
+fi
+
+make suite
+

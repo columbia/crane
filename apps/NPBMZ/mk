@@ -12,7 +12,7 @@ fi
 
 if [ ! -f $XTERN_ROOT/apps/openmp/install/bin/gfortran ]; then
     echo "please recompile \$XTERN_ROOT/apps/openmp/mk with fortran available"
-   # exit 1
+    exit 1
 fi
 
 
@@ -21,10 +21,10 @@ fi
 rm -rf NPB3.3.1-MZ
 tar zxvf NPB3.3.1-MZ.tar.gz
 
-cp make.def ./NPB3.3.1-MZ/NPB3.3.1-MZ-MPI/config/
-cp suite.def ./NPB3.3.1-MZ/NPB3.3.1-MZ-MPI/config/
+cp make.def ./NPB3.3.1-MZ/NPB3.3-MZ-MPI/config/
+cp suite.def ./NPB3.3.1-MZ/NPB3.3-MZ-MPI/config/
 
-pushd NPB3.3.1-MZ/NPB3.3.1-MZ-MPI
+pushd NPB3.3.1-MZ/NPB3.3-MZ-MPI
 if [ "$ARCH" == "x86_64" ]; then
   ln -s $XTERN_ROOT/apps/openmp/install/lib64/libgomp.a
   ln -s $XTERN_ROOT/apps/openmp/install/lib64/libstdc++.a

@@ -1,0 +1,187 @@
+diff --git a/include/tern/runtime/scheduler.h b/include/tern/runtime/scheduler.h
+index b8f49c1..c359110 100644
+--- a/include/tern/runtime/scheduler.h
++++ b/include/tern/runtime/scheduler.h
+@@ -228,7 +228,7 @@ struct Serializer: public TidMap {
+   ~Serializer();
+ 
+   FILE *logger;
+-  unsigned turnCount; // number of turns so far
++  unsigned* turnCount; // number of turns so far
+ };
+ 
+ 
+diff --git a/lib/runtime/helper.cpp b/lib/runtime/helper.cpp
+index ebf9ae9..98d3c41 100644
+--- a/lib/runtime/helper.cpp
++++ b/lib/runtime/helper.cpp
+@@ -18,6 +18,8 @@
+ 
+ /* Authors: Heming Cui (heming@cs.columbia.edu), Junfeng Yang (junfeng@cs.columbia.edu) */
+ 
++#include <cstdlib>
++#include <iostream>
+ #include <stdint.h>
+ #include <assert.h>
+ #include <stdlib.h>
+@@ -26,6 +28,10 @@
+ #include <errno.h>
+ #include <unistd.h>
+ #include <poll.h>
++#include <sys/types.h>
++#include <sys/ipc.h>
++#include <sys/shm.h>
++#include <unistd.h>
+ 
+ #include "tern/config.h"
+ #include "tern/hooks.h"
+@@ -127,7 +133,7 @@ void __tern_prog_begin(void) {
+   assert(!prog_began && "__tern_prog_begin() already called!");
+   prog_began = true;
+ 
+-  //fprintf(stderr, "%08d calls __tern_prog_begin\n", (int) pthread_self());
++  fprintf(stderr, "%08d calls __tern_prog_begin\n", (int) pthread_self());
+   assert(Space::isSys() && "__tern_prog_begin must start in sys space");
+ 
+   main_thread_th = pthread_self();
+diff --git a/lib/runtime/record-scheduler.cpp b/lib/runtime/record-scheduler.cpp
+index 2ac218b..1d4aff8 100644
+--- a/lib/runtime/record-scheduler.cpp
++++ b/lib/runtime/record-scheduler.cpp
+@@ -140,7 +140,7 @@ int RRScheduler::fireTimeouts()
+ 
+     int tid = *prv;
+     assert(tid >=0 && tid < Scheduler::nthread);
+-    if(waits[tid].timeout < turnCount) {
++    if(waits[tid].timeout < *turnCount) {
+       dprintf("RRScheduler: %d timed out (%p, %u)\n",
+               tid, waits[tid].chan, waits[tid].timeout);
+       waits[tid].reset(ETIMEDOUT);
+@@ -164,7 +164,7 @@ void RRScheduler::check_wakeup()
+         runq.push_back(*itr);
+         if (options::enforce_non_det_clock_bound) {
+           dprintf("check_wakeup: current logical clock %u, first non det tid %d, my tid %d, non det logical clock %u, \
+-            the system is within bounded non-determinism.\n", turnCount, *itr, self(), non_det_thds.get_clock(*itr));
++            the system is within bounded non-determinism.\n", *turnCount, *itr, self(), non_det_thds.get_clock(*itr));
+           non_det_thds.erase(*itr); // This operation is required by the bounded non-determinism mechanism.
+         }
+       }
+@@ -279,7 +279,7 @@ int RRScheduler::block()
+   getTurn();
+   int tid = self();
+   if (options::enforce_non_det_clock_bound)
+-    non_det_thds.insert(tid, turnCount); // This operation is required by the bounded non-determinism mechanism.
++    non_det_thds.insert(tid, *turnCount); // This operation is required by the bounded non-determinism mechanism.
+   assert(tid>=0 && tid < Scheduler::nthread);
+   assert(tid == runq.front());
+   dprintf("RRScheduler: %d blocks\n", self());
+@@ -473,7 +473,7 @@ void RRScheduler::selfcheck(void)
+ 
+ ostream& RRScheduler::dump(ostream& o)
+ {
+-  o << "nthread " << Scheduler::nthread << ": " << turnCount;
++  o << "nthread " << Scheduler::nthread << ": " << *turnCount;
+   o << " [runq ";
+   copy(runq.begin(), runq.end(), ostream_iterator<int>(o, " "));
+   o << "]";
+@@ -556,7 +556,7 @@ int RRScheduler::nextRunnable(bool at_thread_end) {
+       that could modify the linked list of run queue, so it is safe. **/
+       runq.pop_front();  
+       if (options::enforce_non_det_clock_bound)
+-        non_det_thds.insert(headElem->tid, turnCount); // This operation is required by the bounded non-determinism mechanism.
++        non_det_thds.insert(headElem->tid, *turnCount); // This operation is required by the bounded non-determinism mechanism.
+     } else {
+       dprintf("RRScheduler::nextRunnable at_thread_end %d, self %d, headElem tid %d, head status %d, self status %d\n",
+         at_thread_end, self(), headElem->tid, headElem->status, runq.get_my_elem(self())->status);
+@@ -599,12 +599,12 @@ void RRScheduler::checkNonDetBound() {
+   if (options::enforce_non_det_clock_bound && non_det_thds.size() > 0) {
+     int tid = non_det_thds.first_thread();
+     unsigned clock = non_det_thds.get_clock(tid);
+-    if (turnCount > clock + options::non_det_clock_bound) {
++    if (*turnCount > clock + options::non_det_clock_bound) {
+       //assert(!runq.in(tid));
+       runq.push_back(tid);
+       non_det_thds.erase(tid);
+       dprintf("checkNonDetBound: current logical clock %u, first non det tid %d, my tid %d, non det logical clock %u, \
+-        try to block the deterministict part of the system.\n", turnCount, tid, self(), clock);
++        try to block the deterministict part of the system.\n", *turnCount, tid, self(), clock);
+     }
+   }
+ }
+diff --git a/lib/runtime/scheduler.cpp b/lib/runtime/scheduler.cpp
+index 8b55a9c..d98fd65 100644
+--- a/lib/runtime/scheduler.cpp
++++ b/lib/runtime/scheduler.cpp
+@@ -19,18 +19,22 @@
+ /* Authors: Heming Cui (heming@cs.columbia.edu), Junfeng Yang (junfeng@cs.columbia.edu) -*- Mode: C++ -*- */
+ // Refactored from Heming's Memoizer code
+ 
+-#include "pthread.h"
++#include "tern/options.h"
+ #include "tern/runtime/scheduler.h"
++#include "pthread.h"
+ #include <iostream>
+ #include <fstream>
+ #include <iterator>
+ #include <vector>
+ #include <cstdio>
+-#include <stdlib.h>
+ #include <cstring>
+ #include <algorithm>
++#include <stdlib.h>
+ #include <sys/stat.h>
+-#include "tern/options.h"
++#include <sys/types.h>
++#include <sys/ipc.h>
++#include <sys/shm.h>
++#include <unistd.h>
+ 
+ using namespace std;
+ using namespace tern;
+@@ -38,13 +42,28 @@ using namespace tern;
+ 
+ Serializer::~Serializer()
+ {
++  if(turnCount!=NULL){
++	  shmdt((void*)turnCount);
++  }
+   if (options::log_sync)
+     fclose(logger);
+ }
+ 
+ Serializer::Serializer(): 
+-  TidMap(pthread_self()), turnCount(0) 
+-{
++  TidMap(pthread_self()) 
++{    
++  int shmid;
++  if ((shmid = shmget(12345678,8,IPC_CREAT|0666))>=0){
++	  if ((turnCount = (unsigned*)shmat(shmid,0,0))!= (unsigned*)-1 ) {
++		  *turnCount = 0;
++	  }else{
++		  fprintf(stderr,"you cannot attach to this shared memory\n");
++		  turnCount = NULL;
++	  }
++  }else{
++	  fprintf(stderr,"you cannot create or open this shared memory\n");
++	  turnCount = NULL;
++  }
+   if (options::log_sync) {
+     mkdir(options::output_dir.c_str(), 0777);
+     std::string logPath = options::output_dir + "/serializer.log";
+@@ -54,12 +73,13 @@ Serializer::Serializer():
+ }
+ 
+ unsigned Serializer::incTurnCount(void) { 
+-  int ret = turnCount++;  
++  int ret = (*turnCount)++;  
++  //fprintf(stderr,"the turnCountNow is %u\n",*turnCount);
+   if (options::log_sync)
+     fprintf(logger, "%d %d\n", (int) self(), ret);
+   return ret;
+ }
+ 
+ unsigned Serializer::getTurnCount(void) { 
+-  return turnCount - 1; 
++  return (*turnCount) - 1; 
+ }

@@ -1,0 +1,752 @@
+diff --git a/apps/leveldb/mk b/apps/leveldb/mk
+new file mode 100755
+index 0000000..f70df06
+--- /dev/null
++++ b/apps/leveldb/mk
+@@ -0,0 +1,51 @@
++#!/bin/bash
++
++#
++# Copyright (c) 2013,  Regents of the Columbia University 
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
++#
++# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
++#
++# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
++# materials provided with the distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
++# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++#
++
++
++#if [ -z $1 ]; then
++#        # No version number
++#        echo "Usage: <version number: e.g. 1.1.5>"
++#        exit 1
++#fi
++
++VER=1.15.0
++cd $XTERN_ROOT/apps/leveldb
++rm -rf leveldb-$VER
++if [ ! -f leveldb-$VER.tar.gz ]; then
++    wget https://leveldb.googlecode.com/files/leveldb-$VER.tar.gz
++fi
++tar zxvf leveldb-$VER.tar.gz
++
++pushd leveldb-$VER
++
++#due to the loss of Internet Connection, I cannot build something related to tree_db by Milannic Cheng Liu
++
++make all -j64
++make db_bench -j64
++make db_bench_sqlite3
++#make db_bench_tree_db
++
++mv db_bench ../db_bench
++mv db_bench_sqlite3 ../db_bench_sqlite3
++#mv db_bench_tree_db ../db_bench_tree_db
++
++popd
++
+diff --git a/apps/leveldb/run b/apps/leveldb/run
+new file mode 100755
+index 0000000..cf377aa
+--- /dev/null
++++ b/apps/leveldb/run
+@@ -0,0 +1,149 @@
++#!/bin/bash
++
++#
++# Copyright (c) 2013,  Regents of the Columbia University 
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
++#
++# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
++#
++# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
++# materials provided with the distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
++# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++#
++
++
++#if [ -z $1 ]; then
++#        # No version number
++#        echo "Usage: <version number: e.g. 1.1.5>"
++#        exit 1
++#fi
++VER=1.15.0
++cd $XTERN_ROOT/apps/leveldb
++rm -rf out* serializer.log
++
++
++#multi-line comments
++:<<BLOCK
++ROUTINE="--compress"
++if [ $1"X" != "X" ];
++then
++        ROUTINE=$1
++fi
++BLOCK
++
++
++
++APP=$XTERN_ROOT/apps/leveldb/db_bench
++SENTENCEA=static\ int\ FLAGS_threads\ =\ 1;
++APPB=$XTERN_ROOT/apps/leveldb/db_bench_4
++SENTENCEB=static\ int\ FLAGS_threads\ =\ 4;
++APPC=$XTERN_ROOT/apps/leveldb/db_bench_8
++SENTENCEC=static\ int\ FLAGS_threads\ =\ 8;
++APPD=$XTERN_ROOT/apps/leveldb/db_bench_16
++SENTENCED=static\ int\ FLAGS_threads\ =\ 16;
++
++SOURCE_FILE=$XTERN_ROOT/apps/leveldb/leveldb-$VER/db/db_bench.cc
++echo $SOURCE_FILE
++
++
++
++if [ ! -f db_bench ]; then
++	pushd leveldb-$VER
++	sed -i "70c$SENTENCEA" $SOURCE_FILE          #用$1替换69行的内容
++	make all
++	make db_bench
++	mv db_bench ../db_bench
++fi
++
++#$APP > result
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP > 01_result_leveldb_xtern_${i}
++	sleep 2
++done
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP > 01_result_leveldb_no_xtern_${i}
++	sleep 2
++done
++
++if [ ! -f db_bench_4 ]; then
++	pushd leveldb-$VER
++	sed -i "70c$SENTENCEB" $SOURCE_FILE          #用$1替换69行的内容
++	make all
++	make db_bench
++	mv db_bench ../db_bench_4
++fi
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APPB > 04_result_leveldb_xtern_${i}
++	sleep 2
++done
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APPB > 04_result_leveldb_no_xtern_${i}
++	sleep 2
++done
++
++
++if [ ! -f db_bench_8 ]; then
++	pushd leveldb-$VER
++	sed -i "70c$SENTENCEC" $SOURCE_FILE          #用$1替换69行的内容
++	make all
++	make db_bench
++	mv db_bench ../db_bench_8
++fi
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APPC > 08_result_leveldb_xtern_${i}
++	sleep 2
++done
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APPC > 08_result_leveldb_no_xtern_${i}
++	sleep 2
++done
++
++
++if [ ! -f db_bench_16 ]; then
++	pushd leveldb-$VER
++	sed -i "70c$SENTENCED" $SOURCE_FILE          #用$1替换69行的内容
++	make all
++	make db_bench
++	mv db_bench ../db_bench_16
++fi
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APPD > 16_result_leveldb_xtern_${i}
++	sleep 2
++done
++
++for i in $(seq 10); do
++	#$APP > result_${i}
++	LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APPD > 16_result_leveldb_no_xtern_${i}
++	sleep 2
++done
++
++# Run with xtern and draw time chart.
++#LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP > result
++
++#sleep 2;
++
++# Run non-det and draw time chart.
++#LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP > result_leveldb_non
++
+diff --git a/apps/mongodb/dep.sh b/apps/mongodb/dep.sh
+new file mode 100644
+index 0000000..118cae4
+--- /dev/null
++++ b/apps/mongodb/dep.sh
+@@ -0,0 +1,6 @@
++#! /bin/sh
++#at first you need install these dependencies
++sudo apt-get install  git scons  
++sudo apt-get install libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libboost-thread-dev
++sudo apt-get install python-pymongo
++sudo easy_install -U bottle
+diff --git a/apps/mongodb/mk b/apps/mongodb/mk
+new file mode 100755
+index 0000000..982e171
+--- /dev/null
++++ b/apps/mongodb/mk
+@@ -0,0 +1,55 @@
++#!/bin/bash
++
++#
++# Copyright (c) 2013,  Regents of the Columbia University 
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
++#
++# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
++#
++# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
++# materials provided with the distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
++# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++#
++
++
++#if [ -z $1 ]; then
++#        # No version number
++#        echo "Usage: <version number: e.g. 1.1.5>"
++#        exit 1
++#fi
++
++VER=2.2.7
++DIR=mongodb
++DIR_PERF=${DIR}_perf
++
++if [ ! -d $DIR  ]; then
++    git clone https://github.com/mongodb/mongo.git $DIR
++fi
++
++pushd $DIR
++	git checkout r$VER
++	#build all the things(mongod,tools)
++	#scons all
++	#just build the database
++	scons
++popd
++
++
++if [ ! -d $DIR_PERF  ]; then
++    git clone https://github.com/mongodb/mongo-perf.git $DIR_PERF
++fi
++
++pushd $DIR_PERF
++pushd mongo-cxx-driver
++	scons
++popd
++	scons benchmark
++popd
+diff --git a/apps/mongodb/run b/apps/mongodb/run
+new file mode 100755
+index 0000000..36634a8
+--- /dev/null
++++ b/apps/mongodb/run
+@@ -0,0 +1,49 @@
++#! /bin/bash
++#
++# Copyright (c) 2013,  Regents of the Columbia University 
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
++#
++# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
++#
++# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
++# materials provided with the distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
++# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++#
++
++
++#if [ -z $1 ]; then
++#        # No version number
++#        echo "Usage: <version number: e.g. 1.1.5>"
++#        exit 1
++#fi
++
++VER=2.2.7
++DIR=mongodb3
++DIR_PERF=${DIR}_perf
++
++pushd $DIR
++	mkdir -p ./data/db
++	mkdir -p log
++	./mongod --dbpath=./data/db --fork --logpath=./log/mongodb.log &
++popd
++
++pushd $DIR_PERF
++	for i in $(seq 10); do
++		python ./runner.py --nolaunch -l $i -n 10 --local
++	done
++:<<block
++pushd gui
++	python server.py
++popd 
++block
++popd
++
++
+diff --git a/apps/mongoose/run b/apps/mongoose/run
+index 1ebb70e..3d4933b 100755
+--- a/apps/mongoose/run
++++ b/apps/mongoose/run
+@@ -28,13 +28,13 @@ APP=$XTERN_ROOT/apps/mongoose/mg-server
+ INPUT="-t 2"
+ 
+ # Start the server.
+-LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT &
++LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT 
+ sleep 2
+ 
+ # Run the aget client.
+-cd $XTERN_ROOT/apps/aget
++#cd $XTERN_ROOT/apps/aget
+ # The 8080 is the listening port of mongoose server.
+-time -p $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://localhost/llvm-gcc-4.2-2.7.source.tgz
+-killall -9 mg-server &> /dev/null
+-cd $XTERN_ROOT/apps/mongoose
++#time -p $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://localhost/llvm-gcc-4.2-2.7.source.tgz
++#killall -9 mg-server &> /dev/null
++#cd $XTERN_ROOT/apps/mongoose
+ 
+diff --git a/apps/pbzip2/run b/apps/pbzip2/run
+index b42ea40..00009e0 100755
+--- a/apps/pbzip2/run
++++ b/apps/pbzip2/run
+@@ -56,5 +56,5 @@ LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT
+ sleep 2;
+ 
+ # Run non-det and draw time chart.
+-LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
++#LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
+ 
+diff --git a/auto.sh b/auto.sh
+new file mode 100755
+index 0000000..7cdeb35
+--- /dev/null
++++ b/auto.sh
+@@ -0,0 +1,34 @@
++#!/bin/bash
++#make the prompt as a interactive to use source command
++export PS1='$ '
++
++echo "export XTERN_ROOT=$(pwd)" >> ~/.bashrc
++echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$XTERN_ROOT/dync_hook" >> ~/.bashrc
++. ~/.bashrc
++
++echo $XTERN_ROOT
++echo $LD_LIBRARY_PATH
++
++pushd $XTERN_ROOT
++./llvm/build-llvm.sh
++./llvm/build-llvm.sh --optimized
++popd
++
++echo "export LLVM_ROOT=\$LLVM_ROOT:$(pwd)/llvm" >> ~/.bashrc
++echo "export PATH=\$PATH:$(pwd)/llvm/install/bin:$(pwd)/llvm/scripts" >> ~/.bashrc
++
++. ~/.bashrc
++
++echo $LLVM_ROOT
++echo $PATH
++
++pushd $XTERN_ROOT
++mkdir -p obj
++pushd obj
++    ./../configure --with-llvmsrc=$XTERN_ROOT/llvm/llvm-2.7/ --with-llvmobj=$XTERN_ROOT/llvm/llvm-obj/ --with-llvmgccdir=$XTERN_ROOT/llvm/install/bin/ --prefix=$XTERN_ROOT/install
++popd 
++popd
++
++pushd $XTERN_ROOT/obj
++make ENABLE_OPTIMIZED=0 clean && make ENABLE_OPTIMIZED=0 && make ENABLE_OPTIMIZED=0 install
++popd
+diff --git a/include/tern/runtime/scheduler.h b/include/tern/runtime/scheduler.h
+index b8f49c1..c359110 100644
+--- a/include/tern/runtime/scheduler.h
++++ b/include/tern/runtime/scheduler.h
+@@ -228,7 +228,7 @@ struct Serializer: public TidMap {
+   ~Serializer();
+ 
+   FILE *logger;
+-  unsigned turnCount; // number of turns so far
++  unsigned* turnCount; // number of turns so far
+ };
+ 
+ 
+diff --git a/lib/runtime/helper.cpp b/lib/runtime/helper.cpp
+index ebf9ae9..98d3c41 100644
+--- a/lib/runtime/helper.cpp
++++ b/lib/runtime/helper.cpp
+@@ -18,6 +18,8 @@
+ 
+ /* Authors: Heming Cui (heming@cs.columbia.edu), Junfeng Yang (junfeng@cs.columbia.edu) */
+ 
++#include <cstdlib>
++#include <iostream>
+ #include <stdint.h>
+ #include <assert.h>
+ #include <stdlib.h>
+@@ -26,6 +28,10 @@
+ #include <errno.h>
+ #include <unistd.h>
+ #include <poll.h>
++#include <sys/types.h>
++#include <sys/ipc.h>
++#include <sys/shm.h>
++#include <unistd.h>
+ 
+ #include "tern/config.h"
+ #include "tern/hooks.h"
+@@ -127,7 +133,7 @@ void __tern_prog_begin(void) {
+   assert(!prog_began && "__tern_prog_begin() already called!");
+   prog_began = true;
+ 
+-  //fprintf(stderr, "%08d calls __tern_prog_begin\n", (int) pthread_self());
++  fprintf(stderr, "%08d calls __tern_prog_begin\n", (int) pthread_self());
+   assert(Space::isSys() && "__tern_prog_begin must start in sys space");
+ 
+   main_thread_th = pthread_self();
+diff --git a/lib/runtime/record-scheduler.cpp b/lib/runtime/record-scheduler.cpp
+index 2ac218b..1d4aff8 100644
+--- a/lib/runtime/record-scheduler.cpp
++++ b/lib/runtime/record-scheduler.cpp
+@@ -140,7 +140,7 @@ int RRScheduler::fireTimeouts()
+ 
+     int tid = *prv;
+     assert(tid >=0 && tid < Scheduler::nthread);
+-    if(waits[tid].timeout < turnCount) {
++    if(waits[tid].timeout < *turnCount) {
+       dprintf("RRScheduler: %d timed out (%p, %u)\n",
+               tid, waits[tid].chan, waits[tid].timeout);
+       waits[tid].reset(ETIMEDOUT);
+@@ -164,7 +164,7 @@ void RRScheduler::check_wakeup()
+         runq.push_back(*itr);
+         if (options::enforce_non_det_clock_bound) {
+           dprintf("check_wakeup: current logical clock %u, first non det tid %d, my tid %d, non det logical clock %u, \
+-            the system is within bounded non-determinism.\n", turnCount, *itr, self(), non_det_thds.get_clock(*itr));
++            the system is within bounded non-determinism.\n", *turnCount, *itr, self(), non_det_thds.get_clock(*itr));
+           non_det_thds.erase(*itr); // This operation is required by the bounded non-determinism mechanism.
+         }
+       }
+@@ -279,7 +279,7 @@ int RRScheduler::block()
+   getTurn();
+   int tid = self();
+   if (options::enforce_non_det_clock_bound)
+-    non_det_thds.insert(tid, turnCount); // This operation is required by the bounded non-determinism mechanism.
++    non_det_thds.insert(tid, *turnCount); // This operation is required by the bounded non-determinism mechanism.
+   assert(tid>=0 && tid < Scheduler::nthread);
+   assert(tid == runq.front());
+   dprintf("RRScheduler: %d blocks\n", self());
+@@ -473,7 +473,7 @@ void RRScheduler::selfcheck(void)
+ 
+ ostream& RRScheduler::dump(ostream& o)
+ {
+-  o << "nthread " << Scheduler::nthread << ": " << turnCount;
++  o << "nthread " << Scheduler::nthread << ": " << *turnCount;
+   o << " [runq ";
+   copy(runq.begin(), runq.end(), ostream_iterator<int>(o, " "));
+   o << "]";
+@@ -556,7 +556,7 @@ int RRScheduler::nextRunnable(bool at_thread_end) {
+       that could modify the linked list of run queue, so it is safe. **/
+       runq.pop_front();  
+       if (options::enforce_non_det_clock_bound)
+-        non_det_thds.insert(headElem->tid, turnCount); // This operation is required by the bounded non-determinism mechanism.
++        non_det_thds.insert(headElem->tid, *turnCount); // This operation is required by the bounded non-determinism mechanism.
+     } else {
+       dprintf("RRScheduler::nextRunnable at_thread_end %d, self %d, headElem tid %d, head status %d, self status %d\n",
+         at_thread_end, self(), headElem->tid, headElem->status, runq.get_my_elem(self())->status);
+@@ -599,12 +599,12 @@ void RRScheduler::checkNonDetBound() {
+   if (options::enforce_non_det_clock_bound && non_det_thds.size() > 0) {
+     int tid = non_det_thds.first_thread();
+     unsigned clock = non_det_thds.get_clock(tid);
+-    if (turnCount > clock + options::non_det_clock_bound) {
++    if (*turnCount > clock + options::non_det_clock_bound) {
+       //assert(!runq.in(tid));
+       runq.push_back(tid);
+       non_det_thds.erase(tid);
+       dprintf("checkNonDetBound: current logical clock %u, first non det tid %d, my tid %d, non det logical clock %u, \
+-        try to block the deterministict part of the system.\n", turnCount, tid, self(), clock);
++        try to block the deterministict part of the system.\n", *turnCount, tid, self(), clock);
+     }
+   }
+ }
+diff --git a/lib/runtime/scheduler.cpp b/lib/runtime/scheduler.cpp
+index 8b55a9c..d98fd65 100644
+--- a/lib/runtime/scheduler.cpp
++++ b/lib/runtime/scheduler.cpp
+@@ -19,18 +19,22 @@
+ /* Authors: Heming Cui (heming@cs.columbia.edu), Junfeng Yang (junfeng@cs.columbia.edu) -*- Mode: C++ -*- */
+ // Refactored from Heming's Memoizer code
+ 
+-#include "pthread.h"
++#include "tern/options.h"
+ #include "tern/runtime/scheduler.h"
++#include "pthread.h"
+ #include <iostream>
+ #include <fstream>
+ #include <iterator>
+ #include <vector>
+ #include <cstdio>
+-#include <stdlib.h>
+ #include <cstring>
+ #include <algorithm>
++#include <stdlib.h>
+ #include <sys/stat.h>
+-#include "tern/options.h"
++#include <sys/types.h>
++#include <sys/ipc.h>
++#include <sys/shm.h>
++#include <unistd.h>
+ 
+ using namespace std;
+ using namespace tern;
+@@ -38,13 +42,28 @@ using namespace tern;
+ 
+ Serializer::~Serializer()
+ {
++  if(turnCount!=NULL){
++	  shmdt((void*)turnCount);
++  }
+   if (options::log_sync)
+     fclose(logger);
+ }
+ 
+ Serializer::Serializer(): 
+-  TidMap(pthread_self()), turnCount(0) 
+-{
++  TidMap(pthread_self()) 
++{    
++  int shmid;
++  if ((shmid = shmget(12345678,8,IPC_CREAT|0666))>=0){
++	  if ((turnCount = (unsigned*)shmat(shmid,0,0))!= (unsigned*)-1 ) {
++		  *turnCount = 0;
++	  }else{
++		  fprintf(stderr,"you cannot attach to this shared memory\n");
++		  turnCount = NULL;
++	  }
++  }else{
++	  fprintf(stderr,"you cannot create or open this shared memory\n");
++	  turnCount = NULL;
++  }
+   if (options::log_sync) {
+     mkdir(options::output_dir.c_str(), 0777);
+     std::string logPath = options::output_dir + "/serializer.log";
+@@ -54,12 +73,13 @@ Serializer::Serializer():
+ }
+ 
+ unsigned Serializer::incTurnCount(void) { 
+-  int ret = turnCount++;  
++  int ret = (*turnCount)++;  
++  //fprintf(stderr,"the turnCountNow is %u\n",*turnCount);
+   if (options::log_sync)
+     fprintf(logger, "%d %d\n", (int) self(), ret);
+   return ret;
+ }
+ 
+ unsigned Serializer::getTurnCount(void) { 
+-  return turnCount - 1; 
++  return (*turnCount) - 1; 
+ }
+diff --git a/myscript/leveldb_processing.py b/myscript/leveldb_processing.py
+new file mode 100644
+index 0000000..f42cef8
+--- /dev/null
++++ b/myscript/leveldb_processing.py
+@@ -0,0 +1,77 @@
++#! /usr/local/bin/python
++import os
++from xlwt import Workbook
++
++excelfile = Workbook()
++
++sheet1 = excelfile.add_sheet('1thread',cell_overwrite_ok=True)
++sheet2 = excelfile.add_sheet('4thread',cell_overwrite_ok=True)
++sheet3 = excelfile.add_sheet('8thread',cell_overwrite_ok=True)
++sheet4 = excelfile.add_sheet('16thread',cell_overwrite_ok=True)
++
++line_counter = 0
++file_counter = 0
++
++filelist = os.listdir(os.getcwd())
++filelist.sort()
++for filename in filelist:
++	if not "result" in filename:
++		pass
++	else:
++		print filename
++		if "00" in filename:
++			line_counter = 0
++			fi = open(filename,"r")
++			for i in range(6):
++				fi.readline()
++			for line in fi:
++				i = line.replace(" ","")
++				plist = (i.split(":")[1])
++				a = plist.split("m")[0]
++				sheet1.write(line_counter,file_counter,a)
++				line_counter = line_counter+1
++			file_counter = file_counter+1
++			fi.close()
++		elif "01" in filename:
++			line_counter = 0
++			fi = open(filename,"r")
++			for i in range(6):
++				fi.readline()
++			for line in fi:
++				i = line.replace(" ","")
++				plist = (i.split(":")[1])
++				a = plist.split("m")[0]
++				sheet2.write(line_counter,file_counter,a)
++				line_counter = line_counter+1
++			file_counter = file_counter+1
++			fi.close()
++		elif "10" in filename:
++			line_counter = 0
++			fi = open(filename,"r")
++			for i in range(6):
++				fi.readline()
++			for line in fi:
++				i = line.replace(" ","")
++				plist = (i.split(":")[1])
++				a = plist.split("m")[0]
++				sheet3.write(line_counter,file_counter,a)
++				line_counter = line_counter+1
++			file_counter = file_counter+1
++			fi.close()
++		elif "11" in filename:
++			line_counter = 0
++			fi = open(filename,"r")
++			for i in range(6):
++				fi.readline()
++			for line in fi:
++				i = line.replace(" ","")
++				plist = (i.split(":")[1])
++				a = plist.split("m")[0]
++				sheet4.write(line_counter,file_counter,a)
++				line_counter = line_counter+1
++			file_counter = file_counter+1
++			fi.close()
++		else:
++			pass
++	
++excelfile.save("haha.xls")
+diff --git a/readme.txt b/readme.txt
+index 26f4002..209f797 100644
+--- a/readme.txt
++++ b/readme.txt
+@@ -1,4 +1,4 @@
+-Typical (and recommended) systems configuration for Parrot (a.k.a., xtern)
++#Typical (and recommended) systems configuration for Parrot (a.k.a., xtern)
+ ================
+ Hardware: we have tried both 4-core and 24-core machines with 64 bits.
+ OS: Ubuntu 11.10.
+diff --git a/rebuild.sh b/rebuild.sh
+new file mode 100755
+index 0000000..8d35870
+--- /dev/null
++++ b/rebuild.sh
+@@ -0,0 +1,34 @@
++#!/bin/bash
++#make the prompt as a interactive to use source command
++export PS1='$ '
++
++#echo "export XTERN_ROOT=$(pwd)" >> ~/.bashrc
++#echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$XTERN_ROOT/dync_hook" >> ~/.bashrc
++#. ~/.bashrc
++
++echo $XTERN_ROOT
++echo $LD_LIBRARY_PATH
++
++pushd $XTERN_ROOT
++#./llvm/build-llvm.sh
++#./llvm/build-llvm.sh --optimized
++popd
++
++#echo "export LLVM_ROOT=\$LLVM_ROOT:$(pwd)/llvm" >> ~/.bashrc
++#echo "export PATH=\$PATH:$(pwd)/llvm/install/bin:$(pwd)/llvm/scripts" >> ~/.bashrc
++
++#. ~/.bashrc
++
++echo $LLVM_ROOT
++echo $PATH
++
++pushd $XTERN_ROOT
++mkdir -p obj
++pushd obj
++#./../configure --with-llvmsrc=$XTERN_ROOT/llvm/llvm-2.7/ --with-llvmobj=$XTERN_ROOT/llvm/llvm-obj/ --with-llvmgccdir=$XTERN_ROOT/llvm/install/bin/ --prefix=$XTERN_ROOT/install
++popd 
++popd
++
++pushd $XTERN_ROOT/obj
++make ENABLE_OPTIMIZED=0 clean && make ENABLE_OPTIMIZED=0 && make ENABLE_OPTIMIZED=0 install
++popd
+diff --git a/run.sh b/run.sh
+new file mode 100644
+index 0000000..af3e5d2
+--- /dev/null
++++ b/run.sh
+@@ -0,0 +1,12 @@
++#! /bin/sh
++sudo apt-get install gcc-4.5 g++-4.5 gcc-multilib g++-multilib
++sudo apt-get install dejagnu flex bison axel libboost-dev libtiff4-dev
++sudo apt-get install zlib1g-dev libbz2-dev libxml-libxml-perl python-pip python-setuptools python-dev
++sudo pip install numpy
++sudo apt-get install libxslt1-dev libxml2-dev
++sudo easy_install-2.7 lxml
++sudo apt-get install libgomp1 libgmp-dev libmpfr-dev libmpc-dev
++sudo apt-get install libmp3lame-dev
++sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.5
++sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
++

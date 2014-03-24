@@ -1,0 +1,34 @@
+#! /bin/bash
+
+echo "if you have installed the easy_install package, the first step will failed, but it won't cause any trouble."
+
+echo "To make you read these lines, it will sleep for 5 seconds"
+
+sleep 5
+
+DNSPYTHONVERSION="1.11.1"
+MSGPACKVERSION="0.4.1"
+
+wget http://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | python - --user
+
+if [ ! -f dnspython-${DNSPYTHONVERSION}.tar.gz ];then
+	wget http://www.dnspython.org/kits/${DNSPYTHONVERSION}/dnspython-${DNSPYTHONVERSION}.tar.gz
+fi
+if [ ! -d dnspython-${DNSPYTHONVERSION} ];then
+	tar -xvf dnspython-${DNSPYTHONVERSION}.tar.gz
+fi
+pushd dnspython-${DNSPYTHONVERSION}
+	python setup.py install --user
+popd
+
+if [ ! -f msgpack-python-${MSGPACKVERSION}.tar.gz ];then
+
+	wget http://pypi.python.org/packages/source/m/msgpack-python/msgpack-python-${MSGPACKVERSION}.tar.gz
+
+fi
+if [ ! -d msgpack-python-${MSGPACKVERSION} ];then
+	tar -xvf msgpack-python-${MSGPACKVERSION}.tar.gz
+fi
+pushd msgpack-python-${MSGPACKVERSION}
+	python setup.py install --user
+popd

@@ -32,3 +32,5 @@ fi
 pushd msgpack-python-${MSGPACKVERSION}
 	python setup.py install --user
 popd
+
+echo export PATH=~/.local/bin:\$PATH >> ~/.bashrc

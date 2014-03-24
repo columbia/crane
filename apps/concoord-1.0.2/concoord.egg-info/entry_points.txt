@@ -1,3 +1,0 @@
-[console_scripts]
-concoord = concoord.main:main
-

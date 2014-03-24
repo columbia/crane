@@ -20,7 +20,7 @@ class serverTest():
         return 7738
     def startServer(self):
         if not self.running:
-            self.logical_clock = sysv_ipc.SharedMemory(12345678,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
+            #self.logical_clock = sysv_ipc.SharedMemory(12345678,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
             os.environ["LD_PRELOAD"] = "/home/milannic/myxtern_compilation/dync_hook/interpose.so"
             args = (self.bin_path)
             popen = subprocess.Popen(args, stdout=subprocess.PIPE)

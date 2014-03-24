@@ -7,6 +7,8 @@ import inspect
 import time
 import os, sys
 import signal
+import sysv_ipc
+import struct
 import cPickle as pickle
 from threading import Thread, Lock, Timer, Event
 from concoord.pack import Proposal, PValue
@@ -84,6 +86,18 @@ class Replica(Node):
         self.throughput_stop = 0
         self.throughput_start = 0
 
+        # Milannic
+        # Two Shared Memories 
+        self.logical_clock_read_address = sysv_ipc.SharedMemory(12345678,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
+        self.logical_clock_read_address.write(struct.pack('<q',0))
+
+        self.logical_clock_predict_address = sysv_ipc.SharedMemory(87654321,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
+        self.logical_clock_predict_address.write(struct.pack('<q',0))
+
+        # Two Logical Clock
+        self.logical_clock_read = 0
+        self.logical_clock_predict = 0
+
     def __str__(self):
         rstr = "%s %s:%d\n" % ("LEADER" if self.isleader else node_names[self.type], self.addr, self.port)
         rstr += "Members:\n%s\n" % "\n".join(str(group) for type,group in self.groups.iteritems())
@@ -113,6 +127,37 @@ class Replica(Node):
         for comp in components[1:]:
             mod = getattr(mod, comp)
         return mod
+
+    # Milannic
+    def getLogicalClock(self):
+        '''
+        get the logical clock in the server and convert the bytes string to int variable
+        '''
+        dec_clock = 0
+        bin_clock = ''
+        byte_clock = self.logical_clock.read(8);
+        for byte in byte_clock:
+            dec = struct.unpack("B",byte)[0]
+            bin_t = bin(dec)[2:]
+            while len(bin_t) < 8:
+                bin_t = '0' + bin_t
+            bin_clock = bin_t + bin_clock
+        dec_clock = int(bin_clock,2)
+        self.logical_clock_read = dec_clock
+
+    def predictLogicalClock(self):
+        '''
+        predict the next send logical clock
+        '''
+        self.logical_clock_predict = self.logical_clock_read+10000000
+
+    def setLogicalClock(self):
+        '''
+        write the predict logical clock to the shared memory
+        '''
+        self.logical_clock_predict_address.write(struct.pack('<q',self.logical_clock_predict))
+
+
 
     def startservice(self):
         """Start the background services associated with a replica."""

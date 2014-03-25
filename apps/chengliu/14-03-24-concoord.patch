@@ -1,0 +1,128 @@
+diff --git a/apps/mongodb/mk b/apps/mongodb/mk
+index bde3674..982e171 100755
+--- a/apps/mongodb/mk
++++ b/apps/mongodb/mk
+@@ -27,7 +27,7 @@
+ #fi
+ 
+ VER=2.2.7
+-DIR=mongodb3
++DIR=mongodb
+ DIR_PERF=${DIR}_perf
+ 
+ if [ ! -d $DIR  ]; then
+diff --git a/apps/mongoose/run b/apps/mongoose/run
+index 1ebb70e..3d4933b 100755
+--- a/apps/mongoose/run
++++ b/apps/mongoose/run
+@@ -28,13 +28,13 @@ APP=$XTERN_ROOT/apps/mongoose/mg-server
+ INPUT="-t 2"
+ 
+ # Start the server.
+-LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT &
++LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT 
+ sleep 2
+ 
+ # Run the aget client.
+-cd $XTERN_ROOT/apps/aget
++#cd $XTERN_ROOT/apps/aget
+ # The 8080 is the listening port of mongoose server.
+-time -p $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://localhost/llvm-gcc-4.2-2.7.source.tgz
+-killall -9 mg-server &> /dev/null
+-cd $XTERN_ROOT/apps/mongoose
++#time -p $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://localhost/llvm-gcc-4.2-2.7.source.tgz
++#killall -9 mg-server &> /dev/null
++#cd $XTERN_ROOT/apps/mongoose
+ 
+diff --git a/apps/pbzip2/run b/apps/pbzip2/run
+index b42ea40..00009e0 100755
+--- a/apps/pbzip2/run
++++ b/apps/pbzip2/run
+@@ -56,5 +56,5 @@ LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT
+ sleep 2;
+ 
+ # Run non-det and draw time chart.
+-LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
++#LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
+ 
+diff --git a/auto.sh b/auto.sh
+index 7cdeb35..3ff5342 100755
+--- a/auto.sh
++++ b/auto.sh
+@@ -10,7 +10,7 @@ echo $XTERN_ROOT
+ echo $LD_LIBRARY_PATH
+ 
+ pushd $XTERN_ROOT
+-./llvm/build-llvm.sh
++#./llvm/build-llvm.sh
+ ./llvm/build-llvm.sh --optimized
+ popd
+ 
+@@ -30,5 +30,5 @@ popd
+ popd
+ 
+ pushd $XTERN_ROOT/obj
+-make ENABLE_OPTIMIZED=0 clean && make ENABLE_OPTIMIZED=0 && make ENABLE_OPTIMIZED=0 install
++make ENABLE_OPTIMIZED=1 clean && make ENABLE_OPTIMIZED=1 && make ENABLE_OPTIMIZED=1 install
+ popd
+diff --git a/include/tern/runtime/scheduler.h b/include/tern/runtime/scheduler.h
+index c359110..de90faf 100644
+--- a/include/tern/runtime/scheduler.h
++++ b/include/tern/runtime/scheduler.h
+@@ -229,6 +229,7 @@ struct Serializer: public TidMap {
+ 
+   FILE *logger;
+   unsigned* turnCount; // number of turns so far
++  unsigned* turnCount_read; // number of turns so far
+ };
+ 
+ 
+diff --git a/lib/runtime/scheduler.cpp b/lib/runtime/scheduler.cpp
+index d98fd65..4ba54b1 100644
+--- a/lib/runtime/scheduler.cpp
++++ b/lib/runtime/scheduler.cpp
+@@ -45,6 +45,9 @@ Serializer::~Serializer()
+   if(turnCount!=NULL){
+ 	  shmdt((void*)turnCount);
+   }
++  if(turnCount_read!=NULL){
++	  shmdt((void*)turnCount_read);
++  }
+   if (options::log_sync)
+     fclose(logger);
+ }
+@@ -52,6 +55,7 @@ Serializer::~Serializer()
+ Serializer::Serializer(): 
+   TidMap(pthread_self()) 
+ {    
++  turnCount_read = NULL;
+   int shmid;
+   if ((shmid = shmget(12345678,8,IPC_CREAT|0666))>=0){
+ 	  if ((turnCount = (unsigned*)shmat(shmid,0,0))!= (unsigned*)-1 ) {
+@@ -64,6 +68,17 @@ Serializer::Serializer():
+ 	  fprintf(stderr,"you cannot create or open this shared memory\n");
+ 	  turnCount = NULL;
+   }
++  if ((shmid = shmget(87654321,8,IPC_CREAT|0666))>=0){
++	  if ((turnCount_read = (unsigned*)shmat(shmid,0,0))!= (unsigned*)-1 ) {
++		  *turnCount_read = 0;
++	  }else{
++		  fprintf(stderr,"you cannot attach to this shared memory\n");
++		  turnCount_read = NULL;
++	  }
++  }else{
++	  fprintf(stderr,"you cannot create or open this shared memory\n");
++	  turnCount_read = NULL;
++  }
+   if (options::log_sync) {
+     mkdir(options::output_dir.c_str(), 0777);
+     std::string logPath = options::output_dir + "/serializer.log";
+@@ -74,6 +89,8 @@ Serializer::Serializer():
+ 
+ unsigned Serializer::incTurnCount(void) { 
+   int ret = (*turnCount)++;  
++//  if(NULL!=turnCount_read && (*turnCount_read)!=0)
++//      fprintf(stderr, "%u \n",(*turnCount_read));
+   //fprintf(stderr,"the turnCountNow is %u\n",*turnCount);
+   if (options::log_sync)
+     fprintf(logger, "%d %d\n", (int) self(), ret);

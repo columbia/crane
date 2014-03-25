@@ -91,8 +91,8 @@ class Replica(Node):
         self.logical_clock_read_address = sysv_ipc.SharedMemory(12345678,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
         self.logical_clock_read_address.write(struct.pack('<q',0))
 
-        self.logical_clock_predict_address = sysv_ipc.SharedMemory(87654321,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
-        self.logical_clock_predict_address.write(struct.pack('<q',0))
+        #self.logical_clock_predict_address = sysv_ipc.SharedMemory(87654321,sysv_ipc.IPC_CREAT,0600,sysv_ipc.PAGE_SIZE)
+        #self.logical_clock_predict_address.write(struct.pack('<q',0))
 
         # Two Logical Clock
         self.logical_clock_read = 0
@@ -135,7 +135,7 @@ class Replica(Node):
         '''
         dec_clock = 0
         bin_clock = ''
-        byte_clock = self.logical_clock.read(8);
+        byte_clock = self.logical_clock_read_address.read(8);
         for byte in byte_clock:
             dec = struct.unpack("B",byte)[0]
             bin_t = bin(dec)[2:]
@@ -149,13 +149,13 @@ class Replica(Node):
         '''
         predict the next send logical clock
         '''
-        self.logical_clock_predict = self.logical_clock_read+10000000
+        self.logical_clock_predict = self.logical_clock_read+1000000000
 
-    def setLogicalClock(self):
-        '''
-        write the predict logical clock to the shared memory
-        '''
-        self.logical_clock_predict_address.write(struct.pack('<q',self.logical_clock_predict))
+#    def setLogicalClock(self):
+#        '''
+#        write the predict logical clock to the shared memory
+#        '''
+#        self.logical_clock_predict_address.write(struct.pack('<q',self.logical_clock_predict))
 
 
 
@@ -1286,6 +1286,23 @@ class Replica(Node):
                                   % (prc.ballotnumber, prc.commandnumber, prc.proposal, prc.receivedcount, prc.ntotal))
                 if prc.receivedcount >= prc.nquorum:
                     if self.debug: self.logger.write("Paxos State", "Agreed on %s" % str(prc.proposal))
+
+# Milannic
+                if isinstance(prc.proposal,Proposal) and self.isleader:
+                    if prc.proposal[2][0] == 'send':
+                        print prc
+                        print "----------------------------------------------------------"
+                        self.getLogicalClock()
+                        self.predictLogicalClock()
+                        print self.logical_clock_read
+                        print self.logical_clock_predict
+                        temp_list = list(prc.proposal[2])
+                        temp_list[0] = 'rSend'
+                        temp_list.append(self.logical_clock_predict)
+                        newproposal = Proposal(prc.proposal[0],prc.proposal[1],tuple(temp_list))
+                        prc.proposal = newproposal
+                        #print prc.proposal
+
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)
                     # delete outstanding messages that caller does not need to check for anymore

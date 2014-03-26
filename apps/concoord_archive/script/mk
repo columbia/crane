@@ -34,3 +34,4 @@ pushd msgpack-python-${MSGPACKVERSION}
 popd
 
 echo export PATH=~/.local/bin:\$PATH >> ~/.bashrc
+. ~/.bashrc

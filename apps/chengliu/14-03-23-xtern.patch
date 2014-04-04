@@ -338,39 +338,6 @@ index 0000000..36634a8
 +popd
 +
 +
-diff --git a/apps/mongoose/run b/apps/mongoose/run
-index 1ebb70e..3d4933b 100755
---- a/apps/mongoose/run
-+++ b/apps/mongoose/run
-@@ -28,13 +28,13 @@ APP=$XTERN_ROOT/apps/mongoose/mg-server
- INPUT="-t 2"
- 
- # Start the server.
--LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT &
-+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT 
- sleep 2
- 
- # Run the aget client.
--cd $XTERN_ROOT/apps/aget
-+#cd $XTERN_ROOT/apps/aget
- # The 8080 is the listening port of mongoose server.
--time -p $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://localhost/llvm-gcc-4.2-2.7.source.tgz
--killall -9 mg-server &> /dev/null
--cd $XTERN_ROOT/apps/mongoose
-+#time -p $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://localhost/llvm-gcc-4.2-2.7.source.tgz
-+#killall -9 mg-server &> /dev/null
-+#cd $XTERN_ROOT/apps/mongoose
- 
-diff --git a/apps/pbzip2/run b/apps/pbzip2/run
-index b42ea40..00009e0 100755
---- a/apps/pbzip2/run
-+++ b/apps/pbzip2/run
-@@ -56,5 +56,5 @@ LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT
- sleep 2;
- 
- # Run non-det and draw time chart.
--LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
-+#LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
  
 diff --git a/auto.sh b/auto.sh
 new file mode 100755
@@ -412,6 +379,7 @@ index 0000000..3ff5342
 +pushd $XTERN_ROOT/obj
 +make ENABLE_OPTIMIZED=1 clean && make ENABLE_OPTIMIZED=1 && make ENABLE_OPTIMIZED=1 install
 +popd
+
 diff --git a/include/tern/runtime/scheduler.h b/include/tern/runtime/scheduler.h
 index b8f49c1..c359110 100644
 --- a/include/tern/runtime/scheduler.h

@@ -10,6 +10,10 @@ DNSPYTHONVERSION="1.11.1"
 MSGPACKVERSION="0.4.1"
 SYSVIPCVERSION="0.6.6"
 
+mkdir packages
+
+pushd packages
+
 wget http://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | python - --user
 
 if [ ! -f dnspython-${DNSPYTHONVERSION}.tar.gz ];then
@@ -44,6 +48,7 @@ if [ ! -d sysv_ipc-${SYSVIPCVERSION} ];then
 fi
 pushd sysv_ipc-${SYSVIPCVERSION}
 	python setup.py install --user
+popd
 popd
 
 echo export PATH=~/.local/bin:\$PATH >> ~/.bashrc

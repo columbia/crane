@@ -1288,20 +1288,24 @@ class Replica(Node):
                     if self.debug: self.logger.write("Paxos State", "Agreed on %s" % str(prc.proposal))
 
 # Milannic
-                if isinstance(prc.proposal,Proposal) and self.isleader:
-                    if prc.proposal[2][0] == 'send':
-                        print prc
-                        print "----------------------------------------------------------"
-                        self.getLogicalClock()
-                        self.predictLogicalClock()
-                        print self.logical_clock_read
-                        print self.logical_clock_predict
-                        temp_list = list(prc.proposal[2])
-                        temp_list[0] = 'rSend'
-                        temp_list.append(self.logical_clock_predict)
-                        newproposal = Proposal(prc.proposal[0],prc.proposal[1],tuple(temp_list))
-                        prc.proposal = newproposal
-                        #print prc.proposal
+                if hasattr(self,'isleader') and hasattr(prc,'proposal'):
+                    if isinstance(prc.proposal,Proposal) and self.isleader:
+                        try:
+                            if prc.proposal[2][0] == 'send':
+                                print prc
+                                print "----------------------------------------------------------"
+                                self.getLogicalClock()
+                                self.predictLogicalClock()
+                                print self.logical_clock_read
+                                print self.logical_clock_predict
+                                temp_list = list(prc.proposal[2])
+                                temp_list[0] = 'rSend'
+                                temp_list.append(self.logical_clock_predict)
+                                newproposal = Proposal(prc.proposal[0],prc.proposal[1],tuple(temp_list))
+                                prc.proposal = newproposal
+                                #print prc.proposal
+                        except:
+                            pass
 
                     # take this response collector out of the outstanding propose set
                     self.add_to_proposals(prc.commandnumber, prc.proposal)

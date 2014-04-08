@@ -28,7 +28,7 @@ def timeout(timeout):
         return f2
     return timeout_function
 
-@timeout(120)
+@timeout(240)
 def test_failure(numreplicas):
     replicas = []
     acceptors = []

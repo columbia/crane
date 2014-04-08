@@ -8,6 +8,7 @@ sleep 5
 
 DNSPYTHONVERSION="1.11.1"
 MSGPACKVERSION="0.4.1"
+SYSVIPCVERSION="0.6.6"
 
 wget http://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | python - --user
 
@@ -30,6 +31,18 @@ if [ ! -d msgpack-python-${MSGPACKVERSION} ];then
 	tar -xvf msgpack-python-${MSGPACKVERSION}.tar.gz
 fi
 pushd msgpack-python-${MSGPACKVERSION}
+	python setup.py install --user
+popd
+
+if [ ! -f sysv_ipc-${SYSVIPCVERSION}.tar.gz ];then
+
+	wget http://semanchuk.com/philip/sysv_ipc/sysv_ipc-${SYSVIPCVERSION}.tar.gz
+
+fi
+if [ ! -d sysv_ipc-${SYSVIPCVERSION} ];then
+	tar -xvf sysv_ipc-${SYSVIPCVERSION}.tar.gz
+fi
+pushd sysv_ipc-${SYSVIPCVERSION}
 	python setup.py install --user
 popd
 

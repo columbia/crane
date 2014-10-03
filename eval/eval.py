@@ -1,4 +1,6 @@
 import os
+import subprocess
+from signal import signal
 
 def getPaxosDefaultOptions():
 	default = {}
@@ -102,13 +104,125 @@ def preSetting(config, bench, apps_name):
 def execBench(cmd, repeats, out_dir,
 	      client_cmd="", client_terminate_server=False,
 	      init_env_cmd=""):
-	return
+	mkdir_p(out_dir)
+	for i in range(int(repeats)):
+		sys.stderr.write("        PROGRESS: %5d/%d\r" % (i+1, int(repeats)))
+		with open('%s/output.%d' % (out_dir, i), 'w', 102400) as log_file:
+			if init_env_cmd:
+				os.system(init_env_cmd)
+			proc = subprocess.Popen(cmd, stdout=log_file, stderr=subprocess.STDOUT, shell=True, executable=bash_path, bufsize=102400)
+			if client_cmd:
+				time.sleep(1)
+				with open('%s/client.%d' % (out_dir, i), 'w', 102400) as client_log_file:
+					client_proc = subprocess.Popen(client_cmd, stdout=client_log_file, stderr=subprocess.STDOUT, shell=True, executable=bash_path, bufsize=102400)
+					client_proc.wait()
+				if client_terminate_server:
+					os.killpg(proc.pid, signal.SIGTERM)
+				proc.wait()
+				time.sleep(2)
+			else:
+				try:
+					proc.wait()
+				except KeyboardInterrupt as k:
+					try:
+						os.killpg(proc.pid, signal.SIGTERM)
+					except:
+						pass
+					raise k
+		try:
+			os.renames('out', '%s/out.%d' % (out_dir, i))
+		except OSError:
+			pass
 
 def processBench(config, bench):
-	return
+		
+	logging.debug("processing: " + bench)
+	specified_evaluation = config.get(bench, 'EVALUATION')
+	apps_name, exec_file = extract_apps_exec(bench, APPS)
+	logging.debug("app = %s" % apps_name)
+	logging.debug("executible file = %s" % exec_file)
+	if not specified_evaluation and not checkExist(exec_file, os.X_OK):
+		logging.warning("%s does not exist, skip [%s]" % (exec_file, bench))
+		return
+	
+	segs = re.sub(r'(\")|(\.)|/|\'', '', bench).split()
+	if args.model_checking and not args.check_all:
+		dir_name = config.get(bench, 'DBUG') + '_'
+	else:
+		dir_name = ""
+	dir_name += '_'.join(segs)
+	mkdir_p(dir_name)
+	os.chdir(dir_name)
+	
+	generate_local_options(config, bench)
+	inputs = config.get(bench, 'inputs')
+	repeats = config.get(bench, 'repeats')
+	
+	if specified_evaluation:
+		specified = __import__(specified_evaluation, globals(), locals(), [], -1)
+		specified.evaluation(int(repeats))
+		return
+	
+	preSetting(config, bench, apps_name)
+	
+	export = config.get(bench, 'EXPORT')
+	if export:
+		logging.debug("export %s", export)
+	
+	init_env_cmd = config.get(bench, 'INIT_ENV_CMD')
+	if init_env_cmd:
+		logging.info("presetting cmd in each round %s" % init_env_cmd)
+		
+	# check if this is a server-client app
+	client_cmd = config.get(bench, 'C_CMD')
+	client_terminate_server = bool(int(config.get(bench, 'C_TERMINATE_SERVER')))
+	use_client_stats = bool(int(config.get(bench, 'C_STATS')))
+	if client_cmd:
+		if client_with_xtern:
+			client_cmd = XTERN_PRELOAD + ' ' + client_cmd
+		client_cmd = 'time ' + client_cmd
+		logging.info("client command : %s" % client_cmd)
+		logging.debug("terminate server after client finish job : " + str(client_terminate_server))
+		logging.debug("evaluate performance by using stats of client : " + str(use_client_stats))
 
+	# generate command for MSMR [time LD_PRELOAD=... exec args...]
+	msmr_command = ' '.join(['time', export, exec_file] + inputs.split())
+	logging.info("executing '%s'" % msmr_command)
+	if not args.compare_only:
+		execBench(msmr_command, repeats, 'msmr', client_cmd, client_terminate_server, init_env_cmd)
+	client_cmd = config.get(bench, 'C_CMD')
+	if client_cmd:
+		client_cmd = 'time ' + client_cmd
+		
+	# get stats
+	msmr_cost = []
+	for i in range(int(repeats)):
+		if args.compare_only:
+			msmr_cost += [1.0]
+			continue
+		if client_cmd and use_client_stats:
+			log_file_name = 'msmr/client.%d' % i
+		else:
+			log_file_name = 'msmr/output.%d' % i
+		for line in (open(log_file_name, 'r').readlines() if args.stl_result else reversed(open(log_file_name, 'r').readlines())):
+			if re.search('^real [0-9]+\.[0-9][0-9][0-9]$', line):
+				msmr_cost += [float(line.split()[1])]
+				break
+	
+	write_stats(xtern_cost, nondet_cost, int(repeats))
+	# copy exec file
+	copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
+	
 def workers(semaphore, lock, configs, bench):
-	return
+	from multiprocessing import Process
+	with semaphore:
+		p = Process(target=processBench, args=(configs, bench))
+		with lock:
+			logging.debug("STARTING %s" % bench)
+			p.start()
+		p.join()
+		with lock:
+			logging.debug("FINISH %s" % bench)
 
 if __name__ == "__main__":
 	print "just a test"

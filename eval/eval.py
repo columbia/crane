@@ -1,3 +1,5 @@
+import sys
+import logging
 import os
 import subprocess
 from signal import signal
@@ -225,4 +227,83 @@ def workers(semaphore, lock, configs, bench):
 			logging.debug("FINISH %s" % bench)
 
 if __name__ == "__main__":
-	print "just a test"
+	logger = logging.getLogger()
+	formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%Y%b%d-%H:%M:%S")
+	ch = logging.StreamHandler()
+	ch.setFormatter(formatter)
+	ch.setLevel(logging.DEBUG)
+	logger.addHandler(ch)
+	logger.setLevel(logging.DEBUG)
+
+	try:
+		MSMR_ROOT = os.environ["MSMR_ROOT"]
+		logging.debug('MSMR_ROOT = ' + MSMR_ROOT)
+	except KeyError as e:
+		logging.error("Please set the environment variable " + str(e))
+		sys.exit(1)
+
+	# parse input arguments
+	parser = argparse.ArgumentParser(
+		description = "Evaluate the performance of MSMR")
+	parser.add_argument('filename', nargs='*',
+		type=str,
+		default = ["msmr.cfg"],
+		help = "list of configuration files (default: msmr.cfg)")
+	args = parser.parse_args()
+
+	if args.filename.__len__() == 0:
+		logging.critical(' no configuration file specified??')
+		sys.exit(1)
+	elif args.filename.__len__() == 1:
+		logging.debug('config file: ' + ''.join(args.filename))
+	else:
+		logging.debug('config files: ' + ', '.join(args.filename))
+
+	logging.debug("set timeformat to '\\nreal %E\\nuser %U\\nsys %S'")
+	os.environ['TIMEFORMAT'] = "\nreal %E\nuser %U\nsys %S"
+
+	# run command in shell
+	bash_path = which('bash')
+	if not bash_path:
+		logging.critical("cannot find shell 'bash'")
+		sys.exit(1)
+	else:
+		bash_path = bash_path[0]
+		logging.debug("find 'bash' at %s" % bash_path)
+
+	default_options = getMsmrDefaultOptions()
+	git_info = getGitInfo()
+	root_dir = os.getcwd()
+	
+	for config_file in args.filename:
+		logging.info("processing '" + config_file + "'")
+		full_path = getConfigFullPath(config_file)
+		
+		local_config = readConfigFile(full_path)
+		if not local_config:
+			logging.warning("skip " + full_path)
+			continue
+		
+		run_dir = genRunDir(full_path, git_info)
+		try:
+			os.unlink('current')
+		except OSError:
+			pass
+		os.symlink(run_dir, 'current')
+		if not run_dir:
+			continue
+		os.chdir(run_dir)
+		if git_info[3]:
+			with open("git_diff", "w") as diff:
+				diff.write(git_info[3])
+
+		benchmarks = local_config.sections()
+		all_threads = []
+		semaphore = threading.BoundedSemaphore(1)
+		log_lock = threading.Lock()
+		for benchmark in benchmarks:
+			if benchmark == "default" or benchmark == "example":
+				continue
+			processBench(local_config, benchmark)
+
+		os.chdir(root_dir)

@@ -1,10 +1,14 @@
+import threading
+import ConfigParser
+import re
+import argparse
 import sys
 import logging
 import os
 import subprocess
 from signal import signal
 
-def getPaxosDefaultOptions():
+def getMsmrDefaultOptions():
 	default = {}
 	return default
 
@@ -40,6 +44,27 @@ def readConfigFile(config_file):
 		if ret:	
 			return newConfig
 
+def getGitInfo():
+    import commands
+    git_show = 'cd '+MSMR_ROOT+' && git show '
+    githash = commands.getoutput(git_show+'| head -1 | sed -e "s/commit //"')
+    git_diff = 'cd '+MSMR_ROOT+' && git diff --quiet'
+    diff = commands.getoutput('cd ' +MSMR_ROOT+ ' && git diff')
+    if diff:
+        gitstatus = '_dirty'
+    else:
+        gitstatus = ''
+    commit_date = commands.getoutput( git_show+
+            '| head -4 | grep "Date:" | sed -e "s/Date:[ \t]*//"' )
+    date_tz  = re.compile(r'^.* ([+-]\d\d\d\d)$').match(commit_date).group(1)
+    date_fmt = ('%%a %%b %%d %%H:%%M:%%S %%Y %s') % date_tz
+    import datetime
+    gitcommitdate = str(datetime.datetime.strptime(commit_date, date_fmt))
+    logging.debug( "git 6 digits hash code: " + githash[0:6] )
+    logging.debug( "git reposotory status: " + gitstatus)
+    logging.debug( "git commit date: " + gitcommitdate)
+    return [githash[0:6], gitstatus, gitcommitdate, diff]
+
 #make directory
 def mkdir_p(path):
 	try:
@@ -51,10 +76,7 @@ def mkdir_p(path):
 		else: raise
 
 def genRunDir(config_file, git_info):
-	if args.model_checking:
-		dir_name = "M"
-	else:
-		dir_name = ""
+	dir_name = ""
 	from os.path import basename
 	config_name = os.path.splitext(basename(config_file))[0]
 	from time import strftime
@@ -73,6 +95,18 @@ def extract_apps_exec(bench, apps_dir=""):
 	else:
 		return apps[0], os.path.abspath(apps_dir + '/' + apps[0] + '/' +apps[1])
 
+def generate_local_options(config, bench):
+	config_options = config.options(bench)
+	output = ""
+	for option in default_options:
+		if option in config_options:
+			entry = option + '=' + config.get(bench, option)
+		else:
+			entry = option + '=' + default_options[option]
+		output += '%s\n' % entry
+	with open("local.options", "w") as option_file:
+		option_file.write(output)
+
 def checkExist(file, flags=os.X_OK):
 	if not os.path.exists(file) or not os.path.isfile(file) or not os.access(file, flags):
 		return False
@@ -81,6 +115,17 @@ def checkExist(file, flags=os.X_OK):
 def copy_file(src, dst):
 	import shutil
 	shutil.copy(src, dst)
+
+def which(name, flags=os.X_OK):
+	result = []
+	path = os.environ.get('PATH', None)
+	if path is None:
+		return []
+	for p in os.environ.get('PATH', '').split(os.pathsep):
+		p = os.path.join(p, name)
+		if os.access(p, flags):
+			result.append(p)
+	return result
 
 def write_stats(time1, time2, time3, time4, repeats):
 	try:
@@ -91,13 +136,13 @@ def write_stats(time1, time2, time3, time4, repeats):
 	time1_std = numpy.std(time1)
 	time2_avg = numpy.average(time2)
 	time2_std = numpy.std(time2)
-	time3_avg = numpy.averge(time3)
+	time3_avg = numpy.average(time3)
 	time3_std = numpy.std(time3)
 	time4_avg = numpy.average(time4)
 	time4_std = numpy.std(time4)
 	import math
 	with open("stats.txt", "w") as stats:
-		stats.write('Average Concensus Time:{0}ms'.format(time3_avg-time2_avg))
+		stats.write('Average Concensus Time:{0}ms\n'.format(time3_avg-time2_avg))
 		stats.write('Average Processing Time:{0}ms'.format(time4_avg-time1_avg))
 
 def preSetting(config, bench, apps_name):
@@ -148,10 +193,7 @@ def processBench(config, bench):
 		return
 	
 	segs = re.sub(r'(\")|(\.)|/|\'', '', bench).split()
-	if args.model_checking and not args.check_all:
-		dir_name = config.get(bench, 'DBUG') + '_'
-	else:
-		dir_name = ""
+	dir_name = ""
 	dir_name += '_'.join(segs)
 	mkdir_p(dir_name)
 	os.chdir(dir_name)
@@ -171,47 +213,33 @@ def processBench(config, bench):
 	if export:
 		logging.debug("export %s", export)
 	
-	init_env_cmd = config.get(bench, 'INIT_ENV_CMD')
-	if init_env_cmd:
-		logging.info("presetting cmd in each round %s" % init_env_cmd)
-		
 	# check if this is a server-client app
-	client_cmd = config.get(bench, 'C_CMD')
-	client_terminate_server = bool(int(config.get(bench, 'C_TERMINATE_SERVER')))
-	use_client_stats = bool(int(config.get(bench, 'C_STATS')))
-	if client_cmd:
-		if client_with_xtern:
-			client_cmd = XTERN_PRELOAD + ' ' + client_cmd
-		client_cmd = 'time ' + client_cmd
-		logging.info("client command : %s" % client_cmd)
-		logging.debug("terminate server after client finish job : " + str(client_terminate_server))
-		logging.debug("evaluate performance by using stats of client : " + str(use_client_stats))
 
 	# generate command for MSMR [time LD_PRELOAD=... exec args...]
-	msmr_command = ' '.join(['time', export, exec_file] + inputs.split())
+	msmr_command = ' '.join([export, exec_file] + inputs.split())
 	logging.info("executing '%s'" % msmr_command)
-	if not args.compare_only:
-		execBench(msmr_command, repeats, 'msmr', client_cmd, client_terminate_server, init_env_cmd)
-	client_cmd = config.get(bench, 'C_CMD')
-	if client_cmd:
-		client_cmd = 'time ' + client_cmd
+	execBench(msmr_command, repeats, 'msmr')
 		
 	# get stats
-	msmr_cost = []
+	time1 = []
+	time2 = []
+	time3 = []
+	time4 = []
 	for i in range(int(repeats)):
-		if args.compare_only:
-			msmr_cost += [1.0]
-			continue
-		if client_cmd and use_client_stats:
-			log_file_name = 'msmr/client.%d' % i
-		else:
-			log_file_name = 'msmr/output.%d' % i
-		for line in (open(log_file_name, 'r').readlines() if args.stl_result else reversed(open(log_file_name, 'r').readlines())):
-			if re.search('^real [0-9]+\.[0-9][0-9][0-9]$', line):
-				msmr_cost += [float(line.split()[1])]
+		log_file_name = MSMR_ROOT+'/test/log/normal_case_test_0_'+inputs.split()[0]+'.log'
+		print log_file_name
+		for line in (open(log_file_name, 'r').readlines()):
+			if re.search('[0-9]+.[0-9]+,', line):
+				time1 += [float(line.split(',')[0].split('.')[1])]
+				time2 += [float(line.split(',')[1].split('.')[1])]
+				time3 += [float(line.split(',')[2].split('.')[1])]
+				time4 += [float(line.split(',')[3].split('.')[1])]
 				break
-	
-	write_stats(xtern_cost, nondet_cost, int(repeats))
+	#print time1
+	#print time2
+	#print time3
+	#print time4
+	write_stats(time1, time2, time3, time4, int(repeats))
 	# copy exec file
 	copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	
@@ -242,6 +270,7 @@ if __name__ == "__main__":
 		logging.error("Please set the environment variable " + str(e))
 		sys.exit(1)
 
+	APPS = os.path.abspath(MSMR_ROOT+"/")
 	# parse input arguments
 	parser = argparse.ArgumentParser(
 		description = "Evaluate the performance of MSMR")

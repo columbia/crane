@@ -127,7 +127,7 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-def write_stats(time1, time2, time3, time4, repeats):
+def write_stats(time1, time2, repeats):
 	try:
 		import numpy
 	except ImportError:
@@ -136,14 +136,14 @@ def write_stats(time1, time2, time3, time4, repeats):
 	time1_std = numpy.std(time1)
 	time2_avg = numpy.average(time2)
 	time2_std = numpy.std(time2)
-	time3_avg = numpy.average(time3)
-	time3_std = numpy.std(time3)
-	time4_avg = numpy.average(time4)
-	time4_std = numpy.std(time4)
 	import math
 	with open("stats.txt", "w") as stats:
-		stats.write('Average Concensus Time:{0}ms\n'.format(time3_avg-time2_avg))
-		stats.write('Average Processing Time:{0}ms'.format(time4_avg-time1_avg))
+		stats.write('Concensus Time:\n')
+		stats.write('\tmean:{0}ms\n'.format(time1_avg))
+		stats.write('\tstd:{0}ms\n'.format(time1_std))
+		stats.write('Response Time:\n')
+		stats.write('\tmean:{0}ms\n'.format(time2_avg))
+		stats.write('\tstd:{0}ms'.format(time2_std))
 
 def preSetting(config, bench, apps_name):
 	return
@@ -223,23 +223,16 @@ def processBench(config, bench):
 	# get stats
 	time1 = []
 	time2 = []
-	time3 = []
-	time4 = []
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/test/log/normal_case_test_0_'+inputs.split()[0]+'.log'
 		print log_file_name
 		for line in (open(log_file_name, 'r').readlines()):
-			if re.search('[0-9]+.[0-9]+,', line):
-				time1 += [float(line.split(',')[0].split('.')[1])]
-				time2 += [float(line.split(',')[1].split('.')[1])]
-				time3 += [float(line.split(',')[2].split('.')[1])]
-				time4 += [float(line.split(',')[3].split('.')[1])]
-				break
-	#print time1
-	#print time2
+			if ',' in line and 'connect' not in line and 'send' not in line and 'receive' not in line and 'close' not in line:
+				time1 += [-float(line.split(',')[1].split('.')[1])+float(line.split(',')[2].split('.')[1])]
+				time2 += [-float(line.split(',')[0].split('.')[1])+float(line.split(',')[3].split('.')[1])]
 	#print time3
 	#print time4
-	write_stats(time1, time2, time3, time4, int(repeats))
+	write_stats(time1, time2, int(repeats))
 	# copy exec file
 	copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

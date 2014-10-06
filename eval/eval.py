@@ -139,11 +139,11 @@ def write_stats(time1, time2, repeats):
 	import math
 	with open("stats.txt", "w") as stats:
 		stats.write('Concensus Time:\n')
-		stats.write('\tmean:{0}ms\n'.format(time1_avg))
-		stats.write('\tstd:{0}ms\n'.format(time1_std))
+		stats.write('\tmean:{0}us\n'.format(time1_avg))
+		stats.write('\tstd:{0}\n'.format(time1_std))
 		stats.write('Response Time:\n')
-		stats.write('\tmean:{0}ms\n'.format(time2_avg))
-		stats.write('\tstd:{0}ms'.format(time2_std))
+		stats.write('\tmean:{0}us\n'.format(time2_avg))
+		stats.write('\tstd:{0}'.format(time2_std))
 
 def preSetting(config, bench, apps_name):
 	return

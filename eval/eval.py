@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import threading
 import ConfigParser
 import re
@@ -25,14 +27,17 @@ def readConfigFile(config_file):
 		newConfig = ConfigParser.ConfigParser({"REPEATS":"1",
 						       "INPUTS":"",
 						       "EXPORT":"",
-						       "CLIENT_CONFIG":"",
-						       "CLIENT_INPUT":"",
-						       "SERVER_CONFIG":"",
-						       "EVALUATION":"",
-						       "DBUG":"-1",
-						       "DBUG_INPUT":"",
-						       "DBUG_OUTPUT":"",
-						       "DBUG_TIMEOUT":"60"})
+						       "TEST_NAME":"",
+						       "NO":"",
+						       "LOG_SUFFIX":".log",
+						       "SLEEP_TIME":"5",
+						       "SECONDARIES_SIZE":"2",
+						       "SERVER_CONFIG":"../libevent_paxos/target/nodes.cfg",
+						       "CLIENT_COUNT":"5",
+						       "CLIENT_IP":"127.0.0.1",
+						       "CLIENT_PORT":"9000",
+						       "CLIENT_REPEAT":"9",
+						       "EVALUATION":""})
 		ret = newConfig.read(config_file)
 	except ConfigParser.MissingSectionHeaderError as e:
 		logging.error(str(e))
@@ -85,15 +90,15 @@ def genRunDir(config_file, git_info):
 	logging.debug("creating %s" % dir_name)
 	return os.path.abspath(dir_name)
 
-def extract_apps_exec(bench, apps_dir=""):
+def extract_apps_exec(config, bench, apps_dir=""):
 	bench = bench.partition('"')[0].partition("'")[0]
 	apps = bench.split()
 	if apps.__len__() < 1:
 		raise Exception("cannot parse executible file name")
 	elif apps.__len__() == 1:
-		return apps[0], os.path.abspath(apps_dir + '/' + apps[0] + '/' +apps[0])
+		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0])
 	else:
-		return apps[0], os.path.abspath(apps_dir + '/' + apps[0] + '/' +apps[1])
+		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0]+'_'+apps[1]+'/'+config.get(bench,"TEST_NAME"))
 
 def generate_local_options(config, bench):
 	config_options = config.options(bench)
@@ -146,6 +151,46 @@ def write_stats(time1, time2, repeats):
 		stats.write('\tstd:{0}'.format(time2_std))
 
 def preSetting(config, bench, apps_name):
+	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
+		testscript.write('#! /bin/bash\n'+
+	'TEST_NAME='+config.get(bench,'TEST_NAME')+'\n'+
+	'NO=${1}\n'+
+	'CUR_DIR=$MSMR_ROOT/libevent_paxos\n'+
+	'LOG_SUFFIX='+config.get(bench,'LOG_SUFFIX')+'\n'+
+	'SLEEP_TIME='+config.get(bench,'SLEEP_TIME')+'\n'+
+	'SECONDARIES_SIZE='+config.get(bench,'SECONDARIES_SIZE')+'\n'+
+	'if [ ! -e ${CUR_DIR}/${TEST_NAME} ];then\n'+
+	'\tFILEPATH=${CUR_DIR}/test\n'+
+	'else\n'+
+	'\tFILEPATH=${CUR_DIR}\n'+
+	'fi\n'+
+	'if [ ! -d ${FILEPATH}/log ];then\n'+
+	'\tmkdir ${FILEPATH}/log\n'+
+	'fi\n'+
+	'exec 2>${FILEPATH}/log/${TEST_NAME}_err_${NO}\n'+
+	'export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib\n'+
+	'SERVER_PROGRAM=${FILEPATH}/../target/server.out\n'+
+	'CONFIG_FILE='+config.get(bench,'SERVER_CONFIG')+'\n'+
+	'rm -rf ${FILEPATH}/.db\n'+
+	'${SERVER_PROGRAM} -n 0 -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
+	'PRIMARY_PID=$!\n'+
+	'sleep ${SLEEP_TIME}\n'+
+	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
+	'\t${SERVER_PROGRAM} -n ${i} -m r -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_${i}_${NO} &\n'+
+	'declare NODE_${i}=$!\n'+
+	'done\n'+
+	'sleep ${SLEEP_TIME}\n'+
+	'CLIENT_PROGRAM=${FILEPATH}/../client/client.out\n')
+		for i in range(1,int(config.get(bench,'CLIENT_COUNT'))):
+			testscript.write('${CLIENT_PROGRAM} -n '+str(i)+' -s '+config.get(bench,'CLIENT_IP')+' -p '+config.get(bench,'CLIENT_PORT')+' -r '+config.get(bench,'CLIENT_REPEAT')+' &>/dev/null &\n')
+		testscript.write('sleep ${SLEEP_TIME}\n'+
+	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
+	'for i in $(echo ${!NODE*});do\n'+
+	'\tkill -15 ${!i} &>/dev/null\n'+
+	'done\n'+
+	'LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}\n'+
+	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)')
+	os.system('chmod +x '+config.get(bench,'TEST_NAME'))
 	return
 
 def execBench(cmd, repeats, out_dir,
@@ -185,12 +230,9 @@ def processBench(config, bench):
 		
 	logging.debug("processing: " + bench)
 	specified_evaluation = config.get(bench, 'EVALUATION')
-	apps_name, exec_file = extract_apps_exec(bench, APPS)
+	apps_name, exec_file = extract_apps_exec(config, bench, APPS)
 	logging.debug("app = %s" % apps_name)
 	logging.debug("executible file = %s" % exec_file)
-	if not specified_evaluation and not checkExist(exec_file, os.X_OK):
-		logging.warning("%s does not exist, skip [%s]" % (exec_file, bench))
-		return
 	
 	segs = re.sub(r'(\")|(\.)|/|\'', '', bench).split()
 	dir_name = ""
@@ -212,8 +254,6 @@ def processBench(config, bench):
 	export = config.get(bench, 'EXPORT')
 	if export:
 		logging.debug("export %s", export)
-	
-	# check if this is a server-client app
 
 	# generate command for MSMR [time LD_PRELOAD=... exec args...]
 	msmr_command = ' '.join([export, exec_file] + inputs.split())
@@ -224,17 +264,17 @@ def processBench(config, bench):
 	time1 = []
 	time2 = []
 	for i in range(int(repeats)):
-		log_file_name = MSMR_ROOT+'/test/log/normal_case_test_0_'+inputs.split()[0]+'.log'
+		log_file_name = MSMR_ROOT+'/eval/current/'+config.get(bench,'TEST_NAME')+'_0_'+inputs.split()[0]+config.get(bench,'LOG_SUFFIX')
 		print log_file_name
 		for line in (open(log_file_name, 'r').readlines()):
 			if ',' in line and 'connect' not in line and 'send' not in line and 'receive' not in line and 'close' not in line:
-				time1 += [-float(line.split(',')[1].split('.')[1])+float(line.split(',')[2].split('.')[1])]
-				time2 += [-float(line.split(',')[0].split('.')[1])+float(line.split(',')[3].split('.')[1])]
+				time1 += [(-float(line.split(',')[1])+float(line.split(',')[2]))*1000000]
+				time2 += [(-float(line.split(',')[0])+float(line.split(',')[3]))*1000000]
 	#print time3
 	#print time4
 	write_stats(time1, time2, int(repeats))
 	# copy exec file
-	copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
+	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	
 def workers(semaphore, lock, configs, bench):
 	from multiprocessing import Process

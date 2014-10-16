@@ -132,7 +132,7 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-def write_stats(time1, time2, repeats):
+def write_stats(time1, time2, repeats, first, last):
 	try:
 		import numpy
 	except ImportError:
@@ -148,7 +148,9 @@ def write_stats(time1, time2, repeats):
 		stats.write('\tstd:{0}\n'.format(time1_std))
 		stats.write('Response Time:\n')
 		stats.write('\tmean:{0}us\n'.format(time2_avg))
-		stats.write('\tstd:{0}'.format(time2_std))
+		stats.write('\tstd:{0}\n'.format(time2_std))
+		stats.write('Throughput:\n')
+		stats.write('\t{0}req/s'.format((last-first)*1000000/len(time1)))
 
 def preSetting(config, bench, apps_name):
 	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
@@ -266,13 +268,16 @@ def processBench(config, bench):
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/eval/current/'+config.get(bench,'TEST_NAME')+'_0_'+inputs.split()[0]+config.get(bench,'LOG_SUFFIX')
 		print log_file_name
-		for line in (open(log_file_name, 'r').readlines()):
+		lines = (open(log_file_name, 'r').readlines())
+		first = float(lines[1].split(',')[0])
+		for line in lines:
 			if ',' in line and 'connect' not in line and 'send' not in line and 'receive' not in line and 'close' not in line:
 				time1 += [(-float(line.split(',')[1])+float(line.split(',')[2]))*1000000]
 				time2 += [(-float(line.split(',')[0])+float(line.split(',')[3]))*1000000]
+				last = float(line.split(',')[3])
 	#print time3
 	#print time4
-	write_stats(time1, time2, int(repeats))
+	write_stats(time1, time2, int(repeats), first, last)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

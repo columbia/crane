@@ -34,6 +34,7 @@ def readConfigFile(config_file):
 						       "SECONDARIES_SIZE":"2",
 						       "SERVER_CONFIG":"../libevent_paxos/target/nodes.cfg",
 						       "CLIENT_COUNT":"5",
+						       "CLIENT_SLEEP_TIME":"1",
 						       "CLIENT_IP":"127.0.0.1",
 						       "CLIENT_PORT":"9000",
 						       "CLIENT_REPEAT":"9",
@@ -144,13 +145,13 @@ def write_stats(time1, time2, repeats, first, last):
 	import math
 	with open("stats.txt", "w") as stats:
 		stats.write('Concensus Time:\n')
-		stats.write('\tmean:{0}us\n'.format(time1_avg))
+		stats.write('\tmean:{0} us\n'.format(time1_avg))
 		stats.write('\tstd:{0}\n'.format(time1_std))
 		stats.write('Response Time:\n')
-		stats.write('\tmean:{0}us\n'.format(time2_avg))
+		stats.write('\tmean:{0} us\n'.format(time2_avg))
 		stats.write('\tstd:{0}\n'.format(time2_std))
 		stats.write('Throughput:\n')
-		stats.write('\t{0}req/s'.format((last-first)*1000000/len(time1)))
+		stats.write('\t{0} req/s'.format(len(time1)/(last-first)))
 
 def preSetting(config, bench, apps_name):
 	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
@@ -184,7 +185,7 @@ def preSetting(config, bench, apps_name):
 	'sleep ${SLEEP_TIME}\n'+
 	'CLIENT_PROGRAM=${FILEPATH}/../client/client.out\n')
 		for i in range(1,int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('${CLIENT_PROGRAM} -n '+str(i)+' -s '+config.get(bench,'CLIENT_IP')+' -p '+config.get(bench,'CLIENT_PORT')+' -r '+config.get(bench,'CLIENT_REPEAT')+' &>/dev/null &\n')
+			testscript.write('${CLIENT_PROGRAM} -n '+str(i)+' -s '+config.get(bench,'CLIENT_IP')+' -p '+config.get(bench,'CLIENT_PORT')+' -r '+config.get(bench,'CLIENT_REPEAT')+' -t '+config.get(bench,'CLIENT_SLEEP_TIME')+' &>/dev/null &\n')
 		testscript.write('sleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+

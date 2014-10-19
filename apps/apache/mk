@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 #
@@ -66,9 +67,7 @@ make
 make install
 
 
-# change working folder back
-cd $MSMR_ROOT/apps/apache
-
-
-# write in conf file
-cp httpd.conf ./install/conf
+# change conf file
+cd $MSMR_ROOT/apps/apache/install/conf
+sed -e "s/Listen 80/Listen 8080/g"  httpd.conf > httpd.conf.tmp
+mv httpd.conf.tmp httpd.conf

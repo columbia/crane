@@ -1,0 +1,74 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+# variables
+APR_VER=1.5.1
+UTIL_VER=1.5.4
+HTTPD_VER=2.4.10
+APP_DIR=$MSMR_ROOT/apps/apache
+
+
+# working folder
+cd $APP_DIR
+
+
+# remove folder
+rm -rf httpd-$VER
+
+
+# download and extract
+if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then
+    wget http://mirror.metrocast.net/apache//httpd/httpd-$HTTPD_VER.tar.gz
+fi
+tar zxvf httpd-$HTTPD_VER.tar.gz
+
+
+# build dependencies
+cd httpd-$HTTPD_VER/srclib
+
+if [ ! -f apr-$APR_VER.tar.gz ]; then
+    wget http://apache.mirrors.pair.com//apr/apr-$APR_VER.tar.gz
+fi
+tar zxvf apr-$APR_VER.tar.gz
+mv apr-$APR_VER apr  # rename folder to apr
+
+if [ ! -f apr-util-$UTIL_VER.tar.gz ]; then
+    wget http://apache.mirrors.pair.com//apr/apr-util-$UTIL_VER.tar.gz
+fi
+tar zxvf apr-util-$UTIL_VER.tar.gz
+mv apr-util-$UTIL_VER apr-util  # rename folder to apr-util
+
+
+# build
+cd ../
+mkdir ../install
+./configure --prefix=$APP_DIR/install --with-included-apr
+make
+make install
+
+
+# change working folder back
+cd $MSMR_ROOT/apps/apache
+
+
+# write in conf file
+cp httpd.conf ./install/conf

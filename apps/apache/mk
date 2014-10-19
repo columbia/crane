@@ -34,6 +34,7 @@ cd $APP_DIR
 
 # remove folder
 rm -rf httpd-$VER
+rm -rf install
 
 
 # download and extract

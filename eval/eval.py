@@ -185,7 +185,7 @@ def preSetting(config, bench, apps_name):
 	'sleep ${SLEEP_TIME}\n'+
 	'CLIENT_PROGRAM=${FILEPATH}/../client/client.out\n')
 		for i in range(1,int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('${CLIENT_PROGRAM} -n '+str(i)+' -s '+config.get(bench,'CLIENT_IP')+' -p '+config.get(bench,'CLIENT_PORT')+' -r '+config.get(bench,'CLIENT_REPEAT')+' -t '+config.get(bench,'CLIENT_SLEEP_TIME')+' &>/dev/null &\n')
+			testscript.write('${CLIENT_PROGRAM} -n '+str(i)+' -s '+config.get(bench,'CLIENT_IP')+' -p '+config.get(bench,'CLIENT_PORT')+' -r '+config.get(bench,'CLIENT_REPEAT')+' -i '+config.get(bench,'CLIENT_SLEEP_TIME')+' &>/dev/null &\n')
 		testscript.write('sleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+

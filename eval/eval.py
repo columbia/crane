@@ -133,7 +133,7 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-def write_stats(time1, time2, repeats, first, last):
+def write_stats(time1, time2, repeats, first, last, lengths):
 	try:
 		import numpy
 	except ImportError:
@@ -142,6 +142,8 @@ def write_stats(time1, time2, repeats, first, last):
 	time1_std = numpy.std(time1)
 	time2_avg = numpy.average(time2)
 	time2_std = numpy.std(time2)
+	length_avg = numpy.average(lengths)
+	length_std = numpy.std(lengths)
 	import math
 	with open("stats.txt", "w") as stats:
 		stats.write('Concensus Time:\n')
@@ -151,7 +153,10 @@ def write_stats(time1, time2, repeats, first, last):
 		stats.write('\tmean:{0} us\n'.format(time2_avg))
 		stats.write('\tstd:{0}\n'.format(time2_std))
 		stats.write('Throughput:\n')
-		stats.write('\t{0} req/s'.format(len(time1)/(last-first)))
+		stats.write('\t{0} req/s\n'.format(len(time1)/(last-first)))
+		stats.write('Queue Length:\n')
+		stats.write('\tmean:{0}\n'.format(length_avg))
+		stats.write('\tstd:{0}'.format(length_std))
 
 def preSetting(config, bench, apps_name):
 	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
@@ -192,7 +197,9 @@ def preSetting(config, bench, apps_name):
 	'\tkill -15 ${!i} &>/dev/null\n'+
 	'done\n'+
 	'LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}\n'+
-	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)')
+	'LOG_NAME_0_EXTRA=${FILEPATH}/log/${TEST_NAME}_extra_0_${NO}\n'+
+	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)'+
+	'$(cp ${LOG_NAME_0_EXTRA} $MSMR_ROOT/eval/current/)')
 	os.system('chmod +x '+config.get(bench,'TEST_NAME'))
 	return
 
@@ -266,6 +273,7 @@ def processBench(config, bench):
 	# get stats
 	time1 = []
 	time2 = []
+	lengths = []
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/eval/current/'+config.get(bench,'TEST_NAME')+'_0_'+inputs.split()[0]+config.get(bench,'LOG_SUFFIX')
 		print log_file_name
@@ -276,9 +284,16 @@ def processBench(config, bench):
 				time1 += [(-float(line.split(',')[1])+float(line.split(',')[2]))*1000000]
 				time2 += [(-float(line.split(',')[0])+float(line.split(',')[3]))*1000000]
 				last = float(line.split(',')[3])
+		log_file_name = MSMR_ROOT+'/eval/current/'+config.get(bench,'TEST_NAME')+'_extra_0_'+inputs.split()[0]
+		print log_file_name
+		lines = (open(log_file_name, 'r').readlines())
+		for line in lines:
+			if 'the length' in line:
+				lengths += [float(line.split(' ')[-1])]
 	#print time3
 	#print time4
-	write_stats(time1, time2, int(repeats), first, last)
+	#print lengths
+	write_stats(time1, time2, int(repeats), first, last, lengths)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

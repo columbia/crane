@@ -19,55 +19,25 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 # variables
-APR_VER=1.5.1
-UTIL_VER=1.5.4
-HTTPD_VER=2.4.10
-APP_DIR=$MSMR_ROOT/apps/apache
+SRV_DIR=$MSMR_ROOT/apps/mysql/install
+BEN_DIR=$MSMR_ROOT/apps/mysql/benchmark
 
 
-# working folder
-cd $APP_DIR
+# start server
+cd $SRV_DIR
+support-files/mysql.server start
 
 
-# remove folder
-rm -rf httpd-$VER
-rm -rf install
+# perform test
+cd $BEN_DIR
+bin/sysbench --test=oltp --oltp-table-size=10000 --mysql-socket=/tmp/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password prepare
+bin/sysbench --test=oltp --oltp-table-size=10000 --oltp-test-mode=complex --num-threads=10 --max-time=60 --mysql-socket=/tmp/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password run
+bin/sysbench --test=oltp --mysql-socket=/tmp/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password cleanup
 
 
-# download and extract
-if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then
-    wget http://mirror.metrocast.net/apache//httpd/httpd-$HTTPD_VER.tar.gz
-fi
-tar zxvf httpd-$HTTPD_VER.tar.gz
-
-
-# build dependencies
-cd httpd-$HTTPD_VER/srclib
-
-if [ ! -f apr-$APR_VER.tar.gz ]; then
-    wget http://apache.mirrors.pair.com//apr/apr-$APR_VER.tar.gz
-fi
-tar zxvf apr-$APR_VER.tar.gz
-mv apr-$APR_VER apr  # rename folder to apr
-
-if [ ! -f apr-util-$UTIL_VER.tar.gz ]; then
-    wget http://apache.mirrors.pair.com//apr/apr-util-$UTIL_VER.tar.gz
-fi
-tar zxvf apr-util-$UTIL_VER.tar.gz
-mv apr-util-$UTIL_VER apr-util  # rename folder to apr-util
-
-
-# build
+# stop server
+cd $SRV_DIR
+support-files/mysql.server stop
 cd ../
-mkdir ../install
-./configure --prefix=$APP_DIR/install --with-included-apr
-make
-make install
 
-
-# change conf file
-cd $MSMR_ROOT/apps/apache/install/conf
-sed -e "s/Listen 80/Listen 8080/g"  httpd.conf > httpd.conf.tmp
-mv httpd.conf.tmp httpd.conf

@@ -21,53 +21,64 @@
 
 
 # variables
-APR_VER=1.5.1
-UTIL_VER=1.5.4
-HTTPD_VER=2.4.10
-APP_DIR=$MSMR_ROOT/apps/apache
+APP_VER=5.6.21
+APP_LV2VER=5.6
+APP_DIR=$MSMR_ROOT/apps/mysql
+BEN_VER=0.4.12.5
 
 
 # working folder
 cd $APP_DIR
 
 
-# remove folder
-rm -rf httpd-$VER
-rm -rf install
+# remove folders
+rm -rf mysql-$APP_VER
+rm -rf sysbench-$BEN_VER
 
 
 # download and extract
-if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then
-    wget http://mirror.metrocast.net/apache//httpd/httpd-$HTTPD_VER.tar.gz
+if [ ! -f mysql-$APP_VER.tar.gz ]; then
+    wget http://dev.mysql.com/get/Downloads/MySQL-$APP_LV2VER/mysql-$APP_VER.tar.gz
 fi
-tar zxvf httpd-$HTTPD_VER.tar.gz
+tar zxvf mysql-$APP_VER.tar.gz
 
 
-# build dependencies
-cd httpd-$HTTPD_VER/srclib
-
-if [ ! -f apr-$APR_VER.tar.gz ]; then
-    wget http://apache.mirrors.pair.com//apr/apr-$APR_VER.tar.gz
-fi
-tar zxvf apr-$APR_VER.tar.gz
-mv apr-$APR_VER apr  # rename folder to apr
-
-if [ ! -f apr-util-$UTIL_VER.tar.gz ]; then
-    wget http://apache.mirrors.pair.com//apr/apr-util-$UTIL_VER.tar.gz
-fi
-tar zxvf apr-util-$UTIL_VER.tar.gz
-mv apr-util-$UTIL_VER apr-util  # rename folder to apr-util
-
-
-# build
-cd ../
+# build mysql
+cd mysql-$APP_VER
 mkdir ../install
-./configure --prefix=$APP_DIR/install --with-included-apr
+mkdir ../install/data
+mkdir ../install/etc
+cmake -D MYSQL_DATADIR=$MSMR_ROOT/apps/mysql/install/data -D SYSCONFDIR=$MSMR_ROOT/apps/mysql/install/etc -D CMAKE_INSTALL_PREFIX=$MSMR_ROOT/apps/mysql/install .
+make
+make install
+cd ../install
+scripts/mysql_install_db
+
+
+# set root user and create dbtest
+support-files/mysql.server start
+bin/mysqladmin -u root password 'password'
+bin/mysql -uroot -ppassword -e "CREATE DATABASE dbtest;"
+support-files/mysql.server stop
+
+
+# download and extract sysbench benchmark
+cd ../
+if [ ! -f sysbench-$BEN_VER.tar.gz ]; then
+    wget http://downloads.mysql.com/source/sysbench-$BEN_VER.tar.gz
+fi
+if [ ! -f sysbench-$BEN_VER.tar ]; then
+    gunzip sysbench-$BEN_VER.tar.gz
+fi
+tar xvf sysbench-$BEN_VER.tar
+
+
+# build benchmark
+mkdir benchmark
+cd sysbench-$BEN_VER
+./autogen.sh
+./configure --prefix=$MSMR_ROOT/apps/mysql/benchmark --with-mysql-includes=$MSMR_ROOT/apps/mysql/install/include --with-mysql-libs=$MSMR_ROOT/apps/mysql/install/lib
 make
 make install
 
 
-# change conf file
-cd $MSMR_ROOT/apps/apache/install/conf
-sed -e "s/Listen 80/Listen 8080/g"  httpd.conf > httpd.conf.tmp
-mv httpd.conf.tmp httpd.conf

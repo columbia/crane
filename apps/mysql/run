@@ -24,20 +24,23 @@ SRV_DIR=$MSMR_ROOT/apps/mysql/install
 BEN_DIR=$MSMR_ROOT/apps/mysql/benchmark
 
 
-# start server
+# start server, wait till socket is there
 cd $SRV_DIR
-support-files/mysql.server start
+bin/mysqld --defaults-file=$SRV_DIR/my.cnf --basedir=$SRV_DIR --datadir=$SRV_DIR/data --log-error=$SRV_DIR/data/mysql.err --pid-file=$SRV_DIR/mysql.pid --socket=$SRV_DIR/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
+while [ ! -S $APP_DIR/install/mysql.sock ] ; do
+    sleep 1
+done;
 
 
 # perform test
 cd $BEN_DIR
-bin/sysbench --test=oltp --oltp-table-size=10000 --mysql-socket=/tmp/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password prepare
-bin/sysbench --test=oltp --oltp-table-size=10000 --oltp-test-mode=complex --num-threads=10 --max-time=60 --mysql-socket=/tmp/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password run
-bin/sysbench --test=oltp --mysql-socket=/tmp/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password cleanup
+bin/sysbench --test=oltp --oltp-table-size=10000 --mysql-socket=$SRV_DIR/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password prepare
+bin/sysbench --test=oltp --oltp-table-size=10000 --oltp-test-mode=complex --num-threads=10 --max-time=60 --mysql-socket=$SRV_DIR/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password run
+bin/sysbench --test=oltp --mysql-socket=$SRV_DIR/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password cleanup
 
 
 # stop server
 cd $SRV_DIR
-support-files/mysql.server stop
+bin/mysqladmin --user=root --password=password --socket=$SRV_DIR/mysql.sock shutdown
 cd ../
 

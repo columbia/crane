@@ -34,7 +34,8 @@ cd $APP_DIR
 # remove folders
 rm -rf mysql-$APP_VER
 rm -rf sysbench-$BEN_VER
-
+rm -rf install
+rm -rf benchmark
 
 # download and extract
 if [ ! -f mysql-$APP_VER.tar.gz ]; then
@@ -48,18 +49,41 @@ cd mysql-$APP_VER
 mkdir ../install
 mkdir ../install/data
 mkdir ../install/etc
-cmake -D MYSQL_DATADIR=$MSMR_ROOT/apps/mysql/install/data -D SYSCONFDIR=$MSMR_ROOT/apps/mysql/install/etc -D CMAKE_INSTALL_PREFIX=$MSMR_ROOT/apps/mysql/install .
+cmake -D MYSQL_DATADIR=$APP_DIR/install/data -D SYSCONFDIR=$APP_DIR/install/etc -D CMAKE_INSTALL_PREFIX=$APP_DIR/install -D MYSQL_TCP_PORT=3366 -D MYSQL_UNIX_ADDR=/tmp/mysql.sock .
 make
 make install
 cd ../install
-scripts/mysql_install_db
+
+
+# write config file
+echo "[mysqld]" >> my.cnf
+echo "basedir = $APP_DIR/install" >> my.cnf
+echo "datadir = $APP_DIR/install/data" >> my.cnf
+echo "port = 3366" >> my.cnf
+echo "socket = $APP_DIR/install/mysql.sock" >> my.cnf
+echo "sql_mode = NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES" >> my.cnf
+echo >> my.cnf
+
+
+# configure mysql install
+scripts/mysql_install_db --basedir=$APP_DIR/install --datadir=$APP_DIR/install/data --defaults-file=$APP_DIR/install/my.cnf
+rm my-new.cnf
+
+
+# start server, wait till socket is there
+bin/mysqld --defaults-file=$APP_DIR/install/my.cnf --basedir=$APP_DIR/install --datadir=$APP_DIR/install/data --log-error=$APP_DIR/install/data/mysql.err --pid-file=$APP_DIR/mysql.pid --socket=$APP_DIR/install/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
+while [ ! -S $APP_DIR/install/mysql.sock ] ; do
+    sleep 1
+done;
 
 
 # set root user and create dbtest
-support-files/mysql.server start
-bin/mysqladmin -u root password 'password'
-bin/mysql -uroot -ppassword -e "CREATE DATABASE dbtest;"
-support-files/mysql.server stop
+bin/mysqladmin -u root password 'password' --socket=$APP_DIR/install/mysql.sock
+bin/mysql --defaults-file=$APP_DIR/install/my.cnf --socket=$APP_DIR/install/mysql.sock -uroot -ppassword -e "CREATE DATABASE dbtest;"
+
+
+# shutdown server
+bin/mysqladmin --user=root --password=password --socket=$APP_DIR/install/mysql.sock shutdown
 
 
 # download and extract sysbench benchmark
@@ -77,8 +101,7 @@ tar xvf sysbench-$BEN_VER.tar
 mkdir benchmark
 cd sysbench-$BEN_VER
 ./autogen.sh
-./configure --prefix=$MSMR_ROOT/apps/mysql/benchmark --with-mysql-includes=$MSMR_ROOT/apps/mysql/install/include --with-mysql-libs=$MSMR_ROOT/apps/mysql/install/lib
+./configure --prefix=$APP_DIR/benchmark --with-mysql-includes=$APP_DIR/install/include --with-mysql-libs=$APP_DIR/install/lib
 make
 make install
-
 

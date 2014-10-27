@@ -27,9 +27,10 @@ BEN_DIR=$MSMR_ROOT/apps/mysql/benchmark
 # start server, wait till socket is there
 cd $SRV_DIR
 bin/mysqld --defaults-file=$SRV_DIR/my.cnf --basedir=$SRV_DIR --datadir=$SRV_DIR/data --log-error=$SRV_DIR/data/mysql.err --pid-file=$SRV_DIR/mysql.pid --socket=$SRV_DIR/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
-while [ ! -S $APP_DIR/install/mysql.sock ] ; do
-    sleep 1
-done;
+sleep 5
+# while [ ! -S $APP_DIR/install/mysql.sock ] ; do
+#     sleep 1
+# done;
 
 
 # perform test

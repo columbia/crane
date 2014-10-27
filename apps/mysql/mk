@@ -72,9 +72,10 @@ rm my-new.cnf
 
 # start server, wait till socket is there
 bin/mysqld --defaults-file=$APP_DIR/install/my.cnf --basedir=$APP_DIR/install --datadir=$APP_DIR/install/data --log-error=$APP_DIR/install/data/mysql.err --pid-file=$APP_DIR/mysql.pid --socket=$APP_DIR/install/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
-while [ ! -S $APP_DIR/install/mysql.sock ] ; do
-    sleep 1
-done;
+sleep 5
+# while [ ! -S $APP_DIR/install/mysql.sock ] ; do
+#     sleep 1
+# done;
 
 
 # set root user and create dbtest

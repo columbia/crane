@@ -1,0 +1,14 @@
+diff -ruN openldap-2.4.33/obj/tests/Makefile openldap-2.4.33-modified/obj/tests/Makefile
+--- openldap-2.4.33/obj/tests/Makefile	2013-01-16 18:08:37.144769634 -0500
++++ openldap-2.4.33-modified/obj/tests/Makefile	2013-01-16 18:08:22.844770146 -0500
+@@ -277,8 +277,8 @@
+ # test primary backends (default)
+ test tests:
+ 	@$(MAKE) bdb
+-	@$(MAKE) hdb
+-	@$(MAKE) mdb
++#	@$(MAKE) hdb
++#	@$(MAKE) mdb
+ 
+ # test all backends
+ alltests: tests

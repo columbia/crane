@@ -1,0 +1,16 @@
+--- openldap-2.4.33/servers/slapd/result.c	2012-10-10 08:18:49.000000000 -0400
++++ openldap-2.4.33-modified/servers/slapd/result.c	2013-09-06 18:14:28.193971527 -0400
+@@ -332,6 +332,13 @@
+ 				ret = 0;
+ 				break;
+ 			}
++			sleep(0);/* Heming: annotation for the parrot+dbug interface
++				This thread will keep trylock and fail and all other
++				threads are blocking on dbug's recv(). Our interface
++				does not enforce RR, but gives higher priority to parrot.
++				So this annotation is for breaking this and deliver this thread
++				to dbug, so that this issue can be resolved nicely.
++				*/
+ 			continue;
+ 		}
+ 

@@ -32,8 +32,11 @@ def readConfigFile(config_file):
 						       "LOG_SUFFIX":".log",
 						       "SLEEP_TIME":"5",
 						       "SECONDARIES_SIZE":"2",
+						       "SERVER_COUNT":"1",
+						       "SERVER_START_PORT":"",
 						       "SERVER_CONFIG":"../libevent_paxos/target/nodes.cfg",
 						       "CLIENT_COUNT":"5",
+						       "CLIENT_PROGRAM":"",
 						       "CLIENT_SLEEP_TIME":"1",
 						       "CLIENT_IP":"127.0.0.1",
 						       "CLIENT_PORT":"9000",
@@ -180,25 +183,33 @@ def preSetting(config, bench, apps_name):
 	'SERVER_PROGRAM=${FILEPATH}/../target/server.out\n'+
 	'CONFIG_FILE='+config.get(bench,'SERVER_CONFIG')+'\n'+
 	'rm -rf ${FILEPATH}/.db\n'+
-	'${SERVER_PROGRAM} -n 0 -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
+	'REAL_SERVER_PROGRAM=${FILEPATH}/../client-ld-preload/Mongoose_Aget/mongoose/mongoose\n')
+		for i in range(1, int(config.get(bench,'SERVER_COUNT'))+1):
+			testscript.write('${REAL_SERVER_PROGRAM} -p ' + str(int(config.get(bench,'SERVER_START_PORT'))+i) +' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
+		testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
 	'PRIMARY_PID=$!\n'+
-	'sleep ${SLEEP_TIME}\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
-	'\t${SERVER_PROGRAM} -n ${i} -m r -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_${i}_${NO} &\n'+
+	'\t${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_${i}_${NO} &\n'+
 	'declare NODE_${i}=$!\n'+
 	'done\n'+
+	'echo "sleep some time"\n'+
 	'sleep ${SLEEP_TIME}\n'+
-	'CLIENT_PROGRAM=${FILEPATH}/../client/client.out\n')
-		for i in range(1,int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('${CLIENT_PROGRAM} -n '+str(i)+' -s '+config.get(bench,'CLIENT_IP')+' -p '+config.get(bench,'CLIENT_PORT')+' -r '+config.get(bench,'CLIENT_REPEAT')+' -i '+config.get(bench,'CLIENT_SLEEP_TIME')+' &>/dev/null &\n')
-		testscript.write('sleep ${SLEEP_TIME}\n'+
+	'CLIENT_PROGRAM='+config.get(bench, 'CLIENT_PROGRAM')+'\n')
+		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
+			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} -f -n2 -p 9000 http://localhost/'+config.get(bench,'TEST_FILE')+'\n')
+		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+
 	'\tkill -15 ${!i} &>/dev/null\n'+
 	'done\n'+
-	'LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}\n'+
+	'for i in $(echo ${!SERVER*});do\n'+
+	'\tkill -9 ${!i} &>/dev/null\n'+
+	'done\n')
+		for i in range(1,int(config.get(bench,'SERVER_COUNT'))+1):
+			testscript.write('kill -9 ${REAL_SERVER_PID_'+str(i)+'} &>/dev/null\n')
+		testscript.write('LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}\n'+
 	'LOG_NAME_0_EXTRA=${FILEPATH}/log/${TEST_NAME}_extra_0_${NO}\n'+
-	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)'+
+	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)\n'+
 	'$(cp ${LOG_NAME_0_EXTRA} $MSMR_ROOT/eval/current/)')
 	os.system('chmod +x '+config.get(bench,'TEST_NAME'))
 	return

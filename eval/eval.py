@@ -34,13 +34,15 @@ def readConfigFile(config_file):
 						       "SECONDARIES_SIZE":"2",
 						       "SERVER_COUNT":"1",
 						       "SERVER_START_PORT":"",
+						       "SERVER_INPUT":"",
 						       "SERVER_CONFIG":"../libevent_paxos/target/nodes.cfg",
 						       "CLIENT_COUNT":"5",
 						       "CLIENT_PROGRAM":"",
+						       "CLIENT_INPUT":"",
 						       "CLIENT_SLEEP_TIME":"1",
 						       "CLIENT_IP":"127.0.0.1",
 						       "CLIENT_PORT":"9000",
-						       "CLIENT_REPEAT":"9",
+						       "CLIENT_REPEAT":"1",
 						       "EVALUATION":""})
 		ret = newConfig.read(config_file)
 	except ConfigParser.MissingSectionHeaderError as e:
@@ -183,9 +185,9 @@ def preSetting(config, bench, apps_name):
 	'SERVER_PROGRAM=${FILEPATH}/../target/server.out\n'+
 	'CONFIG_FILE='+config.get(bench,'SERVER_CONFIG')+'\n'+
 	'rm -rf ${FILEPATH}/.db\n'+
-	'REAL_SERVER_PROGRAM=${FILEPATH}/../client-ld-preload/Mongoose_Aget/mongoose/mongoose\n')
+	'REAL_SERVER_PROGRAM=$MSMR_ROOT/apps/'+bench.split(' ')[0]+'/'+bench.split(' ')[1]+'\n')
 		for i in range(1, int(config.get(bench,'SERVER_COUNT'))+1):
-			testscript.write('${REAL_SERVER_PROGRAM} -p ' + str(int(config.get(bench,'SERVER_START_PORT'))+i) +' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
+			testscript.write('${REAL_SERVER_PROGRAM} '+config.get(bench, 'SERVER_INPUT').replace('<port>', str(int(config.get(bench,'SERVER_START_PORT'))+i))+' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
 		testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
@@ -196,7 +198,7 @@ def preSetting(config, bench, apps_name):
 	'sleep ${SLEEP_TIME}\n'+
 	'CLIENT_PROGRAM='+config.get(bench, 'CLIENT_PROGRAM')+'\n')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} -f -n2 -p 9000 http://localhost/'+config.get(bench,'TEST_FILE')+'\n')
+			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} '+config.get(bench,'CLIENT_INPUT')+'\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+

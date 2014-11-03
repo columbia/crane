@@ -104,7 +104,7 @@ def extract_apps_exec(config, bench, apps_dir=""):
 	elif apps.__len__() == 1:
 		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0])
 	else:
-		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0]+'_'+apps[1]+'/'+config.get(bench,"TEST_NAME"))
+		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0]+'_'+apps[1].replace('/','')+'/'+config.get(bench,"TEST_NAME"))
 
 def generate_local_options(config, bench):
 	config_options = config.options(bench)

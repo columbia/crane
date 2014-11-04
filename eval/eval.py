@@ -25,7 +25,7 @@ def getConfigFullPath(config_file):
 def readConfigFile(config_file):
 	try:
 		newConfig = ConfigParser.ConfigParser({"REPEATS":"1",
-						       "INPUTS":"",
+						       "TEST_ID":"",
 						       "EXPORT":"",
 						       "TEST_NAME":"",
 						       "NO":"",
@@ -35,7 +35,7 @@ def readConfigFile(config_file):
 						       "SERVER_COUNT":"1",
 						       "SERVER_START_PORT":"",
 						       "SERVER_INPUT":"",
-						       "SERVER_CONFIG":"../libevent_paxos/target/nodes.cfg",
+						       "SYSTEM_CONFIG":"../libevent_paxos/target/nodes.cfg",
 						       "CLIENT_COUNT":"5",
 						       "CLIENT_PROGRAM":"",
 						       "CLIENT_INPUT":"",
@@ -147,8 +147,9 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 	time1_std = numpy.std(time1)
 	time2_avg = numpy.average(time2)
 	time2_std = numpy.std(time2)
-	length_avg = numpy.average(lengths)
-	length_std = numpy.std(lengths)
+	if len(lengths) > 0:
+		length_avg = numpy.average(lengths)
+		length_std = numpy.std(lengths)
 	import math
 	with open("stats.txt", "w") as stats:
 		stats.write('Concensus Time:\n')
@@ -159,9 +160,10 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 		stats.write('\tstd:{0}\n'.format(time2_std))
 		stats.write('Throughput:\n')
 		stats.write('\t{0} req/s\n'.format(len(time1)/(last-first)))
-		stats.write('Queue Length:\n')
-		stats.write('\tmean:{0}\n'.format(length_avg))
-		stats.write('\tstd:{0}'.format(length_std))
+		if len(lengths) > 0:
+			stats.write('Queue Length:\n')
+			stats.write('\tmean:{0}\n'.format(length_avg))
+			stats.write('\tstd:{0}'.format(length_std))
 
 def preSetting(config, bench, apps_name):
 	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
@@ -171,7 +173,7 @@ def preSetting(config, bench, apps_name):
 	'CUR_DIR=$MSMR_ROOT/libevent_paxos\n'+
 	'LOG_SUFFIX='+config.get(bench,'LOG_SUFFIX')+'\n'+
 	'SLEEP_TIME='+config.get(bench,'SLEEP_TIME')+'\n'+
-	'SECONDARIES_SIZE='+config.get(bench,'SECONDARIES_SIZE')+'\n'+
+	'SECONDARIES_SIZE='+str(int(config.get(bench,'SERVER_COUNT'))-1)+'\n'+
 	'if [ ! -e ${CUR_DIR}/${TEST_NAME} ];then\n'+
 	'\tFILEPATH=${CUR_DIR}/test\n'+
 	'else\n'+
@@ -183,11 +185,10 @@ def preSetting(config, bench, apps_name):
 	'exec 2>${FILEPATH}/log/${TEST_NAME}_err_${NO}\n'+
 	'export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib\n'+
 	'SERVER_PROGRAM=${FILEPATH}/../target/server.out\n'+
-	'CONFIG_FILE='+config.get(bench,'SERVER_CONFIG')+'\n'+
-	'rm -rf ${FILEPATH}/.db\n'+
-	'REAL_SERVER_PROGRAM=$MSMR_ROOT/apps/'+bench.split(' ')[0]+'/'+bench.split(' ')[1]+'\n')
+	'CONFIG_FILE='+config.get(bench,'SYSTEM_CONFIG')+'\n'+
+	'rm -rf ${FILEPATH}/.db\n')
 		for i in range(1, int(config.get(bench,'SERVER_COUNT'))+1):
-			testscript.write('${REAL_SERVER_PROGRAM} '+config.get(bench, 'SERVER_INPUT').replace('<port>', str(int(config.get(bench,'SERVER_START_PORT'))+i))+' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
+			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',str(int(config.get(bench,'SERVER_START_PORT'))+i))+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', str(int(config.get(bench,'SERVER_START_PORT'))+i))+' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
 		testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
@@ -198,7 +199,7 @@ def preSetting(config, bench, apps_name):
 	'sleep ${SLEEP_TIME}\n'+
 	'CLIENT_PROGRAM='+config.get(bench, 'CLIENT_PROGRAM')+'\n')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} '+config.get(bench,'CLIENT_INPUT')+'\n')
+			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} '+config.get(bench,'CLIENT_INPUT')+' &\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+
@@ -264,7 +265,7 @@ def processBench(config, bench):
 	os.chdir(dir_name)
 	
 	generate_local_options(config, bench)
-	inputs = config.get(bench, 'inputs')
+	inputs = config.get(bench, 'TEST_ID')
 	repeats = config.get(bench, 'repeats')
 	
 	if specified_evaluation:

@@ -28,13 +28,17 @@ def readConfigFile(config_file):
 						       "TEST_ID":"",
 						       "EXPORT":"",
 						       "TEST_NAME":"",
+						       "TEST_FILE":"",
 						       "NO":"",
+						       "PROXY_MODE":"1",
 						       "LOG_SUFFIX":".log",
 						       "SLEEP_TIME":"5",
 						       "SECONDARIES_SIZE":"2",
 						       "SERVER_COUNT":"1",
 						       "SERVER_START_PORT":"",
 						       "SERVER_INPUT":"",
+						       "SERVER_DIRECTORY":"",
+						       "SERVER_KILL":"",
 						       "SYSTEM_CONFIG":"../libevent_paxos/target/nodes.cfg",
 						       "CLIENT_COUNT":"5",
 						       "CLIENT_PROGRAM":"",
@@ -166,6 +170,15 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 			stats.write('\tstd:{0}'.format(length_std))
 
 def preSetting(config, bench, apps_name):
+	for i in range(int(config.get(bench,'SERVER_COUNT'))):
+		mkdir_p('../'+str(7000+i))
+	if config.get(bench, 'TEST_FILE') != "":
+		with open(config.get(bench,'TEST_FILE'), "w") as testfile:
+			for i in range(100000):
+				testfile.write("a")
+		for i in range(int(config.get(bench,'SERVER_COUNT'))):
+			copy_file(config.get(bench,'TEST_FILE'), '../'+str(7000+i)+'/')
+
 	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
 		testscript.write('#! /bin/bash\n'+
 	'TEST_NAME='+config.get(bench,'TEST_NAME')+'\n'+
@@ -189,17 +202,22 @@ def preSetting(config, bench, apps_name):
 	'rm -rf ${FILEPATH}/.db\n')
 		for i in range(1, int(config.get(bench,'SERVER_COUNT'))+1):
 			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',str(int(config.get(bench,'SERVER_START_PORT'))+i))+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', str(int(config.get(bench,'SERVER_START_PORT'))+i))+' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
-		testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
+		if config.get(bench,'PROXY_MODE')=='1':
+			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
 	'\t${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_${i}_${NO} &\n'+
 	'declare NODE_${i}=$!\n'+
-	'done\n'+
-	'echo "sleep some time"\n'+
+	'done\n')
+		testscript.write('echo "sleep some time"\n'+
 	'sleep ${SLEEP_TIME}\n'+
 	'CLIENT_PROGRAM='+config.get(bench, 'CLIENT_PROGRAM')+'\n')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} '+config.get(bench,'CLIENT_INPUT')+' &\n')
+			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} ')
+			if config.get(bench,'PROXY_MODE')=='1':
+				testscript.write(config.get(bench,'CLIENT_INPUT')+' &\n')
+			else:
+				testscript.write(config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+
@@ -210,6 +228,8 @@ def preSetting(config, bench, apps_name):
 	'done\n')
 		for i in range(1,int(config.get(bench,'SERVER_COUNT'))+1):
 			testscript.write('kill -9 ${REAL_SERVER_PID_'+str(i)+'} &>/dev/null\n')
+			if config.get(bench, 'SERVER_KILL') != "":
+				testscript.write(config.get(bench,'SERVER_KILL').replace('<port>',str(i+int(config.get(bench,'SERVER_START_PORT'))))+'\n')
 		testscript.write('LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}\n'+
 	'LOG_NAME_0_EXTRA=${FILEPATH}/log/${TEST_NAME}_extra_0_${NO}\n'+
 	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)\n'+
@@ -220,8 +240,9 @@ def preSetting(config, bench, apps_name):
 def execBench(cmd, repeats, out_dir,
 	      client_cmd="", client_terminate_server=False,
 	      init_env_cmd=""):
-	mkdir_p(out_dir)
+	mkdir_p(out_dir.replace('<port>',''))
 	for i in range(int(repeats)):
+		print cmd
 		sys.stderr.write("        PROGRESS: %5d/%d\r" % (i+1, int(repeats)))
 		with open('%s/output.%d' % (out_dir, i), 'w', 102400) as log_file:
 			if init_env_cmd:
@@ -261,6 +282,7 @@ def processBench(config, bench):
 	segs = re.sub(r'(\")|(\.)|/|\'', '', bench).split()
 	dir_name = ""
 	dir_name += '_'.join(segs)
+	dir_name = dir_name.replace('<port>','')
 	mkdir_p(dir_name)
 	os.chdir(dir_name)
 	
@@ -282,7 +304,7 @@ def processBench(config, bench):
 	# generate command for MSMR [time LD_PRELOAD=... exec args...]
 	msmr_command = ' '.join([export, exec_file] + inputs.split())
 	logging.info("executing '%s'" % msmr_command)
-	execBench(msmr_command, repeats, 'msmr')
+	execBench(msmr_command.replace('<port>',''), repeats, 'msmr')
 		
 	# get stats
 	time1 = []

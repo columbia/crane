@@ -31,6 +31,7 @@ def readConfigFile(config_file):
 						       "TEST_FILE":"",
 						       "NO":"",
 						       "PROXY_MODE":"WITH_PROXY",
+						       "DEBUG_MODE":"WITHOUT_DEBUG",
 						       "LOG_SUFFIX":".log",
 						       "SLEEP_TIME":"5",
 						       "SECONDARIES_SIZE":"0",
@@ -213,7 +214,9 @@ def preSetting(config, bench, apps_name):
 				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')
 			else:
 				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
-			#testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output.${LOG_SUFFIX}\n')
+			if config.get(bench,'DEBUG_MODE')=='WITH_DEBUG':
+				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output.${LOG_SUFFIX}')
+			testscript.write('\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+
@@ -305,6 +308,8 @@ def processBench(config, bench):
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/'+bench.replace(' ','').replace('<port>','').replace('/','')+'_0_'+inputs+config.get(bench,'LOG_SUFFIX')
 		print log_file_name
+		if not os.path.isfile(log_file_name):
+			break
 		lines = (open(log_file_name, 'r').readlines())
 		first = 0
 		for line in lines:
@@ -324,7 +329,8 @@ def processBench(config, bench):
 	#print time3
 	#print time4
 	#print lengths
-	write_stats(time1, time2, int(repeats), first, last, lengths)
+	if len(time1) > 0:
+		write_stats(time1, time2, int(repeats), first, last, lengths)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

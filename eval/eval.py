@@ -25,22 +25,21 @@ def getConfigFullPath(config_file):
 def readConfigFile(config_file):
 	try:
 		newConfig = ConfigParser.ConfigParser({"REPEATS":"1",
-						       "TEST_ID":"",
+						       "TEST_ID":"1",
 						       "EXPORT":"",
 						       "TEST_NAME":"",
 						       "TEST_FILE":"",
 						       "NO":"",
-						       "PROXY_MODE":"1",
+						       "PROXY_MODE":"WITH_PROXY",
 						       "LOG_SUFFIX":".log",
 						       "SLEEP_TIME":"5",
-						       "SECONDARIES_SIZE":"2",
+						       "SECONDARIES_SIZE":"0",
 						       "SERVER_COUNT":"1",
-						       "SERVER_START_PORT":"",
+						       "SERVER_START_PORT":"7000",
 						       "SERVER_INPUT":"",
-						       "SERVER_DIRECTORY":"",
 						       "SERVER_KILL":"",
-						       "SYSTEM_CONFIG":"../libevent_paxos/target/nodes.cfg",
-						       "CLIENT_COUNT":"5",
+						       "SYSTEM_CONFIG":"$MSMR_ROOT/libevent_paxos/target/nodes.cfg",
+						       "CLIENT_COUNT":"1",
 						       "CLIENT_PROGRAM":"",
 						       "CLIENT_INPUT":"",
 						       "CLIENT_SLEEP_TIME":"1",
@@ -108,7 +107,7 @@ def extract_apps_exec(config, bench, apps_dir=""):
 	elif apps.__len__() == 1:
 		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0])
 	else:
-		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0]+'_'+apps[1].replace('/','')+'/'+config.get(bench,"TEST_NAME"))
+		return apps[0], os.path.abspath(apps_dir + '/eval/current/' +apps[0]+'_'+apps[1].replace('/','')+'/'+bench.replace(' ','').replace('/','').replace('<port>',''))
 
 def generate_local_options(config, bench):
 	config_options = config.options(bench)
@@ -168,56 +167,53 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 			stats.write('Queue Length:\n')
 			stats.write('\tmean:{0}\n'.format(length_avg))
 			stats.write('\tstd:{0}'.format(length_std))
+	os.system('cat stats.txt')
 
 def preSetting(config, bench, apps_name):
 	for i in range(int(config.get(bench,'SERVER_COUNT'))):
-		mkdir_p('../'+str(7000+i))
+		mkdir_p('../server'+str(7000+i))
+	for i in range(int(config.get(bench,'CLIENT_COUNT'))):
+		mkdir_p('../client'+str(int(i)+1))
 	if config.get(bench, 'TEST_FILE') != "":
-		with open(config.get(bench,'TEST_FILE'), "w") as testfile:
-			for i in range(100000):
-				testfile.write("a")
 		for i in range(int(config.get(bench,'SERVER_COUNT'))):
-			copy_file(config.get(bench,'TEST_FILE'), '../'+str(7000+i)+'/')
-
-	with open(config.get(bench,'TEST_NAME'), "w") as testscript:
+			copy_file(config.get(bench,'TEST_FILE'), '../server'+str(7000+i)+'/')
+	if config.get(bench, 'CLIENT_PROGRAM') != "":
+		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
+			copy_file(config.get(bench,'CLIENT_PROGRAM'),'../client'+str(int(i)+1)+'/client')
+	testname = bench.replace(' ','').replace('<port>','').replace('/','')
+	with open(testname, "w") as testscript:
 		testscript.write('#! /bin/bash\n'+
-	'TEST_NAME='+config.get(bench,'TEST_NAME')+'\n'+
+	'TEST_NAME='+testname+'\n'+
 	'NO=${1}\n'+
-	'CUR_DIR=$MSMR_ROOT/libevent_paxos\n'+
 	'LOG_SUFFIX='+config.get(bench,'LOG_SUFFIX')+'\n'+
 	'SLEEP_TIME='+config.get(bench,'SLEEP_TIME')+'\n'+
 	'SECONDARIES_SIZE='+str(int(config.get(bench,'SERVER_COUNT'))-1)+'\n'+
-	'if [ ! -e ${CUR_DIR}/${TEST_NAME} ];then\n'+
-	'\tFILEPATH=${CUR_DIR}/test\n'+
-	'else\n'+
-	'\tFILEPATH=${CUR_DIR}\n'+
+	'if [ ! -d ./log ];then\n'+
+	'\tmkdir ./log\n'+
 	'fi\n'+
-	'if [ ! -d ${FILEPATH}/log ];then\n'+
-	'\tmkdir ${FILEPATH}/log\n'+
-	'fi\n'+
-	'exec 2>${FILEPATH}/log/${TEST_NAME}_err_${NO}\n'+
-	'export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib\n'+
-	'SERVER_PROGRAM=${FILEPATH}/../target/server.out\n'+
-	'CONFIG_FILE='+config.get(bench,'SYSTEM_CONFIG')+'\n'+
-	'rm -rf ${FILEPATH}/.db\n')
-		for i in range(1, int(config.get(bench,'SERVER_COUNT'))+1):
-			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',str(int(config.get(bench,'SERVER_START_PORT'))+i))+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', str(int(config.get(bench,'SERVER_START_PORT'))+i))+' &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
-		if config.get(bench,'PROXY_MODE')=='1':
-			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &\n'+
+	'exec 2>./log/${TEST_NAME}_err_${NO}\n'+
+	'export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib\n'+
+	'SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out\n'+
+	'CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/nodes.cfg\n'+
+	'rm -rf $MSMR_ROOT/libevent_paxos/.db\n')
+		for i in range(int(config.get(bench,'SERVER_COUNT'))):
+			port = str(int(config.get(bench,'SERVER_START_PORT'))+i)
+			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',port)+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', port)+' &> ../server'+port+'/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
+		if config.get(bench,'PROXY_MODE')=='WITH_PROXY':
+			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>./log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>./log/${TEST_NAME}_extra_0_${NO} &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
-	'\t${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_${i}_${NO} &\n'+
+	'\t${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} 1>./log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>./log/${TEST_NAME}_extra_${i}_${NO} &\n'+
 	'declare NODE_${i}=$!\n'+
 	'done\n')
 		testscript.write('echo "sleep some time"\n'+
-	'sleep ${SLEEP_TIME}\n'+
-	'CLIENT_PROGRAM='+config.get(bench, 'CLIENT_PROGRAM')+'\n')
+	'sleep ${SLEEP_TIME}\n')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			testscript.write('LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} ')
-			if config.get(bench,'PROXY_MODE')=='1':
-				testscript.write(config.get(bench,'CLIENT_INPUT')+' &\n')
+			if config.get(bench,'PROXY_MODE')=='WITH_PROXY':
+				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')
 			else:
-				testscript.write(config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &\n')
+				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
+			#testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output.${LOG_SUFFIX}\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
 	'for i in $(echo ${!NODE*});do\n'+
@@ -230,11 +226,7 @@ def preSetting(config, bench, apps_name):
 			testscript.write('kill -9 ${REAL_SERVER_PID_'+str(i)+'} &>/dev/null\n')
 			if config.get(bench, 'SERVER_KILL') != "":
 				testscript.write(config.get(bench,'SERVER_KILL').replace('<port>',str(i+int(config.get(bench,'SERVER_START_PORT'))))+'\n')
-		testscript.write('LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}\n'+
-	'LOG_NAME_0_EXTRA=${FILEPATH}/log/${TEST_NAME}_extra_0_${NO}\n'+
-	'$(cp ${LOG_NAME_0} $MSMR_ROOT/eval/current/)\n'+
-	'$(cp ${LOG_NAME_0_EXTRA} $MSMR_ROOT/eval/current/)')
-	os.system('chmod +x '+config.get(bench,'TEST_NAME'))
+	os.system('chmod +x '+testname)
 	return
 
 def execBench(cmd, repeats, out_dir,
@@ -311,16 +303,19 @@ def processBench(config, bench):
 	time2 = []
 	lengths = []
 	for i in range(int(repeats)):
-		log_file_name = MSMR_ROOT+'/eval/current/'+config.get(bench,'TEST_NAME')+'_0_'+inputs.split()[0]+config.get(bench,'LOG_SUFFIX')
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/'+bench.replace(' ','').replace('<port>','').replace('/','')+'_0_'+inputs+config.get(bench,'LOG_SUFFIX')
 		print log_file_name
 		lines = (open(log_file_name, 'r').readlines())
-		first = float(lines[1].split(',')[0])
+		first = 0
 		for line in lines:
-			if ',' in line and 'connect' not in line and 'send' not in line and 'receive' not in line and 'close' not in line:
-				time1 += [(-float(line.split(',')[1])+float(line.split(',')[2]))*1000000]
-				time2 += [(-float(line.split(',')[0])+float(line.split(',')[3]))*1000000]
-				last = float(line.split(',')[3])
-		log_file_name = MSMR_ROOT+'/eval/current/'+config.get(bench,'TEST_NAME')+'_extra_0_'+inputs.split()[0]
+			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
+			if match:
+				if first == 0:
+					first = float(match.group(1))
+				time1 += [(-float(match.group(2))+float(match.group(3)))*1000000]
+				time2 += [(-float(match.group(1))+float(match.group(4)))*1000000]
+				last = float(match.group(4))
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/'+bench.replace(' ','').replace('<port>','').replace('/','')+'_extra_0_'+inputs.split()[0]
 		print log_file_name
 		lines = (open(log_file_name, 'r').readlines())
 		for line in lines:

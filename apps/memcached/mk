@@ -22,7 +22,7 @@
 # variables
 APP_VER=1.4.21
 BEN_VER=1.0.18
-APP_DIR=$MSMR_ROOT/apps/postfix
+APP_DIR=$MSMR_ROOT/apps/memcached
 
 # working folder
 cd $APP_DIR

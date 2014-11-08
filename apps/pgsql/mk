@@ -22,7 +22,7 @@
 
 # variables
 APP_VER=9.3.5
-APP_DIR=$MSMR_ROOT/apps/pgsql
+APP_DIR=$MSMR_ROOT/apps/pgsql/${1}
 
 
 # working folder
@@ -44,7 +44,7 @@ tar zxvf postgresql-$APP_VER.tar.gz
 # build postgresql
 cd postgresql-$APP_VER
 mkdir ../install
-./configure --prefix=$APP_DIR/install --with-pgport=5452
+./configure --prefix=$APP_DIR/install --with-pgport=${1}
 make
 make install
 

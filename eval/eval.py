@@ -185,6 +185,9 @@ def preSetting(config, bench, apps_name):
 	with open(testname, "w") as testscript:
 		testscript.write('#! /bin/bash\n'+
 	'TEST_NAME='+testname+'\n'+
+	config.get(bench, 'SERVER_KILL')+'\n'+
+	'killall -9 client\n'+
+	'killall -9 server.out\n'+
 	'NO=${1}\n'+
 	'LOG_SUFFIX='+config.get(bench,'LOG_SUFFIX')+'\n'+
 	'SLEEP_TIME='+config.get(bench,'SLEEP_TIME')+'\n'+
@@ -200,7 +203,7 @@ def preSetting(config, bench, apps_name):
 		for i in range(int(config.get(bench,'SERVER_COUNT'))):
 			port = str(int(config.get(bench,'SERVER_START_PORT'))+i)
 			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',port)+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', port)+' &> ../server'+port+'/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
-		if config.get(bench,'PROXY_MODE')=='WITH_PROXY':
+		if config.get(bench,'PROXY_MODE').startswith('WITH_PROXY'):
 			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>./log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>./log/${TEST_NAME}_extra_0_${NO} &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
@@ -210,12 +213,12 @@ def preSetting(config, bench, apps_name):
 		testscript.write('echo "sleep some time"\n'+
 	'sleep ${SLEEP_TIME}\n')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			if config.get(bench,'PROXY_MODE')=='WITH_PROXY':
+			if config.get(bench,'PROXY_MODE').startswith('WITH_PROXY'):
 				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')
 			else:
 				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
 			if config.get(bench,'DEBUG_MODE')=='WITH_DEBUG':
-				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output.${LOG_SUFFIX}')
+				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
 			testscript.write('\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+

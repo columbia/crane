@@ -197,17 +197,20 @@ def preSetting(config, bench, apps_name):
 	'fi\n'+
 	'exec 2>./log/${TEST_NAME}_err_${NO}\n'+
 	'export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib\n'+
-	'SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out\n'+
-	'CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/nodes.cfg\n'+
-	'rm -rf $MSMR_ROOT/libevent_paxos/.db\n')
+	'SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out\n')
+		if config.get(bench, 'SERVER_COUNT')=='1':
+			testscript.write('CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/single_server.cfg\n')
+		else:
+			testscript.write('CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/nodes.cfg\n')
+		testscript.write('rm -rf $MSMR_ROOT/libevent_paxos/.db\n')
 		for i in range(int(config.get(bench,'SERVER_COUNT'))):
 			port = str(int(config.get(bench,'SERVER_START_PORT'))+i)
 			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',port)+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', port)+' &> ../server'+port+'/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
 		if config.get(bench,'PROXY_MODE').startswith('WITH_PROXY'):
-			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>./log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>./log/${TEST_NAME}_extra_0_${NO} &\n'+
+			testscript.write('${SERVER_PROGRAM} -n 0 -m s -c ${CONFIG_FILE} -l ./log 1>./log/node_0_${NO}_stdout 2>./log/node_0_${NO}_stderr &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
-	'\t${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} 1>./log/${TEST_NAME}_${i}_${NO}${LOG_SUFFIX} 2>./log/${TEST_NAME}_extra_${i}_${NO} &\n'+
+	'\t${SERVER_PROGRAM} -n ${i} -m s -c ${CONFIG_FILE} -l ./log 1>./log/node_${i}_${NO}_stdout 2>./log/node_${i}_${NO}_stderr &\n'+
 	'declare NODE_${i}=$!\n'+
 	'done\n')
 		testscript.write('echo "sleep some time"\n'+
@@ -309,7 +312,7 @@ def processBench(config, bench):
 	time2 = []
 	lengths = []
 	for i in range(int(repeats)):
-		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/'+bench.replace(' ','').replace('<port>','').replace('/','')+'_0_'+inputs+config.get(bench,'LOG_SUFFIX')
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-proxy-req.log'
 		print log_file_name
 		if not os.path.isfile(log_file_name):
 			break
@@ -323,7 +326,7 @@ def processBench(config, bench):
 				time1 += [(-float(match.group(2))+float(match.group(3)))*1000000]
 				time2 += [(-float(match.group(1))+float(match.group(4)))*1000000]
 				last = float(match.group(4))
-		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/'+bench.replace(' ','').replace('<port>','').replace('/','')+'_extra_0_'+inputs.split()[0]
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-proxy-sys.log'
 		print log_file_name
 		lines = (open(log_file_name, 'r').readlines())
 		for line in lines:

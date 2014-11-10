@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2014,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# variables
+APP_VER=1.4.35
+APP_DIR=$MSMR_ROOT/apps/lighttpd
+
+# working folder
+cd $APP_DIR
+
+# remove folders
+rm -rf lighttpd-$APP_VER
+rm -rf install
+rm -rf ab-standalone-0.1
+
+# download and extract
+if [ ! -f lighttpd-$APP_VER.tar.gz ]; then
+    wget http://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-$APP_VER.tar.gz
+fi
+tar zxvf lighttpd-$APP_VER.tar.gz
+
+# build
+mkdir install
+cd lighttpd-$APP_VER
+./configure --prefix=$APP_DIR/install
+make
+make install
+
+# config
+cd ../install
+mkdir www
+cp ../lighttpd-$APP_VER.tar.gz ./www
+echo "server.document-root = \"$APP_DIR/install/www\"" >> lighttpd.conf 
+echo "server.port = 8081" >> lighttpd.conf
+echo "server.pid-file = \"$APP_DIR/install/lighttpd.pid\"" >> lighttpd.conf
+
+# benchmark using ab
+cd ../
+if [ ! -d ../apache/install ]; then
+    echo "\n\nPlease proceed to apps/apache to build apache first"
+    exit 1
+fi
+cp ../apache/install/bin/ab ./install
+

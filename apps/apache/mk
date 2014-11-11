@@ -19,6 +19,7 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# apache benchmark (ab) source code at: httpd-2.4.10/support/ab.c
 
 # variables
 APR_VER=1.5.1

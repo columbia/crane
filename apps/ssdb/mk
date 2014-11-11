@@ -19,6 +19,8 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# benchmark source in ssdb/master/tools/ssdb-bench.cpp
+
 # variables
 APP_DIR=$MSMR_ROOT/apps/ssdb
 

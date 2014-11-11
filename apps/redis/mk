@@ -19,6 +19,7 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# benchmark redis-benchmark in redis-2.8.17/src/redis-benchmark.c
 
 APP_VER=2.8.17
 APP_DIR=$MSMR_ROOT/apps/redis

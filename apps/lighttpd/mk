@@ -19,6 +19,8 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# use ab as benchmark, refer to apache
+
 # variables
 APP_VER=1.4.35
 APP_DIR=$MSMR_ROOT/apps/lighttpd

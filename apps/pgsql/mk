@@ -19,6 +19,7 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# benchmark pgbench source code in postgresql-9.3.5/contrib/pgbench/pgbench.c
 
 # variables
 APP_VER=9.3.5

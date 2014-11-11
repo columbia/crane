@@ -19,6 +19,8 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# benchmark use memslap from libmemcached, source code in libmemcached-1.0.18/clients/memslap.cc
+
 # variables
 APP_VER=1.4.21
 BEN_VER=1.0.18

@@ -210,7 +210,7 @@ def preSetting(config, bench, apps_name):
 			testscript.write('${SERVER_PROGRAM} -n 0 -m s -c ${CONFIG_FILE} -l ./log 1>./log/node_0_${NO}_stdout 2>./log/node_0_${NO}_stderr &\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
-	'\t${SERVER_PROGRAM} -n ${i} -m s -c ${CONFIG_FILE} -l ./log 1>./log/node_${i}_${NO}_stdout 2>./log/node_${i}_${NO}_stderr &\n'+
+	'\t${SERVER_PROGRAM} -n ${i} -m r -c ${CONFIG_FILE} -l ./log 1>./log/node_${i}_${NO}_stdout 2>./log/node_${i}_${NO}_stderr &\n'+
 	'declare NODE_${i}=$!\n'+
 	'done\n')
 		testscript.write('echo "sleep some time"\n'+

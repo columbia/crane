@@ -38,10 +38,19 @@ Results:
 		Response Time: 26864 us
 		Throughput: 372.25 Req/s
 
-	[Serve=pgsql, Server count=3, Client=pgbench, Client count=100]
+	[Server=pgsql, Server count=3, Client=pgbench, Client count=100]
 	With proxy:(connect and send)
 		Consensus Time: 668500.679511 us
 		Response Time: 668502.354863 us
 		Throughput: 145.394200774 Req/s
 	Without proxy:
-		TPS: 107.301376
+		Throughput: 107.301376 Transaction/s
+
+	[Server=ssdb, Server count=3, Client=ssdb-bench, Client count=100]
+	With proxy:(Only connect)
+		Consensus Time: 931536.983799 us
+		Response Time: 931537.31243 us
+		Throughput: 77.0859722124 Req/s
+	Without proxy:(set)
+		Response Time: 256000 us
+		Throughput: 39098 Query/s

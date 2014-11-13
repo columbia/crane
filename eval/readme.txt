@@ -54,3 +54,15 @@ Results:
 	Without proxy:(set)
 		Response Time: 256000 us
 		Throughput: 39098 Query/s
+
+	[Server=mysql]
+	(to be done)
+
+	[Server=mongodb]
+	(to be done)
+	
+	[Server=ldap]
+	(to be done)
+
+	[Server=memcache]
+	(to be done)

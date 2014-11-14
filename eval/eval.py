@@ -171,6 +171,7 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 	os.system('cat stats.txt')
 
 def preSetting(config, bench, apps_name):
+	os.system("sed -e 's/group_size = [0-9]\+/group_size = "+config.get(bench, 'SERVER_COUNT')+"/g' $MSMR_ROOT/libevent_paxos/target/nodes.cfg > nodes.cfg")
 	for i in range(int(config.get(bench,'SERVER_COUNT'))):
 		mkdir_p('../server'+str(7000+i))
 	for i in range(int(config.get(bench,'CLIENT_COUNT'))):
@@ -178,13 +179,13 @@ def preSetting(config, bench, apps_name):
 	if bench.split(" ")[0]=="apache":
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
 			os.system("cp $MSMR_ROOT/apps/apache/install/conf/httpd.conf ../server"+str(i)+"/httpd.conf")
-			os.system("sed -e \"s/Listen 7000/Listen "+str(i)+"/g\" ../server"+str(i)+"/httpd.conf > ../server"+str(i)+"/httpd"+str(i)+".conf")
+			os.system("sed -e \"s/Listen [0-9]\+/Listen "+str(i)+"/g\" ../server"+str(i)+"/httpd.conf > ../server"+str(i)+"/httpd"+str(i)+".conf")
 	if config.get(bench, 'TEST_FILE') != "":
 		if bench.split(" ")[0]=="apache":
 			os.system("cp "+config.get(bench, 'TEST_FILE')+" $MSMR_ROOT/apps/apache/install/htdocs/")
 	if config.get(bench, 'CLIENT_PROGRAM') != "":
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			copy_file(config.get(bench,'CLIENT_PROGRAM'),'../client'+str(int(i)+1)+'/client')
+			os.system("cp "+config.get(bench,'CLIENT_PROGRAM')+' ../client'+str(int(i)+1)+'/client')
 	testname = bench.replace(' ','').replace('<port>','').replace('/','')
 	with open(testname, "w") as testscript:
 		testscript.write('#! /bin/bash\n'+
@@ -202,10 +203,7 @@ def preSetting(config, bench, apps_name):
 	'exec 2>./log/${TEST_NAME}_err_${NO}\n'+
 	'export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib\n'+
 	'SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out\n')
-		if config.get(bench, 'SERVER_COUNT')=='1':
-			testscript.write('CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/single_server.cfg\n')
-		else:
-			testscript.write('CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/nodes.cfg\n')
+		testscript.write('CONFIG_FILE=nodes.cfg\n')
 		testscript.write('rm -rf $MSMR_ROOT/libevent_paxos/.db\n')
 		for i in range(int(config.get(bench,'SERVER_COUNT'))):
 			port = str(int(config.get(bench,'SERVER_START_PORT'))+i)
@@ -234,6 +232,8 @@ def preSetting(config, bench, apps_name):
 	'done\n'+
 	'for i in $(echo ${!SERVER*});do\n'+
 	'\tkill -9 ${!i} &>/dev/null\n'+
+	'killall -9 server.out\n'+
+	'killall -9 client\n'+
 	'done\n')
 		for i in range(1,int(config.get(bench,'SERVER_COUNT'))+1):
 			testscript.write('kill -9 ${REAL_SERVER_PID_'+str(i)+'} &>/dev/null\n')

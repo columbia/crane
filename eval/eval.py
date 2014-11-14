@@ -176,13 +176,24 @@ def preSetting(config, bench, apps_name):
 		mkdir_p('../server'+str(7000+i))
 	for i in range(int(config.get(bench,'CLIENT_COUNT'))):
 		mkdir_p('../client'+str(int(i)+1))
+
+	#handle the config and mk stuff
 	if bench.split(" ")[0]=="apache":
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
 			os.system("cp $MSMR_ROOT/apps/apache/install/conf/httpd.conf ../server"+str(i)+"/httpd.conf")
 			os.system("sed -e \"s/Listen [0-9]\+/Listen "+str(i)+"/g\" ../server"+str(i)+"/httpd.conf > ../server"+str(i)+"/httpd"+str(i)+".conf")
+	elif bench.split(" ")[0]=="lighttpd":
+		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
+			os.system("cp $MSMR_ROOT/apps/lighttpd/install/lighttpd.conf ../server"+str(i)+"/lighttpd.conf")
+			os.system("sed -e 's/server.port = [0-9]\+/server.port = "+str(i)+"/g' ../server"+str(i)+"/lighttpd.conf > ../server"+str(i)+"/lighttpd"+str(i)+".conf")
+	
+	#handle test file
 	if config.get(bench, 'TEST_FILE') != "":
 		if bench.split(" ")[0]=="apache":
 			os.system("cp "+config.get(bench, 'TEST_FILE')+" $MSMR_ROOT/apps/apache/install/htdocs/")
+		else: 
+			for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
+				os.system("cp "+config.get(bench, 'TEST_FILE')+" ../server"+str(i)+"/")
 	if config.get(bench, 'CLIENT_PROGRAM') != "":
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
 			os.system("cp "+config.get(bench,'CLIENT_PROGRAM')+' ../client'+str(int(i)+1)+'/client')

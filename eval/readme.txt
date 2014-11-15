@@ -51,14 +51,20 @@ Results:
 		Consensus Time: 931536.983799 us
 		Response Time: 931537.31243 us
 		Throughput: 77.0859722124 Req/s
-	Without proxy:(set)
+	Without proxy:
 		Response Time: 256000 us
 		Throughput: 39098 Query/s
 
-	[Server=mysql]
-	(to be done)
+	[Server=mongodb, Server count=3, Client=ycsb, Client count=1]
+	With proxy:
+		Consensus Time: 852907.870143 us
+		Response Time: 852985.890891 us
+		Throughput: 141.706648565 Req/s
+	Without proxy:
+		Average Latency: 7236.46511627907 us
+		Throughput: 2801/1204481792715 Req/s
 
-	[Server=mongodb]
+	[Server=mysql]
 	(to be done)
 	
 	[Server=ldap]

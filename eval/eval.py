@@ -192,6 +192,10 @@ def preSetting(config, bench, apps_name):
 			os.system("sed -e 's/port: [0-9]\+/port: "+str(i)+"/g' ../server"+str(i)+"/ssdb.conf > ../server"+str(i)+"/ssdb1.conf")
 			os.system("sed -e 's/dir = \./dir = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master/g' ../server"+str(i)+"/ssdb1.conf > ../server"+str(i)+"/ssdb2.conf")
 			os.system("sed -e 's/pidfile = \./pidfile = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master/g' ../server"+str(i)+"/ssdb2.conf > ../server"+str(i)+"/ssdb"+str(i)+".conf")
+	elif bench.split(' ')[0]=='mongodb':
+		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/mongodb-binding -r ../")
+		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/core -r ../")
+		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/CHANGELOG ../")
 	#handle test file
 	if config.get(bench, 'TEST_FILE') != "":
 		if bench.split(" ")[0]=="apache":

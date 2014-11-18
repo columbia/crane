@@ -12,12 +12,14 @@ diff -ruN dkftpbench-0.45/CHECK.cc dkftpbench-0.45-2/CHECK.cc
  		printf("check: %d == %d at line %d file %s\n", d, e, line, file);
 diff -ruN dkftpbench-0.45/CHECK.h dkftpbench-0.45-2/CHECK.h
 --- dkftpbench-0.45/CHECK.h	2002-01-15 22:21:57.000000000 -0800
-+++ dkftpbench-0.45-2/CHECK.h	2014-11-15 20:58:47.206238282 -0800
-@@ -16,7 +16,7 @@
++++ dkftpbench-0.45-2/CHECK.h	2014-11-17 17:58:15.060688664 -0800
+@@ -15,8 +15,8 @@
+ void check(int d, int e, const char * file, int line);
  
  /** Check two integers to make sure they are not equal. */
- #define CHECKNE(d, e) checkne((int)(d), (int)(e), __FILE__,  __LINE__)
+-#define CHECKNE(d, e) checkne((int)(d), (int)(e), __FILE__,  __LINE__)
 -void checkne(int d, int e, const char * file, int line);
++#define CHECKNE(d, e) checkne((int)(d), (long)(e), __FILE__,  __LINE__)
 +void checkne(int d, long e, const char * file, int line);
  
  #ifdef __cplusplus

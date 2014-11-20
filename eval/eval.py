@@ -196,6 +196,11 @@ def preSetting(config, bench, apps_name):
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/mongodb-binding -r ../")
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/core -r ../")
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/CHANGELOG ../")
+	elif bench.split(' ')[0]=='pgsql':
+		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
+			if(not(os.path.isfile(os.environ['MSMR_ROOT']+'/apps/pgsql/'+str(i)+'/install/bin/pg_ctl'))):
+				print 'Please cd to $MSMR_ROOT/apps/pgsql and \"mk '+str(i)+'\" first.'
+				exit(1)
 	#handle test file
 	if config.get(bench, 'TEST_FILE') != "":
 		if bench.split(" ")[0]=="apache":

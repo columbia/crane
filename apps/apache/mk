@@ -51,19 +51,21 @@ if [ ! -f apr-$APR_VER.tar.gz ]; then
     wget http://apache.mirrors.pair.com//apr/apr-$APR_VER.tar.gz
 fi
 tar zxvf apr-$APR_VER.tar.gz
-mv apr-$APR_VER apr  # rename folder to apr
+mv apr-$APR_VER apr
 
+
+#cd ../
 if [ ! -f apr-util-$UTIL_VER.tar.gz ]; then
     wget http://apache.mirrors.pair.com//apr/apr-util-$UTIL_VER.tar.gz
 fi
 tar zxvf apr-util-$UTIL_VER.tar.gz
-mv apr-util-$UTIL_VER apr-util  # rename folder to apr-util
+mv apr-util-$UTIL_VER apr-util
 
 
 # build
 cd ../
 mkdir ../install
-./configure --prefix=$APP_DIR/install --with-included-apr
+./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all
 make
 make install
 

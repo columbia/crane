@@ -30,7 +30,7 @@ cd $APP_DIR/install/bin
 
 
 # do test
-./ab -n 100 -c 10 http://127.0.0.1:8080/
+./ab -n 100 -c 10 http://127.0.0.1:7000/
 
 
 # stop server

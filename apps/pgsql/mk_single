@@ -20,10 +20,47 @@
 #
 
 # benchmark pgbench source code in postgresql-9.3.5/contrib/pgbench/pgbench.c
-cd $MSMR_ROOT/apps/pgsql
 
-./mk_single 7000
-./mk_single 7001
-./mk_single 7002
-./mk_single 7003
-./mk_single 7004
+# variables
+APP_VER=9.3.5
+APP_DIR=$MSMR_ROOT/apps/pgsql/${1}
+
+
+# working folder
+cd $APP_DIR
+
+
+# remove folders
+rm -rf postgresql-$APP_VER
+rm -rf install
+
+
+# download and extract
+if [ ! -f postgresql-$APP_VER.tar.gz ]; then
+    wget http://ftp.postgresql.org/pub/source/v9.3.5/postgresql-$APP_VER.tar.gz
+fi
+tar zxvf postgresql-$APP_VER.tar.gz
+
+
+# build postgresql
+cd postgresql-$APP_VER
+mkdir ../install
+./configure --prefix=$APP_DIR/install --with-pgport=${1}
+make
+make install
+
+
+# build pgbench benchmark
+cd contrib/pgbench
+make
+cp pgbench $APP_DIR/install/bin
+
+
+# config postgresql
+cd $APP_DIR/install
+bin/pg_ctl init -D $APP_DIR/install/data
+bin/pg_ctl start -D $APP_DIR/install/data
+sleep 2
+bin/createuser root
+bin/pg_ctl stop -D $APP_DIR/install/data
+

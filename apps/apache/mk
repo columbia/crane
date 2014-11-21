@@ -35,6 +35,7 @@ cd $APP_DIR
 rm -rf httpd-$VER
 rm -rf install
 rm -rf pcre
+rm -rf pcre-$PCRE_VER
 
 # download and extract
 if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then

@@ -25,17 +25,16 @@
 APR_VER=1.5.1
 UTIL_VER=1.5.4
 HTTPD_VER=2.4.10
+PCRE_VER=8.36
 APP_DIR=$MSMR_ROOT/apps/apache
-
 
 # working folder
 cd $APP_DIR
 
-
 # remove folder
 rm -rf httpd-$VER
 rm -rf install
-
+rm -rf pcre
 
 # download and extract
 if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then
@@ -43,9 +42,17 @@ if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then
 fi
 tar zxvf httpd-$HTTPD_VER.tar.gz
 
-
 # build dependencies
-cd httpd-$HTTPD_VER/srclib
+if [ ! -f pcre-$PCRE_VER.tar.gz ]; then
+    wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-$PCRE_VER.tar.gz
+fi
+tar pcre-$PCRE_VER.tar.gz
+cd pcre-$PCRE_VER
+./configure --prefix=$APP_DIR/pcre
+make
+make install
+
+cd ../httpd-$HTTPD_VER/srclib
 
 if [ ! -f apr-$APR_VER.tar.gz ]; then
     wget http://apache.mirrors.pair.com//apr/apr-$APR_VER.tar.gz
@@ -53,24 +60,21 @@ fi
 tar zxvf apr-$APR_VER.tar.gz
 mv apr-$APR_VER apr
 
-
-#cd ../
 if [ ! -f apr-util-$UTIL_VER.tar.gz ]; then
     wget http://apache.mirrors.pair.com//apr/apr-util-$UTIL_VER.tar.gz
 fi
 tar zxvf apr-util-$UTIL_VER.tar.gz
 mv apr-util-$UTIL_VER apr-util
 
-
 # build
 cd ../
 mkdir ../install
-./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all
+./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all --with-pcre=$APP_DIR/pcre
 make
 make install
-
 
 # change conf file
 cd $MSMR_ROOT/apps/apache/install/conf
 sed -e "s/Listen 80/Listen 7000/g"  httpd.conf > httpd.conf.tmp
 mv httpd.conf.tmp httpd.conf
+

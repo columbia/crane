@@ -19,23 +19,18 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 # variables
 APP_DIR=$MSMR_ROOT/apps/apache
-
 
 # change diretory and start server
 cd $APP_DIR/install/bin
 ./apachectl -k start
 
-
 # do test
 ./ab -n 100 -c 10 http://127.0.0.1:7000/
 
-
 # stop server
 ./apachectl -k stop
-
 
 # change directory back
 cd $APP_DIR

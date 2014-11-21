@@ -47,7 +47,7 @@ tar zxvf httpd-$HTTPD_VER.tar.gz
 if [ ! -f pcre-$PCRE_VER.tar.gz ]; then
     wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-$PCRE_VER.tar.gz
 fi
-tar pcre-$PCRE_VER.tar.gz
+tar zxvf pcre-$PCRE_VER.tar.gz
 cd pcre-$PCRE_VER
 ./configure --prefix=$APP_DIR/pcre
 make

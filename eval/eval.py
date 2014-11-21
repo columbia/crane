@@ -242,6 +242,10 @@ def preSetting(config, bench, apps_name):
 	'done\n')
 		testscript.write('echo "sleep some time"\n'+
 	'sleep ${SLEEP_TIME}\n')
+		
+		#preparation for client
+		if(bench.split(' ')[0] == 'pgsql'):
+			testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client -i '+config.get(bench, 'CLIENT_INPUT')+' &')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
 			if config.get(bench,'PROXY_MODE').startswith('WITH_PROXY'):
 				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')

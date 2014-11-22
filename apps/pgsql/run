@@ -25,8 +25,8 @@ APP_DIR=$MSMR_ROOT/apps/pgsql
 
 
 # change diretory and start server
-cd $APP_DIR/install
-bin/pg_ctl start -D $APP_DIR/install/data
+cd $APP_DIR/${1}/install
+bin/pg_ctl start -D $APP_DIR/${1}/install/data
 sleep 2
 
 
@@ -38,5 +38,5 @@ bin/dropdb dbtest
 
 
 # stop server
-bin/pg_ctl stop -D $APP_DIR/install/data
+bin/pg_ctl stop -D $APP_DIR/${1}/install/data
 

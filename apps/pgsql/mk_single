@@ -45,7 +45,7 @@ tar zxvf postgresql-$APP_VER.tar.gz
 # build postgresql
 cd postgresql-$APP_VER
 mkdir ../install
-./configure --prefix=$APP_DIR/install --with-pgport=${1}
+./configure --prefix=$APP_DIR/install --with-pgport=${1} --without-readline --without-zlib
 make
 make install
 

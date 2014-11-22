@@ -29,7 +29,7 @@ sleep 1
 
 # benchmack
 cd ../benchmark
-bin/memslap -s 127.0.0.1:11222 --concurrency=100 --execute-number=10000
+bin/memslap -s 127.0.0.1:11222 --concurrency=10 --execute-number=5000
 
 # stop server
 cd ../install

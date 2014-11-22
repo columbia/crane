@@ -42,7 +42,7 @@ tar zxvf lighttpd-$APP_VER.tar.gz
 # build
 mkdir install
 cd lighttpd-$APP_VER
-./configure --prefix=$APP_DIR/install
+./configure --prefix=$APP_DIR/install --without-pcre --without-zlib --without-bzip2
 make
 make install
 
@@ -57,7 +57,9 @@ echo "server.pid-file = \"$APP_DIR/install/lighttpd.pid\"" >> lighttpd.conf
 # benchmark using ab
 cd ../
 if [ ! -d ../apache/install ]; then
-    echo "\n\nPlease proceed to apps/apache to build apache first"
+    echo ""
+    echo "Please proceed to apps/apache to build apache first"
+    echo ""
     exit 1
 fi
 cp ../apache/install/bin/ab ./install

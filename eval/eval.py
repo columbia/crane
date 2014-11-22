@@ -199,7 +199,7 @@ def preSetting(config, bench, apps_name):
 	elif bench.split(' ')[0]=='pgsql':
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
 			if(not(os.path.isfile(os.environ['MSMR_ROOT']+'/apps/pgsql/'+str(i)+'/install/bin/pg_ctl'))):
-				print 'Please cd to $MSMR_ROOT/apps/pgsql and \"mk '+str(i)+'\" first.'
+				print 'Please cd to $MSMR_ROOT/apps/pgsql and \"./mk_single '+str(i)+'\" first.'
 				exit(1)
 	#handle test file
 	if config.get(bench, 'TEST_FILE') != "":

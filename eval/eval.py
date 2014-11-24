@@ -147,6 +147,10 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 		import numpy
 	except ImportError:
 		logging.error("please install 'numpy' module")
+	try: 
+		import matplotlib.pyplot as plt
+	except ImportError:
+		logging.error("Cannot draw plot! Please install 'matplotlib' module")
 	time1_avg = numpy.average(time1)
 	time1_std = numpy.std(time1)
 	time2_avg = numpy.average(time2)

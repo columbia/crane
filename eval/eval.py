@@ -395,7 +395,6 @@ def processBench(config, bench):
 			origin_time2 += [float(line.split(':')[0])]
 		for i in range(len(origin_time1)):
 			time1 += [(origin_time2[i]-origin_time1[i])*1000000]
-	print time1
 	#print time4
 	#print lengths
 	if len(time1) > 0:

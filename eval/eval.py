@@ -202,6 +202,8 @@ def preSetting(config, bench, apps_name):
 	for i in range(int(config.get(bench,'CLIENT_COUNT'))):
 		mkdir_p('../client'+str(int(i)+1))
 
+	#if(config.get(bench, 'DEBUG_MODE')=='WITH_DEBUG'):
+
 	#handle the config and mk stuff
 	if bench.split(" ")[0]=="apache":
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
@@ -276,8 +278,7 @@ def preSetting(config, bench, apps_name):
 				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')
 			else:
 				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
-			if config.get(bench,'DEBUG_MODE')=='WITH_DEBUG':
-				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
+			testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
 			testscript.write('\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+

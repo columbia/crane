@@ -232,6 +232,14 @@ def preSetting(config, bench, apps_name):
 			if(not(os.path.isfile(os.environ['MSMR_ROOT']+'/apps/pgsql/'+str(i)+'/install/bin/pg_ctl'))):
 				print 'Please cd to $MSMR_ROOT/apps/pgsql and \"./mk_single '+str(i)+'\" first.'
 				exit(1)
+	elif bench.split(' ')[0]=='proftpd':
+		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
+			os.system("cp $MSMR_ROOT/apps/proftpd/install/etc/proftpd.conf ../server"+str(i)+"/")
+			os.system("sed -e 's/Port [0-9]\+/Port "+str(i)+"/g' ../server"+str(i)+"/proftpd.conf > ../server"+str(i)+"/proftpd2.conf")
+			os.system("sed -e 's/\.pid/"+str(i)+"\.pid/g' ../server"+str(i)+"/proftpd2.conf > ../server"+str(i)+"/proftpd3.conf")
+			os.system("sed -e 's/data/data"+str(i)+"/g' ../server"+str(i)+"/proftpd3.conf > ../server"+str(i)+"/proftpd"+str(i)+".conf")
+			os.system("mkdir $MSMR_ROOT/apps/proftpd/install/data"+str(i))
+			os.system("cp $MSMR_ROOT/apps/proftpd/install/data/* $MSMR_ROOT/apps/proftpd/install/data"+str(i)+"/")
 	#handle test file
 	if config.get(bench, 'TEST_FILE') != "":
 		if bench.split(" ")[0]=="apache":

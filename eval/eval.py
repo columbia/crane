@@ -244,7 +244,7 @@ def preSetting(config, bench, apps_name):
 	'TEST_NAME='+testname+'\n'+
 	config.get(bench, 'SERVER_KILL')+'\n'+
 	'killall -9 client\n'+
-	'killall -9 server.out\n'+
+	'killall -15 server.out\n'+
 	'NO=${1}\n'+
 	'LOG_SUFFIX='+config.get(bench,'LOG_SUFFIX')+'\n'+
 	'SLEEP_TIME='+config.get(bench,'SLEEP_TIME')+'\n'+
@@ -287,7 +287,7 @@ def preSetting(config, bench, apps_name):
 	'done\n'+
 	'for i in $(echo ${!SERVER*});do\n'+
 	'\tkill -9 ${!i} &>/dev/null\n'+
-	'killall -9 server.out\n'+
+	'killall -15 server.out\n'+
 	'killall -9 client\n'+
 	'done\n')
 		for i in range(1,int(config.get(bench,'SERVER_COUNT'))+1):

@@ -32,6 +32,7 @@ def readConfigFile(config_file):
 						       "NO":"",
 						       "PROXY_MODE":"WITH_PROXY",
 						       "DEBUG_MODE":"WITHOUT_DEBUG",
+						       "PLOT_MODE":"WITHOUT_PLOT",
 						       "LOG_SUFFIX":".log",
 						       "SLEEP_TIME":"5",
 						       "SECONDARIES_SIZE":"0",
@@ -142,11 +143,35 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-def write_stats(time1, time2, repeats, first, last, lengths):
+def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot):
 	try:
 		import numpy
 	except ImportError:
 		logging.error("please install 'numpy' module")
+	try: 
+		import matplotlib.pyplot as plt
+	except ImportError:
+		logging.error("Cannot draw plot! Please install 'matplotlib' module")
+	if isPlot:
+		x = range(len(origin_time1))
+		plt.scatter(x, origin_time1)
+		
+		x = range(len(origin_time2))
+		plt.scatter(x, origin_time2)
+
+		x = range(len(origin_time3))
+		plt.scatter(x, origin_time3)
+		plt.savefig('origintime3.png')
+		plt.clf()
+		
+		x = range(len(time1))
+		plt.scatter(x, time1)
+
+		x = range(len(time2))
+		plt.scatter(x, time2)
+		plt.savefig('time2.png')
+		plt.clf()
+
 	time1_avg = numpy.average(time1)
 	time1_std = numpy.std(time1)
 	time2_avg = numpy.average(time2)
@@ -156,10 +181,10 @@ def write_stats(time1, time2, repeats, first, last, lengths):
 		length_std = numpy.std(lengths)
 	import math
 	with open("stats.txt", "w") as stats:
-		stats.write('Concensus Time:\n')
+		stats.write('Concensus Time('+str(len(time1))+'):\n')
 		stats.write('\tmean:{0} us\n'.format(time1_avg))
 		stats.write('\tstd:{0}\n'.format(time1_std))
-		stats.write('Response Time:\n')
+		stats.write('Response Time('+str(len(time2))+'):\n')
 		stats.write('\tmean:{0} us\n'.format(time2_avg))
 		stats.write('\tstd:{0}\n'.format(time2_std))
 		stats.write('Throughput:\n')
@@ -177,6 +202,8 @@ def preSetting(config, bench, apps_name):
 	for i in range(int(config.get(bench,'CLIENT_COUNT'))):
 		mkdir_p('../client'+str(int(i)+1))
 
+	#if(config.get(bench, 'DEBUG_MODE')=='WITH_DEBUG'):
+
 	#handle the config and mk stuff
 	if bench.split(" ")[0]=="apache":
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
@@ -190,9 +217,13 @@ def preSetting(config, bench, apps_name):
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
 			os.system("cp $MSMR_ROOT/apps/ssdb/ssdb-master/ssdb.conf ../server"+str(i)+"/")
 			os.system("sed -e 's/port: [0-9]\+/port: "+str(i)+"/g' ../server"+str(i)+"/ssdb.conf > ../server"+str(i)+"/ssdb1.conf")
-			os.system("sed -e 's/dir = \./dir = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master/g' ../server"+str(i)+"/ssdb1.conf > ../server"+str(i)+"/ssdb2.conf")
-			os.system("sed -e 's/pidfile = \./pidfile = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master/g' ../server"+str(i)+"/ssdb2.conf > ../server"+str(i)+"/ssdb"+str(i)+".conf")
+			os.system("sed -e 's/dir = \.\/var/dir = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master\/var"+str(i)+"/g' ../server"+str(i)+"/ssdb1.conf > ../server"+str(i)+"/ssdb2.conf")
+			os.system("sed -e 's/pidfile = \.\/var\/ssdb/pidfile = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master\/var\/ssdb"+str(i)+"/g' ../server"+str(i)+"/ssdb2.conf > ../server"+str(i)+"/ssdb"+str(i)+".conf")
+			os.system("rm $MSMR_ROOT/apps/ssdb/ssdb-master/var/ssdb"+str(i)+".pid")
+			os.system("mkdir $MSMR_ROOT/apps/ssdb/ssdb-master/var"+str(i))
 	elif bench.split(' ')[0]=='mongodb':
+		for i in range(7000, 7000+int(config.get(bench, "SERVER_COUNT"))):
+			os.system("mkdir $MSMR_ROOT/apps/mongodb/install/data"+str(i))
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/mongodb-binding -r ../")
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/core -r ../")
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/CHANGELOG ../")
@@ -201,6 +232,14 @@ def preSetting(config, bench, apps_name):
 			if(not(os.path.isfile(os.environ['MSMR_ROOT']+'/apps/pgsql/'+str(i)+'/install/bin/pg_ctl'))):
 				print 'Please cd to $MSMR_ROOT/apps/pgsql and \"./mk_single '+str(i)+'\" first.'
 				exit(1)
+	elif bench.split(' ')[0]=='proftpd':
+		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
+			os.system("cp $MSMR_ROOT/apps/proftpd/install/etc/proftpd.conf ../server"+str(i)+"/")
+			os.system("sed -e 's/Port [0-9]\+/Port "+str(i)+"/g' ../server"+str(i)+"/proftpd.conf > ../server"+str(i)+"/proftpd2.conf")
+			os.system("sed -e 's/\.pid/"+str(i)+"\.pid/g' ../server"+str(i)+"/proftpd2.conf > ../server"+str(i)+"/proftpd3.conf")
+			os.system("sed -e 's/data/data"+str(i)+"/g' ../server"+str(i)+"/proftpd3.conf > ../server"+str(i)+"/proftpd"+str(i)+".conf")
+			os.system("mkdir $MSMR_ROOT/apps/proftpd/install/data"+str(i))
+			os.system("cp $MSMR_ROOT/apps/proftpd/install/data/* $MSMR_ROOT/apps/proftpd/install/data"+str(i)+"/")
 	#handle test file
 	if config.get(bench, 'TEST_FILE') != "":
 		if bench.split(" ")[0]=="apache":
@@ -217,7 +256,7 @@ def preSetting(config, bench, apps_name):
 	'TEST_NAME='+testname+'\n'+
 	config.get(bench, 'SERVER_KILL')+'\n'+
 	'killall -9 client\n'+
-	'killall -9 server.out\n'+
+	'killall -15 server.out\n'+
 	'NO=${1}\n'+
 	'LOG_SUFFIX='+config.get(bench,'LOG_SUFFIX')+'\n'+
 	'SLEEP_TIME='+config.get(bench,'SLEEP_TIME')+'\n'+
@@ -251,8 +290,7 @@ def preSetting(config, bench, apps_name):
 				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')
 			else:
 				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
-			if config.get(bench,'DEBUG_MODE')=='WITH_DEBUG':
-				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
+			testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
 			testscript.write('\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+
@@ -261,7 +299,7 @@ def preSetting(config, bench, apps_name):
 	'done\n'+
 	'for i in $(echo ${!SERVER*});do\n'+
 	'\tkill -9 ${!i} &>/dev/null\n'+
-	'killall -9 server.out\n'+
+	'killall -15 server.out\n'+
 	'killall -9 client\n'+
 	'done\n')
 		for i in range(1,int(config.get(bench,'SERVER_COUNT'))+1):
@@ -341,6 +379,9 @@ def processBench(config, bench):
 	execBench(msmr_command.replace('<port>',''), repeats, 'msmr')
 		
 	# get stats
+	origin_time1 = []
+	origin_time2 = []
+	origin_time3 = []
 	time1 = []
 	time2 = []
 	lengths = []
@@ -356,20 +397,24 @@ def processBench(config, bench):
 			if match:
 				if first == 0:
 					first = float(match.group(1))
-				time1 += [(-float(match.group(2))+float(match.group(3)))*1000000]
 				time2 += [(-float(match.group(1))+float(match.group(4)))*1000000]
 				last = float(match.group(4))
-		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-proxy-sys.log'
+				origin_time1 += [float(match.group(1))]
+				origin_time3 += [float(match.group(3))]
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-consensus-sys.log'
 		print log_file_name
 		lines = (open(log_file_name, 'r').readlines())
 		for line in lines:
-			if 'the length' in line:
-				lengths += [float(line.split(' ')[-1])]
-	#print time3
+			origin_time2 += [float(line.split(':')[0])]
+		for i in range(len(origin_time1)):
+			time1 += [(origin_time2[i]-origin_time1[i])*1000000]
 	#print time4
 	#print lengths
+	isPlot = False
+	if(config.get(bench, "PLOT_MODE")=="WITH_PLOT"):
+		isPlot = True
 	if len(time1) > 0:
-		write_stats(time1, time2, int(repeats), first, last, lengths)
+		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

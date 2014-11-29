@@ -40,10 +40,10 @@ Results (last updated on 11/27/2014):
 	[Server=Lighttpd, Server count=3, Client=Ab, Client count=100]
 	With proxy:
 		System:
-			Concensus Time:
+			Concensus Time(4799):
 				mean: 8588.36478158 us
 				std: 12737.463843
-			Response Time: 
+			Response Time(4799): 
 				mean: 8869.2045171 us
 				std: 12776.5457869
 			Throughput: 776.35067849 Req/s
@@ -71,26 +71,34 @@ Results (last updated on 11/27/2014):
 
 	[Server=Ssdb, Server count=3, Client=ssdb-bench, Client count=100]
 	With proxy:
-		Consensus Time: 
-			mean: 46967.2674903 us
-			std: 19923.150514
-		Response Time: 
-			mean: 46967.6448614 us
-			std: 19923.0598068
-		Throughput: 3193.70895769 Req/s
+		System:
+			Consensus Time(120000): 
+				mean: 20339.3639863 us
+				std: 21865.9739571
+			Response Time(120000): 
+				mean: 20759.1385961 us
+				std: 22028.4780573
+			Throughput: 1954.05336637 Req/s
+		Real Server(set):
+			qps: 1214
+			time: 82000 us
 	Without proxy:
-		Response Time: 256000 us
-		Throughput: 39098 Query/s
+		qps: 30564
+		time: 3000 us
 
-	[Server=Mongodb, Server count=3, Client=ycsb, Client count=1]
+	[Server=Mongodb, Server count=3, Client=ycsb, Client count=2]
 	With proxy:
-		Consensus Time: 
-			mean: 31611.5360169 us
-			std: 33265.9289061
-		Response Time:
-			mean: 31611.8883481 us
-			std: 33265.9362168
-		Throughput: 556.45594725 Req/s
+		System:
+			Consensus Time(17021): 
+				mean: 27936.6877474 us
+				std: 101034.193019
+			Response Time(17021):
+				mean: 28657.3323245 us
+				std: 101076.672629
+			Throughput: 198.860874368 Req/s
+		Real Server:
+			AverageLatency: 193439 us
+			Throughput: 11.807351256892542
 	Without proxy:
 		Average Latency: 7236.46511627907 us
 		Throughput: 2801.1204481792715 Req/s
@@ -107,13 +115,16 @@ Results (last updated on 11/27/2014):
 
 	[Server=memcached, Server Count=3, Client=memslap, Client Count=100]
 	With Proxy:
-		Concensus Time:
-			mean: 3060.86621104 us
-			std: 4309.08754029
-		Response Time:
-			mean: 3061.58168637 us
-			std: 4309.0610575
-		Throughput: 2046.9926672 Req/s
+		System:
+			Concensus Time(13043):
+				mean: 2582.75371821 us
+				std: 2813.53107613
+			Response Time(13043):
+				mean: 2873.49056103 us
+				std: 2950.63957846
+			Throughput: 2020.00553691 Req/s
+		Real server:
+			Loading time: 47000 us
 	Without Proxy:
 		Loading time: 8000 us
 

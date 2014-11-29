@@ -103,15 +103,20 @@ Results (last updated on 11/27/2014):
 		Average Latency: 7236.46511627907 us
 		Throughput: 2801.1204481792715 Req/s
 
-	[Server=proftpd, Server count=1, Client=dkftpbench, Client Count=2]
+	[Server=proftpd, Server count=3, Client=dkftpbench, Client Count=10]
 	With Proxy:
-		Concensus Time:
-			mean: 820195.412486 us
-			std: 376619.771528
-		Response Time:
-			mean: 820195.608919 us
-			std: 376619.813539
-		Throughput: 52.4910836419 Req/s
+		System:
+			Concensus Time(2600):
+				mean: 661.111519887 us
+				std: 3415.66346119
+			Response Time(2600):
+				mean: 703.23247176 us
+				std: 3422.55397882
+			Throughput: 25.1892199412 Req/s
+		Real server:
+			3579 bytes per second
+	Without Proxy:
+		3584 bytes per second
 
 	[Server=memcached, Server Count=3, Client=memslap, Client Count=100]
 	With Proxy:

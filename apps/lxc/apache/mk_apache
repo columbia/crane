@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2014,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# run this script at host to build apache in an existing container
+
+WORK_DIR=$MSMR_ROOT/apps/lxc/apache
+APP_DIR=/home/ubuntu/apps/apache
+
+if [ "$1" == "" ]; then
+  echo "Please input the name of the container, stopping"
+  exit 1
+fi
+
+echo ""
+echo "This script requires root privilege, please input yout password if prompted"
+echo ""
+
+# start container
+sudo lxc-start -n $1 -d
+sleep 1
+
+# make directory and pass the script to the container
+PID=$(sudo lxc-info -n $1 | grep PID | awk '{ print $2 }')
+
+if [ ! -d /proc/$PID/root/home/ubuntu/apps/apache ]; then
+  sudo mkdir /proc/$PID/root/home/ubuntu/apps/apache
+fi
+sudo cp $WORK_DIR/container_mk_apache /proc/$PID/root/home/ubuntu/apps/apache
+
+# execute script
+sudo lxc-attach -n $1 /home/ubuntu/apps/apache/container_mk_apache
+
+# stop container
+sudo lxc-stop -n $1
+

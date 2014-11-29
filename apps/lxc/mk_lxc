@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2014,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+LXC_VER=1.0.6
+
+# download and extract
+cd $MSMR_ROOT/apps/lxc
+if [ ! -f lxc-$LXC_VER.tar.gz ]; then
+	wget https://linuxcontainers.org/downloads/lxc-$LXC_VER.tar.gz
+fi
+tar zxvf lxc-$LXC_VER.tar.gz
+
+# make and install
+cd lxc-$LXC_VER
+
+./autogen.sh
+./configure
+make
+
+echo ""
+echo "Installing and setting up LXC requires root privilege, please enter your password if prompted"
+echo ""
+
+sudo make install
+sudo ldconfig
+
+# network bride
+sudo brctl addbr lxcbr0
+sudo brctl addif lxcbr0 eth0
+sudo ip link set dev lxcbr0 up
+
+

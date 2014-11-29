@@ -1,0 +1,27 @@
+Linux Container LXC Folder
+
+
+1. install LXC at host system
+$ ./mk_lxc
+
+
+2. build a single container
+$ ./mk_container <container name>
+
+
+3. build an app: see individual app folder
+
+
+4. remove a container
+If the container is still running:
+$ sudo lxc-stop -n <name>
+Then:
+$ sudo lxc-destroy -n <name>
+
+
+5. uninstall LXC at host system
+$ cd lxc-1.0.6
+$ sudo make uninstall
+
+
+Note: ./container_setup is used to be executed inside the container, do not execute it in host

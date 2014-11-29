@@ -32,6 +32,7 @@ def readConfigFile(config_file):
 						       "NO":"",
 						       "PROXY_MODE":"WITH_PROXY",
 						       "DEBUG_MODE":"WITHOUT_DEBUG",
+						       "PLOT_MODE":"WITHOUT_PLOT",
 						       "LOG_SUFFIX":".log",
 						       "SLEEP_TIME":"5",
 						       "SECONDARIES_SIZE":"0",
@@ -142,7 +143,7 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3):
+def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot):
 	try:
 		import numpy
 	except ImportError:
@@ -151,26 +152,25 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 		import matplotlib.pyplot as plt
 	except ImportError:
 		logging.error("Cannot draw plot! Please install 'matplotlib' module")
-	x = range(len(origin_time1))
-	plt.scatter(x, origin_time1)
-	plt.savefig('origintime1.png')
-	plt.clf()
-	x = range(len(origin_time2))
-	plt.scatter(x, origin_time2)
-	plt.savefig('origintime2.png')
-	plt.clf()
-	x = range(len(origin_time3))
-	plt.scatter(x, origin_time3)
-	plt.savefig('origintime3.png')
-	plt.clf()
-	x = range(len(time1))
-	plt.scatter(x, time1)
-	plt.savefig('time1.png')
-	plt.clf()
-	x = range(len(time2))
-	plt.scatter(x, time2)
-	plt.savefig('time2.png')
-	plt.clf()
+	if isPlot:
+		x = range(len(origin_time1))
+		plt.scatter(x, origin_time1)
+		
+		x = range(len(origin_time2))
+		plt.scatter(x, origin_time2)
+
+		x = range(len(origin_time3))
+		plt.scatter(x, origin_time3)
+		plt.savefig('origintime3.png')
+		plt.clf()
+		
+		x = range(len(time1))
+		plt.scatter(x, time1)
+
+		x = range(len(time2))
+		plt.scatter(x, time2)
+		plt.savefig('time2.png')
+		plt.clf()
 
 	time1_avg = numpy.average(time1)
 	time1_std = numpy.std(time1)
@@ -181,10 +181,10 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 		length_std = numpy.std(lengths)
 	import math
 	with open("stats.txt", "w") as stats:
-		stats.write('Concensus Time:\n')
+		stats.write('Concensus Time('+str(len(time1))+'):\n')
 		stats.write('\tmean:{0} us\n'.format(time1_avg))
 		stats.write('\tstd:{0}\n'.format(time1_std))
-		stats.write('Response Time:\n')
+		stats.write('Response Time('+str(len(time2))+'):\n')
 		stats.write('\tmean:{0} us\n'.format(time2_avg))
 		stats.write('\tstd:{0}\n'.format(time2_std))
 		stats.write('Throughput:\n')
@@ -217,9 +217,13 @@ def preSetting(config, bench, apps_name):
 		for i in range(7000, 7000+int(config.get(bench,'SERVER_COUNT'))):
 			os.system("cp $MSMR_ROOT/apps/ssdb/ssdb-master/ssdb.conf ../server"+str(i)+"/")
 			os.system("sed -e 's/port: [0-9]\+/port: "+str(i)+"/g' ../server"+str(i)+"/ssdb.conf > ../server"+str(i)+"/ssdb1.conf")
-			os.system("sed -e 's/dir = \./dir = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master/g' ../server"+str(i)+"/ssdb1.conf > ../server"+str(i)+"/ssdb2.conf")
-			os.system("sed -e 's/pidfile = \./pidfile = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master/g' ../server"+str(i)+"/ssdb2.conf > ../server"+str(i)+"/ssdb"+str(i)+".conf")
+			os.system("sed -e 's/dir = \.\/var/dir = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master\/var"+str(i)+"/g' ../server"+str(i)+"/ssdb1.conf > ../server"+str(i)+"/ssdb2.conf")
+			os.system("sed -e 's/pidfile = \.\/var\/ssdb/pidfile = "+os.environ["MSMR_ROOT"].replace('/','\/')+"\/apps\/ssdb\/ssdb-master\/var\/ssdb"+str(i)+"/g' ../server"+str(i)+"/ssdb2.conf > ../server"+str(i)+"/ssdb"+str(i)+".conf")
+			os.system("rm $MSMR_ROOT/apps/ssdb/ssdb-master/var/ssdb"+str(i)+".pid")
+			os.system("mkdir $MSMR_ROOT/apps/ssdb/ssdb-master/var"+str(i))
 	elif bench.split(' ')[0]=='mongodb':
+		for i in range(7000, 7000+int(config.get(bench, "SERVER_COUNT"))):
+			os.system("mkdir $MSMR_ROOT/apps/mongodb/install/data"+str(i))
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/mongodb-binding -r ../")
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/core -r ../")
 		os.system("cp $MSMR_ROOT/apps/mongodb/ycsb-0.1.4/CHANGELOG ../")
@@ -398,8 +402,11 @@ def processBench(config, bench):
 			time1 += [(origin_time2[i]-origin_time1[i])*1000000]
 	#print time4
 	#print lengths
+	isPlot = False
+	if(config.get(bench, "PLOT_MODE")=="WITH_PLOT"):
+		isPlot = True
 	if len(time1) > 0:
-		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3)
+		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

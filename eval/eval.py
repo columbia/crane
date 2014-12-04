@@ -143,7 +143,7 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot):
+def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap):
 	try:
 		import numpy
 	except ImportError:
@@ -184,9 +184,17 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 		stats.write('Concensus Time('+str(len(time1))+'):\n')
 		stats.write('\tmean:{0} us\n'.format(time1_avg))
 		stats.write('\tstd:{0}\n'.format(time1_std))
+		for t in concensusmap:
+			stats.write('\t{0}({1}):\n'.format(t, len(concensusmap[t])))
+			stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap[t])))
+			stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap[t])))
 		stats.write('Response Time('+str(len(time2))+'):\n')
 		stats.write('\tmean:{0} us\n'.format(time2_avg))
 		stats.write('\tstd:{0}\n'.format(time2_std))
+		for t in responsemap:
+                        stats.write('\t{0}({1}):\n'.format(t, len(responsemap[t])))
+                        stats.write('\t\tmean:{0} us\n'.format(numpy.average(responsemap[t])))
+                        stats.write('\t\tstd:{0}\n'.format(numpy.std(responsemap[t])))
 		stats.write('Throughput:\n')
 		stats.write('\t{0} req/s\n'.format(len(time1)/(last-first)))
 		if len(lengths) > 0:
@@ -385,6 +393,9 @@ def processBench(config, bench):
 	time1 = []
 	time2 = []
 	lengths = []
+	types = []
+	concensusmap = {}
+	responsemap = {}
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-proxy-req.log'
 		print log_file_name
@@ -401,20 +412,29 @@ def processBench(config, bench):
 				last = float(match.group(4))
 				origin_time1 += [float(match.group(1))]
 				origin_time3 += [float(match.group(3))]
+			if line.startswith('Operation'):
+				types += [line.split(' ')[1].translate(None, '.\n')]
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-consensus-sys.log'
 		print log_file_name
 		lines = (open(log_file_name, 'r').readlines())
 		for line in lines:
 			origin_time2 += [float(line.split(':')[0])]
 		for i in range(len(origin_time1)):
-			time1 += [(origin_time2[i]-origin_time1[i])*1000000]
-	#print time4
+			tmpTime = [(origin_time2[i]-origin_time1[i])*1000000]
+			time1 += tmpTime
+			if types[i] not in concensusmap:
+				concensusmap[types[i]] = tmpTime
+				responsemap[types[i]] = [time2[i]]
+			else:
+				concensusmap[types[i]] += tmpTime
+				responsemap[types[i]] += [time2[i]]
+	#print types
 	#print lengths
 	isPlot = False
 	if(config.get(bench, "PLOT_MODE")=="WITH_PLOT"):
 		isPlot = True
 	if len(time1) > 0:
-		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot)
+		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	

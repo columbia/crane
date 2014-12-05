@@ -24,6 +24,8 @@
 WORK_DIR=$MSMR_ROOT/apps/lxc/apache
 APP_DIR=/home/ubuntu/apps/apache
 
+cd $WORK_DIR
+
 if [ "$1" == "" ]; then
   echo "Please input the name of the container, stopping"
   exit 1
@@ -43,10 +45,12 @@ PID=$(sudo lxc-info -n $1 | grep PID | awk '{ print $2 }')
 if [ ! -d /proc/$PID/root/home/ubuntu/apps/apache ]; then
   sudo mkdir /proc/$PID/root/home/ubuntu/apps/apache
 fi
-sudo cp $WORK_DIR/container_mk_apache /proc/$PID/root/home/ubuntu/apps/apache
+sudo cp container_mk_apache /proc/$PID/root/home/ubuntu/apps/apache
+sudo cp container_start_apache /proc/$PID/root/home/ubuntu/apps/apache
+sudo cp container_stop_apache /proc/$PID/root/home/ubuntu/apps/apache
 
 # execute script
-sudo lxc-attach -n $1 /home/ubuntu/apps/apache/container_mk_apache
+sudo lxc-attach -n $1 $APP_DIR/container_mk_apache
 
 # stop container
 sudo lxc-stop -n $1

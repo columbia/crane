@@ -1,0 +1,11 @@
+Before submitting your patches, check they are signed-off-by
+conforming with the DCO contained in the ./CONTRIBUTING file.
+
+Maintainer
+----------
+
+Person          : Daniel Lezcano, Serge Hallyn, Stéphane Graber
+Mail patches to : lxc-devel@lists.linuxcontainers.org
+Mailing lists   : lxc-devel@lists.linuxcontainers.org, lxc-users@lists.linuxcontainers.org
+Web page        : http://linuxcontainers.org
+GIT location    : git://github.com/lxc/lxc

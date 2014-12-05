@@ -24,7 +24,7 @@ LXC_VER=1.0.6
 # download and extract
 cd $MSMR_ROOT/apps/lxc
 if [ ! -f lxc-$LXC_VER.tar.gz ]; then
-	wget https://linuxcontainers.org/downloads/lxc-$LXC_VER.tar.gz
+	wget --no-check-certificate https://linuxcontainers.org/downloads/lxc-$LXC_VER.tar.gz
 fi
 tar zxvf lxc-$LXC_VER.tar.gz
 
@@ -39,12 +39,15 @@ echo ""
 echo "Installing and setting up LXC requires root privilege, please enter your password if prompted"
 echo ""
 
+#CGROUP_STAT=$(mount | grep cgroup)
+#if [ "$CGROUP_STAT" == "" ]; then
+#  echo "cgroup /sys/fs/cgroup cgroup defaults 0 0" | sudo tee --append /etc/fstab
+#  sudo mount /sys/fs/cgroup
+#  echo ""
+#  echo "We have added cgroup on /sys/fs/cgroup"
+#  echo ""
+#fi
+
 sudo make install
 sudo ldconfig
-
-# network bride
-sudo brctl addbr lxcbr0
-sudo brctl addif lxcbr0 eth0
-sudo ip link set dev lxcbr0 up
-
 

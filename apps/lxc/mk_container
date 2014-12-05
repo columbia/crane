@@ -22,33 +22,44 @@
 # run this script at host to prepare a container for later use
 
 WORK_DIR=$MSMR_ROOT/apps/lxc
+CONFIG_DIR=/usr/local/etc/lxc
+
 
 if [ "$1" == "" ]; then
-  echo "Please input the name of the container, stopping"
+  echo "./mk_container <name>"
   exit 1
 fi
 
 echo ""
-echo "This script requires root privilege, please input yout password if prompted"
+echo "This script requires root privilege, please input your password if prompted"
 echo ""
 
+# create new template
+sudo rm -f $CONFIG_DIR/$1.conf
+echo "lxc.network.type = veth" | sudo tee --append $CONFIG_DIR/$1.conf
+echo "lxc.network.link = virbr0" | sudo tee --append $CONFIG_DIR/$1.conf
+echo "lxc.network.flags = up" | sudo tee --append $CONFIG_DIR/$1.conf
+echo "lxc.network.hwaddr = 00:16:3e:xx:xx:xx" | sudo tee --append $CONFIG_DIR/$1.conf
+echo "lxc.network.ipv4 = 0.0.0.0/24" | sudo tee --append $CONFIG_DIR/$1.conf
+echo "lxc.network.veth.pair = vethtest1" | sudo tee --append $CONFIG_DIR/$1.conf
+
 # create container
-sudo lxc-create -t ubuntu -n $1
+sudo lxc-create -f $CONFIG_DIR/$1.conf -t ubuntu -n $1
 
 # set bridge
-BRIDGE_STATUS=sudo brctl show lxcbr0 | grep lxcbr0
-if [ "$BRIDGE_STATUS" == "can't get info No such device" ]; then
-  sudo brctl addbr lxcbr0
-  sudo brctl addif lxcbr0 eth0
-  sudo ip link set dev lxcbr0 up
+BRIDGE_STATUS=$(sudo brctl show | grep virbr0)
+if [ "$BRIDGE_STATUS" == "" ]; then
+  sudo virsh net-start default
 fi
 
 # start container
 sudo lxc-start -n $1 -d
+sleep 1
 
 # pass the script to the container
+cd $WORK_DIR
 PID=$(sudo lxc-info -n $1 | grep PID | awk '{ print $2 }')
-sudo cp $WORK_DIR/container_setup /proc/$PID/root/home/ubuntu
+sudo cp container_setup /proc/$PID/root/home/ubuntu
 
 # execute script
 sudo lxc-attach -n $1 /home/ubuntu/container_setup

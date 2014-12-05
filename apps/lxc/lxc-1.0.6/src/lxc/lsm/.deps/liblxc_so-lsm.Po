@@ -1,1 +1,0 @@
-lsm/liblxc_so-lsm.o: lsm/lsm.c

@@ -19,14 +19,14 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# run this script at host to prepare a container for later use
+# test to connect apache in container
 
-WORK_DIR=$MSMR_ROOT/apps/lxc
-CONFIG_DIR=/usr/local/etc/lxc
+WORK_DIR=$MSMR_ROOT/apps/lxc/apache
 
+cd $WORK_DIR
 
 if [ "$1" == "" ]; then
-  echo "./mk_container <name>"
+  echo "<Usage> ./bunch_test_apache <number of instances>"
   exit 1
 fi
 
@@ -34,36 +34,26 @@ echo ""
 echo "This script requires root privilege, please input your password if prompted"
 echo ""
 
-# create new template
-sudo rm -f $CONFIG_DIR/$1.conf
-echo "lxc.network.type = veth" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.link = virbr0" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.flags = up" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.hwaddr = 00:16:3e:xx:xx:xx" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.ipv4 = 0.0.0.0/24" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.veth.pair = vethtest1" | sudo tee --append $CONFIG_DIR/$1.conf
-
-# create container
-sudo lxc-create -f $CONFIG_DIR/$1.conf -t ubuntu -n $1
-
 # set bridge
 BRIDGE_STATUS=$(sudo brctl show | grep virbr0)
 if [ "$BRIDGE_STATUS" == "" ]; then
   sudo virsh net-start default
 fi
 
-# start container
-sudo lxc-start -n $1 -d
-sleep 3
+# test if apache is built
+if [ ! -f $MSMR_ROOT/apps/apache/install/bin/ab ]; then
+  echo ""
+  echo "Please proceed to m-smr/apps/apache to build apache first"
+  exit 1
+fi
 
-# pass the script to the container
-cd $WORK_DIR
-PID=$(sudo lxc-info -n $1 | grep PID | awk '{ print $2 }')
-sudo cp container_setup /proc/$PID/root/home/ubuntu
-
-# execute script
-sudo lxc-attach -n $1 /home/ubuntu/container_setup
-
-# stop container
-sudo lxc-stop -n $1
+for i in $(seq 1 $1);
+do
+  ./start_apache test$i
+  sleep 1
+  IP=$(sudo lxc-info -n test$i | grep IP | awk '{ print $2 }')
+  $MSMR_ROOT/apps/apache/install/bin/ab -n 100 -c 10 http://$IP:80/
+  ./stop_apache test$i
+  sleep 1
+done
 

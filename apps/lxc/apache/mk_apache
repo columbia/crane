@@ -27,7 +27,7 @@ APP_DIR=/home/ubuntu/apps/apache
 cd $WORK_DIR
 
 if [ "$1" == "" ]; then
-  echo "Please input the name of the container, stopping"
+  echo "<Usage> ./mk_apache <container name>"
   exit 1
 fi
 
@@ -37,7 +37,7 @@ echo ""
 
 # start container
 sudo lxc-start -n $1 -d
-sleep 1
+sleep 3
 
 # make directory and pass the script to the container
 PID=$(sudo lxc-info -n $1 | grep PID | awk '{ print $2 }')

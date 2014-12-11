@@ -19,14 +19,10 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# run this script at host to prepare a container for later use
-
-WORK_DIR=$MSMR_ROOT/apps/lxc
-CONFIG_DIR=/usr/local/etc/lxc
-
+APP_DIR=/home/ubuntu/apps/apache
 
 if [ "$1" == "" ]; then
-  echo "./mk_container <name>"
+  echo "<Usage> ./stop_apache <container name>"
   exit 1
 fi
 
@@ -34,35 +30,12 @@ echo ""
 echo "This script requires root privilege, please input your password if prompted"
 echo ""
 
-# create new template
-sudo rm -f $CONFIG_DIR/$1.conf
-echo "lxc.network.type = veth" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.link = virbr0" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.flags = up" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.hwaddr = 00:16:3e:xx:xx:xx" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.ipv4 = 0.0.0.0/24" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.veth.pair = vethtest1" | sudo tee --append $CONFIG_DIR/$1.conf
+# stop server
+sudo lxc-attach -n $1 $APP_DIR/container_stop_apache
 
-# create container
-sudo lxc-create -f $CONFIG_DIR/$1.conf -t ubuntu -n $1
-
-# set bridge
-BRIDGE_STATUS=$(sudo brctl show | grep virbr0)
-if [ "$BRIDGE_STATUS" == "" ]; then
-  sudo virsh net-start default
-fi
-
-# start container
-sudo lxc-start -n $1 -d
-sleep 3
-
-# pass the script to the container
-cd $WORK_DIR
-PID=$(sudo lxc-info -n $1 | grep PID | awk '{ print $2 }')
-sudo cp container_setup /proc/$PID/root/home/ubuntu
-
-# execute script
-sudo lxc-attach -n $1 /home/ubuntu/container_setup
+# stop port forwarding
+#IP=$(sudo lxc-info -n $1 | grep IP | awk '{ print $2 }')
+#sudo iptables -D PREROUTING -t nat -i eth0 -p tcp --dport $2 -j DNAT --to $IP:80
 
 # stop container
 sudo lxc-stop -n $1

@@ -1,12 +1,19 @@
 Linux Container LXC Folder
 
 
+0. prerequisite
+$ sudo apt-get install libcap-dev automake bridge-utils debootstrap
+
+
 1. install LXC at host system
 $ ./mk_lxc
 
 
-2. build a single container
+2. build container
+To build a single one:
 $ ./mk_container <container name>
+To batch build containers name test1 to testn:
+$ ./batch_mk_container <number of instances>
 
 
 3. build an app: see individual app folder
@@ -24,4 +31,5 @@ $ cd lxc-1.0.6
 $ sudo make uninstall
 
 
-Note: ./container_setup is used to be executed inside the container, do not execute it in host
+Note: all container_* scripts are used to be executed inside the container, do not execute in host.
+

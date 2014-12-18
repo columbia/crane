@@ -1,0 +1,108 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2014,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+# variables
+APP_VER=5.6.21
+APP_LV2VER=5.6
+APP_DIR=$MSMR_ROOT/apps/mysql
+BEN_VER=0.4.12.5
+
+
+# working folder
+cd $APP_DIR
+
+
+# remove folders
+rm -rf mysql-$APP_VER
+rm -rf sysbench-$BEN_VER
+rm -rf install
+rm -rf benchmark
+
+# download and extract
+if [ ! -f mysql-$APP_VER.tar.gz ]; then
+    wget http://dev.mysql.com/get/Downloads/MySQL-$APP_LV2VER/mysql-$APP_VER.tar.gz
+fi
+tar zxvf mysql-$APP_VER.tar.gz
+
+
+# build mysql
+cd mysql-$APP_VER
+mkdir ../install
+mkdir ../install/data
+mkdir ../install/etc
+cmake -D MYSQL_DATADIR=$APP_DIR/install/data -D SYSCONFDIR=$APP_DIR/install/etc -D CMAKE_INSTALL_PREFIX=$APP_DIR/install -D MYSQL_TCP_PORT=3366 -D MYSQL_UNIX_ADDR=/tmp/mysql.sock .
+make
+make install
+cd ../install
+
+
+# write config file
+echo "[mysqld]" >> my.cnf
+echo "basedir = $APP_DIR/install" >> my.cnf
+echo "datadir = $APP_DIR/install/data" >> my.cnf
+echo "port = 3366" >> my.cnf
+echo "socket = $APP_DIR/install/mysql.sock" >> my.cnf
+echo "sql_mode = NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES" >> my.cnf
+echo >> my.cnf
+
+
+# configure mysql install
+scripts/mysql_install_db --basedir=$APP_DIR/install --datadir=$APP_DIR/install/data --defaults-file=$APP_DIR/install/my.cnf
+rm my-new.cnf
+
+
+# start server, wait till socket is there
+bin/mysqld --defaults-file=$APP_DIR/install/my.cnf --basedir=$APP_DIR/install --datadir=$APP_DIR/install/data --log-error=$APP_DIR/install/data/mysql.err --pid-file=$APP_DIR/mysql.pid --socket=$APP_DIR/install/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
+sleep 5
+# while [ ! -S $APP_DIR/install/mysql.sock ] ; do
+#     sleep 1
+# done;
+
+
+# set root user and create dbtest
+bin/mysqladmin -u root password 'password' --socket=$APP_DIR/install/mysql.sock
+bin/mysql --defaults-file=$APP_DIR/install/my.cnf --socket=$APP_DIR/install/mysql.sock -uroot -ppassword -e "CREATE DATABASE dbtest;"
+
+
+# shutdown server
+bin/mysqladmin --user=root --password=password --socket=$APP_DIR/install/mysql.sock shutdown
+
+
+# download and extract sysbench benchmark
+cd ../
+if [ ! -f sysbench-$BEN_VER.tar.gz ]; then
+    wget http://downloads.mysql.com/source/sysbench-$BEN_VER.tar.gz
+fi
+if [ ! -f sysbench-$BEN_VER.tar ]; then
+    gunzip sysbench-$BEN_VER.tar.gz
+fi
+tar xvf sysbench-$BEN_VER.tar
+
+
+# build benchmark
+mkdir benchmark
+cd sysbench-$BEN_VER
+./autogen.sh
+./configure --prefix=$APP_DIR/benchmark --with-mysql-includes=$APP_DIR/install/include --with-mysql-libs=$APP_DIR/install/lib
+make
+make install
+

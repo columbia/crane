@@ -54,7 +54,7 @@ fi
 
 # start container
 sudo lxc-start -n $1 -d
-sleep 3
+sleep 10
 
 # pass the script to the container
 cd $WORK_DIR

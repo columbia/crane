@@ -39,4 +39,3 @@ echo ""
 
 IP=$(sudo lxc-info -n $1 | grep IP | awk '{ print $2 }')
 $MSMR_ROOT/apps/apache/install/bin/ab -n 100 -c 10 http://$IP:80/
-

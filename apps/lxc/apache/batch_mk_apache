@@ -32,13 +32,13 @@ fi
 
 for i in $(seq 1 $1);
 do
-  ./mk_apache test$i
+  ./mk_apache container$i
 done
 
 echo ""
 echo "The following containers are set up:"
 
 for i in $(seq 1 $1);
-  do echo "test$i"
+  do echo "container$i"
 done
 

@@ -49,11 +49,11 @@ fi
 
 for i in $(seq 1 $1);
 do
-  ./start_apache test$i
+  ./start_apache container$i
   sleep 1
-  IP=$(sudo lxc-info -n test$i | grep IP | awk '{ print $2 }')
+  IP=$(sudo lxc-info -n container$i | grep IP | awk '{ print $2 }')
   $MSMR_ROOT/apps/apache/install/bin/ab -n 100 -c 10 http://$IP:80/
-  ./stop_apache test$i
+  ./stop_apache container$i
   sleep 1
 done
 

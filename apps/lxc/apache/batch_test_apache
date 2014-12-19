@@ -47,12 +47,22 @@ if [ ! -f $MSMR_ROOT/apps/apache/install/bin/ab ]; then
   exit 1
 fi
 
+echo "Starting $1 containers with apache..."
 for i in $(seq 1 $1);
 do
   ./start_apache container$i
-  sleep 5
+done
+
+echo "Testing $1 containers with ab..."
+for i in $(seq 1 $1);
+do
   IP=$(sudo lxc-info -n container$i | grep IP | awk '{ print $2 }')
   $MSMR_ROOT/apps/apache/install/bin/ab -n 100 -c 10 http://$IP:80/
-  ./stop_apache container$i
-  sleep 5
 done
+
+echo "Stopping $1 containers..."
+for i in $(seq 1 $1);
+do
+  ./stop_apache container$i
+done
+

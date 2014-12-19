@@ -33,7 +33,6 @@ fi
 for i in $(seq 1 $1);
 do
   ./mk_container container$i
-  sleep 8
 done
 
 echo ""

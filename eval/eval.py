@@ -189,28 +189,31 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 		length_std = numpy.std(lengths)
 	import math
 	with open("stats.txt", "w") as stats:
-		stats.write('Concensus Time('+str(len(time1))+'):\n')
-		stats.write('\tmean:{0} us\n'.format(time1_avg))
-		stats.write('\tstd:{0}\n'.format(time1_std))
-		for t in concensusmap:
-			stats.write('\t{0}({1}):\n'.format(t, len(concensusmap[t])))
-			stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap[t])))
-			stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap[t])))
-		stats.write('Response Time('+str(len(time2))+'):\n')
-		stats.write('\tmean:{0} us\n'.format(time2_avg))
-		stats.write('\tstd:{0}\n'.format(time2_std))
-		for t in responsemap:
-                        stats.write('\t{0}({1}):\n'.format(t, len(responsemap[t])))
-                        stats.write('\t\tmean:{0} us\n'.format(numpy.average(responsemap[t])))
-                        stats.write('\t\tstd:{0}\n'.format(numpy.std(responsemap[t])))
 		# tom add 20150126
-		stats.write('Throughput (from timestamps in libevent_paxos):\n')
-		stats.write('\t{0} operations/s\n'.format(len(time1)/(last-first)))
+		if Perf_Test_Flag == 1:
+			stats.write('Concensus Time('+str(len(time1))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(time1_avg))
+			stats.write('\tstd:{0}\n'.format(time1_std))
+			for t in concensusmap:
+				stats.write('\t{0}({1}):\n'.format(t, len(concensusmap[t])))
+				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap[t])))
+				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap[t])))
+			stats.write('Response Time('+str(len(time2))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(time2_avg))
+			stats.write('\tstd:{0}\n'.format(time2_std))
+			for t in responsemap:
+				stats.write('\t{0}({1}):\n'.format(t, len(responsemap[t])))
+				stats.write('\t\tmean:{0} us\n'.format(numpy.average(responsemap[t])))
+				stats.write('\t\tstd:{0}\n'.format(numpy.std(responsemap[t])))
+			# tom add 20150126
+			stats.write('Throughput (from timestamps in libevent_paxos):\n')
+			stats.write('\t{0} operations/s\n'.format(len(time1)/(last-first)))
+			# end tom add 20150126
+			if len(lengths) > 0:
+				stats.write('Queue Length:\n')
+				stats.write('\tmean:{0}\n'.format(length_avg))
+				stats.write('\tstd:{0}'.format(length_std))
 		# end tom add 20150126
-		if len(lengths) > 0:
-			stats.write('Queue Length:\n')
-			stats.write('\tmean:{0}\n'.format(length_avg))
-			stats.write('\tstd:{0}'.format(length_std))
 		# tom add 2015-01-23
 		#if bench.split(" ")[0]=="apache":
 		stats.write('==============================\n')

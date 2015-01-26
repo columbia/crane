@@ -1,0 +1,15 @@
+#! /bin/bash
+CUR_DIR=$(pwd)
+${CUR_DIR}/client.out -n 0 -s 127.0.0.1 -p 8000 -r 9 &>/dev/null &
+CLIENT_1=$!
+${CUR_DIR}/client.out -n 1 -s 127.0.0.1 -p 8000 -r 9 &>/dev/null &
+CLIENT_2=$!
+#${CUR_DIR}/client.out -n 2 -s 127.0.0.1 -p 8000 -r 9 &>/dev/null &
+${CUR_DIR}/client.out -n 2 -s 127.0.0.1 -p 8000 -r 9  &>/dev/null &
+CLIENT_3=$!
+
+sleep 30
+
+kill ${CLIENT_1} &>/dev/null
+kill ${CLIENT_2} &>/dev/null
+kill ${CLIENT_3} &>/dev/null

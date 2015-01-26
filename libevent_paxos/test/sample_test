@@ -1,0 +1,33 @@
+#!/bin/bash
+
+
+:<<'END'
+FILEPATH=$(pwd)
+LOG_NAME=${FILEPATH}/Log/ping_test_1
+RESULT=$(grep "Lost.*Leader" ${LOG_NAME}  | wc -l)
+echo ${RESULT}
+echo ${1}
+
+for i in $(seq 6);do
+    declare var_${i}=${i}
+    export var_${i}=${i}
+done
+
+
+
+for i in $(echo ${!var*});do
+    eval j=\$${i}
+    echo ${j}
+done
+    
+for i in $(echo ${!var*});do
+    echo "${!i}"
+done
+
+VAR='1 2 3'
+REF=VAR
+eval "echo \"\$${REF}\""
+echo "${!REF}"
+END
+
+exit 0

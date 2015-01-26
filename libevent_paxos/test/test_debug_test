@@ -1,0 +1,102 @@
+#! /bin/bash
+#run some test for the program
+#to be added
+
+#start one leader, test whether all the initializations finish
+
+
+check_output(){
+
+#    LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}
+#    LOG_NAME_1=${FILEPATH}/log/${TEST_NAME}_1_${NO}${LOG_SUFFIX}
+#    LOG_NAME_2=${FILEPATH}/log/${TEST_NAME}_2_${NO}${LOG_SUFFIX}
+#
+#    RESULT_1=$(diff ${LOG_NAME_0} ${LOG_NAME_1} | wc -l)
+#
+#    if [ "${RESULT_1}" -ne "0" ];then
+#        echo ${RESULT_1}
+#        exit 1
+#    fi
+#
+#    RESULT_2=$(diff ${LOG_NAME_0} ${LOG_NAME_2} | wc -l)
+#
+#    if [ "${RESULT_2}" -ne "0" ];then
+#        exit 1
+#    fi
+
+    exit 0
+}
+
+TEST_NAME=$(basename $0)
+NO=${1}
+
+#echo "==========Node Start Test =========="
+
+CUR_DIR=$(pwd)
+
+LOG_SUFFIX=".log"
+SLEEP_TIME=3
+SECONDARIES_SIZE=2
+#do not re-compile
+:<<'END'
+cd ..
+make clean 
+make
+cd ${CUR_DIR}
+END
+
+if [ ! -e ${CUR_DIR}/${TEST_NAME} ];then
+    FILEPATH=${CUR_DIR}/test
+else
+    FILEPATH=${CUR_DIR}
+fi
+
+if [ ! -e ${FILEPATH}/${TEST_NAME} ];then
+    echo ${CUR_DIR}
+    echo ${FILEPATH}
+    echo "Script Execution Path Error"
+    exit 1
+fi
+
+
+if [ ! -d ${FILEPATH}/log ];then
+    mkdir ${FILEPATH}/log
+fi
+
+exec 2>${FILEPATH}/log/${TEST_NAME}_err_${NO}
+
+export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib
+
+SERVER_PROGRAM=${FILEPATH}/../target/server.out
+CONFIG_FILE=${FILEPATH}/../target/single_server.cfg
+
+rm -rf ${FILEPATH}/.db
+
+#echo "The Log File Will Be Stored In ${FILEPATH}/log/${TEST_NAME}_*_${NO}"
+#echo "Now We Start The Leader"
+${SERVER_PROGRAM} -n 0 -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &
+PRIMARY_PID=$!
+
+
+#echo "Sleep Some Time"
+
+sleep 5
+
+CLIENT_PROGRAM=${FILEPATH}/../client/client.out
+
+${CLIENT_PROGRAM} -n 0 -s 127.0.0.1 -p 9000 -r 1000  -t 0 -i 1000 &>/dev/null &
+${CLIENT_PROGRAM} -n 1 -s 127.0.0.1 -p 9000 -r 1000  -t 0 -i 1000 &>/dev/null &
+${CLIENT_PROGRAM} -n 2 -s 127.0.0.1 -p 9000 -r 1000  -t 0 -i 1000 &>/dev/null &
+
+${CLIENT_PROGRAM} -n 3 -s 127.0.0.1 -p 9000 -r 1000  -t 0 -i 1000 &>/dev/null &
+${CLIENT_PROGRAM} -n 4 -s 127.0.0.1 -p 9000 -r 1000  -t 0 -i 1000 &>/dev/null &
+
+
+sleep 3
+
+sleep ${SLEEP_TIME}
+
+#echo "Kill The Leader"
+kill -15 ${PRIMARY_PID} &>/dev/null
+
+check_output

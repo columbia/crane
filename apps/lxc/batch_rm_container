@@ -19,25 +19,31 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# create a number of container (container1 to containern)
+# remove a number of container (container1 to containern)
 
 WORK_DIR=$MSMR_ROOT/apps/lxc
 
 cd $WORK_DIR
 
 if [ "$1" == "" ]; then
-  echo "<Usage> ./bunch_mk_container <number of instances>"
+  echo "<Usage> ./bunch_rm_container <number of instances>"
   exit 1
 fi
 
+echo ""
+echo "This script requires root privilege, please input your password if prompted"
+echo ""
+
 for i in $(seq 1 $1);
 do
-  ./mk_container container$i
+  sudo lxc-stop -n container$i
+  sudo lxc-destroy -n container$i
 done
 
 echo ""
-echo "The following containers are created:"
+echo "The following containers are removed:"
 
 for i in $(seq 1 $1);
   do echo "container$i"
 done
+

@@ -23,7 +23,7 @@
 
 echo "ubuntu" | sudo -S apt-get update
 sleep 1
-sudo apt-get -y install gcc g++ wget make cmake automake perl libevent-dev libtool
+sudo apt-get -y install gcc g++ wget make cmake automake perl libevent-dev libtool libncurses5-dev
 
 mkdir /home/ubuntu/apps
 

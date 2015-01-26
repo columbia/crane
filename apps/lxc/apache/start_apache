@@ -40,7 +40,7 @@ fi
 
 # start container
 sudo lxc-start -n $1 -d
-sleep 3
+sleep 12
 
 # start server
 sudo lxc-attach -n $1 $APP_DIR/container_start_apache

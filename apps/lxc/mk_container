@@ -41,7 +41,7 @@ echo "lxc.network.link = virbr0" | sudo tee --append $CONFIG_DIR/$1.conf
 echo "lxc.network.flags = up" | sudo tee --append $CONFIG_DIR/$1.conf
 echo "lxc.network.hwaddr = 00:16:3e:xx:xx:xx" | sudo tee --append $CONFIG_DIR/$1.conf
 echo "lxc.network.ipv4 = 0.0.0.0/24" | sudo tee --append $CONFIG_DIR/$1.conf
-echo "lxc.network.veth.pair = vethtest1" | sudo tee --append $CONFIG_DIR/$1.conf
+echo "lxc.network.veth.pair = veth$1" | sudo tee --append $CONFIG_DIR/$1.conf
 
 # create container
 sudo lxc-create -f $CONFIG_DIR/$1.conf -t ubuntu -n $1
@@ -54,7 +54,7 @@ fi
 
 # start container
 sudo lxc-start -n $1 -d
-sleep 3
+sleep 12
 
 # pass the script to the container
 cd $WORK_DIR

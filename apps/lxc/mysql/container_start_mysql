@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (c) 2014,  Regents of the Columbia University
+# Copyright (c) 2014,  Regents of the Columbia University 
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -19,25 +19,13 @@
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# create a number of container (container1 to containern)
+# variables
+SRV_DIR=/home/ubuntu/apps/mysql/install
+BEN_DIR=/home/ubuntu/apps/mysql/benchmark
 
-WORK_DIR=$MSMR_ROOT/apps/lxc
 
-cd $WORK_DIR
+# start server, wait till socket is there
+cd $SRV_DIR
+bin/mysqld --defaults-file=$SRV_DIR/my.cnf --basedir=$SRV_DIR --datadir=$SRV_DIR/data --log-error=$SRV_DIR/data/mysql.err --pid-file=$SRV_DIR/mysql.pid --socket=$SRV_DIR/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
+sleep 5
 
-if [ "$1" == "" ]; then
-  echo "<Usage> ./bunch_mk_container <number of instances>"
-  exit 1
-fi
-
-for i in $(seq 1 $1);
-do
-  ./mk_container container$i
-done
-
-echo ""
-echo "The following containers are created:"
-
-for i in $(seq 1 $1);
-  do echo "container$i"
-done

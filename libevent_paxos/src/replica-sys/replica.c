@@ -3,6 +3,12 @@
 #include "../include/config-comp/config-comp.h"
 #include <sys/stat.h>
 
+static int exit_flag = 0;
+
+#define CHECK_EXIT do{if(exit_flag){\
+    SYS_LOG(my_node,"Component Received TERMINATION SIGNAL,NOW QUIT.\n")\
+    event_base_loopexit((my_node)->base,NULL);}}while(0);
+
 int max_waiting_connections = MAX_ACCEPT_CONNECTIONS; 
 static unsigned current_connection = 3;
 
@@ -64,6 +70,12 @@ static int free_node(node*);
 //helper function
 static int isLeader(node*);
 
+
+
+static void node_sys_sig_handler(int sig){
+    exit_flag = 1;
+}
+
 //implementation level
 
 static void node_singal_handler(evutil_socket_t fid,short what,void* arg){
@@ -93,18 +105,25 @@ static void peer_node_on_event(struct bufferevent* bev,short ev,void* arg){
         bufferevent_free(bev);
         event_add(peer_node->reconnect,&my_node->config.reconnect_timeval);
     }
+    CHECK_EXIT;
+    return;
 };
 
 
 static void connect_peer(peer* peer_node){
+    node* my_node = peer_node->my_node;
     peer_node->my_buff_event = bufferevent_socket_new(peer_node->base,-1,BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(peer_node->my_buff_event,peer_node_on_read,NULL,peer_node_on_event,peer_node);
     bufferevent_enable(peer_node->my_buff_event,EV_READ|EV_WRITE|EV_PERSIST);
     bufferevent_socket_connect(peer_node->my_buff_event,(struct sockaddr*)peer_node->peer_address,peer_node->sock_len);
+    CHECK_EXIT;
 };
 
 static void peer_node_on_timeout(int fd,short what,void* arg){
-    connect_peer((peer*)arg);
+    peer* p = arg;
+    node* my_node = p->my_node;
+    connect_peer(p);
+    CHECK_EXIT;
 };
 
 
@@ -116,6 +135,7 @@ static void connect_peers(node* my_node){
             connect_peer(peer_node);
         }
     }
+    CHECK_EXIT;
 }
 
 
@@ -124,6 +144,7 @@ static void lost_connection_with_leader(node* my_node){
             my_node->node_id);
     SYS_LOG(my_node,"Node %u Will Start A Leader Election\n",
             my_node->node_id);
+    CHECK_EXIT
     return;
 }
 
@@ -149,6 +170,8 @@ static void expected_leader_ping_period(int fd,short what,void* arg){
             lost_connection_with_leader(my_node);
         }
     }
+    CHECK_EXIT
+    return;
 }
 
 
@@ -161,7 +184,6 @@ static void leader_ping_period(int fd,short what,void* arg){
             event_free(my_node->ev_leader_ping);
             initialize_expect_ping(my_node);
         }
-        return;
     }else{
         void* ping_req = build_ping_req(my_node->node_id,&my_node->cur_view);
         if(NULL==ping_req){
@@ -178,11 +200,13 @@ static void leader_ping_period(int fd,short what,void* arg){
         if(NULL!=ping_req){
             free(ping_req);
         }
-    add_ping_event:
+        add_ping_event:
         if(NULL!=my_node->ev_leader_ping){
             event_add(my_node->ev_leader_ping,&my_node->config.ping_timeval);
         }
     }
+    CHECK_EXIT
+    return;
 };
 
 static int initialize_leader_ping(node* my_node){
@@ -193,6 +217,7 @@ static int initialize_leader_ping(node* my_node){
         }
     }
     event_add(my_node->ev_leader_ping,&my_node->config.ping_timeval);
+    CHECK_EXIT
     return 0;
 }
 
@@ -204,6 +229,7 @@ static int initialize_expect_ping(node* my_node){
         }
     }
     event_add(my_node->ev_leader_ping,&my_node->config.expect_ping_timeval);
+    CHECK_EXIT
     return 0;
 }
 
@@ -216,7 +242,7 @@ static void make_progress_on(int fd,short what,void* arg){
             event_free(my_node->ev_make_progress);
             initialize_leader_make_progress(my_node);
         }
-        return;
+        goto make_progress_on_exit;
     }
     if(NULL!=my_node->consensus_comp){
         consensus_make_progress(my_node->consensus_comp);
@@ -224,18 +250,24 @@ static void make_progress_on(int fd,short what,void* arg){
     if(NULL!=my_node->ev_make_progress){
         event_add(my_node->ev_make_progress,&my_node->config.make_progress_timeval);
     }
+make_progress_on_exit:
+    CHECK_EXIT
     return;
 }
 
 static int initialize_leader_make_progress(node* my_node){
+    int ret = 0;
     if(NULL==my_node->ev_make_progress){
         my_node->ev_make_progress = evtimer_new(my_node->base,make_progress_on,(void*)my_node);
         if(my_node->ev_make_progress==NULL){
-            return 1;
+            ret = 1;
+            goto initialize_leader_make_progress_exit;
         }
     }
     event_add(my_node->ev_make_progress,&my_node->config.make_progress_timeval);
-    return 0;
+initialize_leader_make_progress_exit:
+    CHECK_EXIT;
+    return ret;
 }
 
 
@@ -255,10 +287,12 @@ static void update_view(node* my_node,view* new_view){
     }
     SYS_LOG(my_node,"Node %d 's Current View Changed To %u \n",
         my_node->node_id,my_node->cur_view.view_id);
+    CHECK_EXIT
     return;
 }
 
 static void become_leader(node* my_node){
+    CHECK_EXIT
     return;
 }
 static void giveup_leader(node* my_node){
@@ -280,6 +314,7 @@ static void free_peer(peer* peer_node){
         }
         free(peer_node);
     }
+    return;
 }
 
 static void free_peers(node* my_node){
@@ -289,11 +324,11 @@ static void free_peers(node* my_node){
 }
 
 static int isLeader(node* my_node){
+    CHECK_EXIT;
     return my_node->cur_view.leader_id==my_node->node_id;
 }
 
 static int free_node(node* my_node){
-    
     if(my_node->listener!=NULL){
         evconnlistener_free(my_node->listener);
     }
@@ -315,10 +350,12 @@ static int free_node(node* my_node){
 
 
 static void replica_on_error_cb(struct bufferevent* bev,short ev,void *arg){
+    node* my_node = arg;
     if(ev&BEV_EVENT_EOF){
         // the connection has been closed;
         // do the cleaning
     }
+    CHECK_EXIT
     return;
 }
 
@@ -328,11 +365,12 @@ static void replica_on_accept(struct evconnlistener* listener,evutil_socket_t fd
     struct bufferevent* new_buff_event = bufferevent_socket_new(my_node->base,fd,BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(new_buff_event,replica_on_read,NULL,replica_on_error_cb,(void*)my_node);
     bufferevent_enable(new_buff_event,EV_READ|EV_PERSIST|EV_WRITE);
+    CHECK_EXIT
+    return;
 };
 
 // consensus part
 static void send_for_consensus_comp(node* my_node,size_t data_size,void* data,int target){
-    
     consensus_msg* msg = build_consensus_msg(data_size,data);
     if(NULL==msg){
         goto send_for_consensus_comp_exit;
@@ -359,7 +397,7 @@ send_for_consensus_comp_exit:
     if(msg!=NULL){
         free(msg);
     }
-    
+    CHECK_EXIT
     return;
 }
 
@@ -370,6 +408,7 @@ static void handle_ping_ack(node* my_node,ping_ack_msg* msg){
         SYS_LOG(my_node,
                 "Ignore Ping Ack From Node %u.\n",msg->node_id);
     }
+    CHECK_EXIT
 }
 
 static void handle_ping_req(node* my_node,ping_req_msg* msg){
@@ -389,7 +428,7 @@ static void handle_ping_req(node* my_node,ping_req_msg* msg){
                 free(ping_ack);
             }
         } 
-        return;
+        goto handle_ping_req_exit;
     }
     if(my_node->cur_view.view_id == msg->view.view_id){
         if(!isLeader(my_node)){
@@ -410,6 +449,8 @@ static void handle_ping_req(node* my_node,ping_req_msg* msg){
                     msg->node_id,msg->view.view_id);
         }
     }
+handle_ping_req_exit:
+    CHECK_EXIT
     return;
 }
 
@@ -419,6 +460,7 @@ static void handle_consensus_msg(node* my_node,consensus_msg* msg){
     if(NULL!=my_node->consensus_comp){
         consensus_handle_msg(my_node->consensus_comp,msg->header.data_size,(void*)msg+SYS_MSG_HEADER_SIZE);
     }
+    CHECK_EXIT
     return;
 }
 
@@ -434,6 +476,7 @@ static void handle_request_submit(node* my_node,
                 my_node->consensus_comp,msg->header.data_size,
                 (void*)msg+SYS_MSG_HEADER_SIZE,&return_vs);
     }
+    CHECK_EXIT
     return;
 }
 
@@ -467,6 +510,7 @@ static void handle_msg(node* my_node,struct bufferevent* bev,size_t data_size){
 
 handle_msg_exit:
     if(NULL!=msg_buf){free(msg_buf);}
+    CHECK_EXIT
     return;
 }
 
@@ -497,9 +541,10 @@ static void replica_on_read(struct bufferevent* bev,void* arg){
         len = evbuffer_get_length(input);
     }
     if(my_node->stat_log){
-        STAT_LOG(my_node,"This Function Call Process %u Requests In Total.\n",counter);
+        //STAT_LOG(my_node,"This Function Call Process %u Requests In Total.\n",counter);
     }
     if(NULL!=buf){free(buf);}
+    CHECK_EXIT
     return;
 }
 
@@ -535,7 +580,7 @@ int initialize_node(node* my_node,const char* log_path,int deliver_mode,void (*u
         }
     }
     if(!build_log_ret){
-        if(my_node->sys_log || my_node->stat_log){
+        //if(my_node->sys_log || my_node->stat_log){
             char* sys_log_path = (char*)malloc(sizeof(char)*strlen(log_path)+50);
             memset(sys_log_path,0,sizeof(char)*strlen(log_path)+50);
             if(NULL!=sys_log_path){
@@ -543,15 +588,15 @@ int initialize_node(node* my_node,const char* log_path,int deliver_mode,void (*u
                 my_node->sys_log_file = fopen(sys_log_path,"w");
                 free(sys_log_path);
             }
-            if(NULL==my_node->sys_log_file){
+            if(NULL==my_node->sys_log_file && (my_node->sys_log || my_node->stat_log)){
                 err_log("CONSENSUS MODULE : System Log File Cannot Be Created.\n");
             }
-        }
+        //}
     }
-     
 //    my_node->signal_handler = evsignal_new(my_node->base,
 //            SIGQUIT,node_singal_handler,my_node);
 //    evsignal_add(my_node->signal_handler,NULL);
+    
     my_node->state = NODE_ACTIVE;
     my_node->msg_cb = handle_msg;
     connect_peers(my_node);
@@ -566,7 +611,7 @@ int initialize_node(node* my_node,const char* log_path,int deliver_mode,void (*u
     }
     flag = 0;
 initialize_node_exit:
-        return flag;
+    return flag;
 }
 
 node* system_initialize(int node_id,const char* start_mode,const char* config_path,const char* log_path,int deliver_mode,void(*user_cb)(int data_size,void* data,void* arg),void* db_ptr,void* arg){
@@ -605,7 +650,6 @@ node* system_initialize(int node_id,const char* start_mode,const char* config_pa
     my_node->config.reconnect_timeval.tv_sec = 2;
     my_node->config.reconnect_timeval.tv_usec = 0;
 
-
     if(consensus_read_config(my_node,config_path)){
         err_log("CONSENSUS MODULE : Configuration File Reading Failed.\n");
         goto exit_error;
@@ -638,10 +682,14 @@ exit_error:
 void system_run(struct node_t* my_node){
     SYS_LOG(my_node,"Node %u Starts Running\n",
             my_node->node_id);
+    sigset_t node_sig_set;
+    sigfillset(&node_sig_set);
+    sigdelset(&node_sig_set,SIGUSR1);
+    int ret = pthread_sigmask(SIG_BLOCK,&node_sig_set,NULL);
+    signal(SIGUSR1,node_sys_sig_handler);
     event_base_dispatch(my_node->base);
 }
 
 void system_exit(struct node_t* my_node){
-    event_base_loopexit(my_node->base,NULL);
     free_node(my_node);
 }

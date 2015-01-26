@@ -83,40 +83,40 @@ exec 2>${LOG_PATH}/script-err${LOG_SUFFIX}
 
 export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib
 
-REAL_SERVER_PROGRAM=${FILEPATH}/../client-ld-preload/Mongoose_Aget/mongoose/mongoose
+rm -rf ${FILEPATH}/.db
 
-${REAL_SERVER_PROGRAM} -p 7000 &>${LOG_PATH}/server_log &
+REAL_SERVER_PROGRAM=${FILEPATH}/../simple-sc/simple-server.out
+
+${REAL_SERVER_PROGRAM} -s 127.0.0.1 -p 7000 &>${LOG_PATH}/server.log &
 
 REAL_SERVER_PID=$!
 
 SERVER_PROGRAM=${FILEPATH}/../target/server.out
-CONFIG_FILE=${FILEPATH}/../target/single_server.cfg
+CONFIG_FILE=${FILEPATH}/single_server.cfg
 
 #echo "The Log File Will Be Stored In ${FILEPATH}/log/${TEST_NAME}_*_${NO}"
 #echo "Now We Start The Leader"
 
-rm -rf ${FILEPATH}/.db
-
-${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} -l ${LOG_PATH} 1>${LOG_PATH}/node-0-stdout 2>${LOG_PATH}/node-0-stderr &
+${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} -l ${LOG_PATH} 1>${LOG_PATH}/node-0-stdout.log 2>${LOG_PATH}/node-0-stderr.log &
 
 PRIMARY_PID=$!
 
+
 #echo "Sleep Some Time"
 
-sleep 3
+sleep 2
 
-CLIENT_PROGRAM=${FILEPATH}/../client-ld-preload/Mongoose_Aget/aget 
+CLIENT_PROGRAM=${FILEPATH}/../simple-sc/simple-client.out
 
-LD_PRELOAD=${FILEPATH}/../client-ld-preload/libclilib.so ${CLIENT_PROGRAM} -f -n2 -p 9000 http://localhost/input.tar 
+${CLIENT_PROGRAM} -n 0 -s 127.0.0.1 -p 9000 -r 200
 
-#${CLIENT_PROGRAM} -n 0 -s 127.0.0.1 -p 9000 -r 200 &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_c0_${LOG_SUFFIX} &
 #${CLIENT_PROGRAM} -n 1 -s 127.0.0.1 -p 9000 -r 200 &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_c1_${LOG_SUFFIX} &
 #${CLIENT_PROGRAM} -n 2 -s 127.0.0.1 -p 9000 -r 1000  &>/dev/null &
 #${CLIENT_PROGRAM} -n 3 -s 127.0.0.1 -p 9000 -r 1000  &>/dev/null &
 #${CLIENT_PROGRAM} -n 4 -s 127.0.0.1 -p 9000 -r 1000  &>/dev/null &
 
 
-read -p "haha" haha
+#echo "Kill The Leader"
 
 kill -15 ${PRIMARY_PID} &>/dev/null
 kill -9 ${REAL_SERVER_PID} &>/dev/null

@@ -109,15 +109,15 @@ int main ( int argc, char *argv[] )
         request->data[12] = '\0';
 
         if((ret=send(my_socket,request,CLIENT_MSG_SIZE(request),0))<0){
-            fprintf(stderr,"cannot send anything : %s .\n",strerror(errno));
+            fprintf(stdout,"cannot send anything : %s .\n",strerror(errno));
             //goto main_exit_error;
         }
-        fprintf(stderr,"send message %s\n",request->data);
+        fprintf(stdout,"send message %s\n",request->data);
         if((ret=recv(my_socket,recv_msg,2000,0))<0){
-            fprintf(stderr,"cannot recv anything : %s .\n",strerror(errno));
+            fprintf(stdout,"cannot recv anything : %s .\n",strerror(errno));
             //goto main_exit_error;
         }
-        fprintf(stderr,"recv message %s\n",recv_msg);
+        fprintf(stdout,"recv message %s\n",recv_msg);
     }
     return EXIT_SUCCESS;
 main_exit_error:

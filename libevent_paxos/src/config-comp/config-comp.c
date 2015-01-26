@@ -45,6 +45,12 @@ int consensus_read_config(node* cur_node,const char* config_path){
     
     if(NULL!=consensus_global_config){
         long long temp;
+        if(config_setting_lookup_int64(consensus_global_config,"progress_timeval_s",&temp)){
+            cur_node->config.make_progress_timeval.tv_sec = temp;
+        }
+        if(config_setting_lookup_int64(consensus_global_config,"progress_timeval_us",&temp)){
+            cur_node->config.make_progress_timeval.tv_usec = temp;
+        }
         if(config_setting_lookup_int64(consensus_global_config,"reconnect_timeval_s",&temp)){
             cur_node->config.reconnect_timeval.tv_sec = temp;
         }

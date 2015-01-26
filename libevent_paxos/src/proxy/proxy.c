@@ -60,6 +60,11 @@ static req_sub_msg* build_req_sub_msg(hk_t s_key,counter_t counter,int type,size
 static void wake_up(proxy_node* proxy);
 static void real_do_action(proxy_node* proxy);
 
+typedef struct signal_comp_st{
+    void* event;
+    void* proxy;
+}signal_comp;
+
 //log component
 
 //implementation
@@ -80,7 +85,7 @@ static void cross_view(proxy_node* proxy){
 
 static void proxy_do_action(int fd,short what,void* arg){
     proxy_node* proxy = arg;
-    SYS_LOG(proxy,"Proxy Triggers Periodically Checking Event.Now Checking Pending Requests.\n");
+    SYS_LOG(proxy,"Proxy Triggers Periodically Checking Event.Now Checking Pending Requests\n");
     real_do_action(proxy);
 }
 
@@ -88,20 +93,27 @@ static void real_do_action(proxy_node* proxy){
     request_record* data = NULL;
     size_t data_size=0;
     PROXY_ENTER(proxy);
-    SYS_LOG(proxy,"In REAL Do Action,The Current Rec Is %lu.\n",proxy->cur_rec);
     db_key_type cur_higest;
     pthread_mutex_lock(&proxy->lock);
     cur_higest = proxy->highest_rec;
     pthread_mutex_unlock(&proxy->lock);
-    SYS_LOG(proxy,"In REAL Do Action,The Highest Rec Is %lu.\n",cur_higest);
+    SYS_LOG(proxy,"In REAL Do Action,The Current Rec Is %lu\n",proxy->cur_rec);
+    SYS_LOG(proxy,"In REAL Do Action,The Highest Rec Is %lu\n",cur_higest);
+    FILE* output = NULL;
+    if(proxy->req_log){
+        output = proxy->req_log_file;
+    }
     while(proxy->cur_rec<=cur_higest){
-        SYS_LOG(proxy,"In REAL Do Action,We Execute Rec Is %lu.\n",proxy->cur_rec);
+        SYS_LOG(proxy,"In REAL Do Action,We Execute Rec %lu\n",proxy->cur_rec);
         data = NULL;
         data_size = 0;
         retrieve_record(proxy->db_ptr,sizeof(db_key_type),&proxy->cur_rec,&data_size,(void**)&data);
         if(NULL==data){
             cross_view(proxy);
         }else{
+            if(output!=NULL){
+                fprintf(output,"Request:%ld:",proxy->cur_rec);
+            }
             do_action_to_server(data->data_size,data->data,proxy);
             proxy->cur_rec++;
         }
@@ -122,8 +134,8 @@ static void do_action_to_server(int data_size,void* data,void* arg){
     struct timeval endtime;
     gettimeofday(&endtime,NULL);
     if(proxy->ts_log && output!=NULL){
-        fprintf(output,"\n");
-        fprintf(output,"%lu : %lu.%lu,%lu.%lu,%lu.%lu,%lu.%lu\n",header->connection_id,
+        //fprintf(output,"\n");
+        fprintf(output,"%lu : %lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu\n",header->connection_id,
             header->received_time.tv_sec,header->received_time.tv_usec,
             header->created_time.tv_sec,header->created_time.tv_usec,
             endtime.tv_sec,endtime.tv_usec,endtime.tv_sec,endtime.tv_usec);
@@ -137,8 +149,8 @@ static void do_action_to_server(int data_size,void* data,void* arg){
             break;
         case P_SEND:
             if(output!=NULL){
-                fprintf(output,"Operation: Sends data: (START):%s:(END)\n",
-                        ((proxy_send_msg*)header)->data);
+                //fprintf(output,"Operation: Sends data: (START):%s:(END).\n",((proxy_send_msg*)header)->data);
+                fprintf(output,"Operation: Sends data.\n");
             }
             do_action_send(data_size,data,arg);
             break;
@@ -150,6 +162,9 @@ static void do_action_to_server(int data_size,void* data,void* arg){
             break;
         default:
             break;
+    }
+    if(NULL!=output){
+        fprintf(output,"\n");
     }
     if(output!=NULL){
         fflush(output);
@@ -212,6 +227,7 @@ do_action_send_exit:
 static void do_action_close(int data_size,void* data,void* arg){
     proxy_node* proxy = arg;
     proxy_close_msg* msg = data;
+    PROXY_ENTER(proxy);
     socket_pair* ret = NULL;
     MY_HASH_GET(&msg->header.connection_id,proxy->hash_map,ret);
     // this is error, TO-DO:error handler
@@ -227,6 +243,7 @@ static void do_action_close(int data_size,void* data,void* arg){
             ret->p_c = NULL;
         }
     }
+    PROXY_LEAVE(proxy);
 do_action_close_exit:
     return;
 }
@@ -265,7 +282,7 @@ static void fake_update_state(int data_size,void* data,void* arg){
     gettimeofday(&endtime,NULL);
     if(proxy->ts_log && output!=NULL){
         fprintf(output,"\n");
-        fprintf(output,"%lu : %lu.%lu,%lu.%lu,%lu.%lu,%lu.%lu\n",header->connection_id,
+        fprintf(output,"%lu : %lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu\n",header->connection_id,
             header->received_time.tv_sec,header->received_time.tv_usec,
             header->created_time.tv_sec,header->created_time.tv_usec,
             endtime.tv_sec,endtime.tv_usec,endtime.tv_sec,endtime.tv_usec);
@@ -295,11 +312,9 @@ static void fake_update_state(int data_size,void* data,void* arg){
 
 
 static void* t_consensus(void *arg){
-    
     struct node_t* my_node = arg;
     system_run(my_node);
     system_exit(my_node);
-    
     return NULL;
 }
 
@@ -341,11 +356,11 @@ void reconnect_on_timeout(int fd,short what,void* arg){
 
 
 static void server_side_on_read(struct bufferevent* bev,void* arg){
-    
     socket_pair* pair = arg;
     proxy_node* proxy = pair->proxy;
     PROXY_ENTER(proxy);
     struct evbuffer* input = bufferevent_get_input(bev);
+    struct evbuffer* output = NULL;
     size_t len = 0;
     int cur_len = 0;
     void* msg = NULL;
@@ -353,20 +368,18 @@ static void server_side_on_read(struct bufferevent* bev,void* arg){
     SYS_LOG(proxy,"There Is %u Bytes Data In The Buffer In Total.\n",
             (unsigned)len);
     // every time we just send 1024 bytes data to the client
-    while(len>0){
-        //cur_len = (len>1024)?1024:len;
+    // max_length_to_be_added
+    if(len>0){
         cur_len = len;
-        msg = (void*)malloc(cur_len);
-        if(NULL==msg){goto server_side_on_read_exit;}
-        evbuffer_remove(input,msg,cur_len);
         if(pair->p_c!=NULL){
-            bufferevent_write(pair->p_c,msg,cur_len);
+            output = bufferevent_get_output(pair->p_c);
         }
-        free(msg);
-        msg=NULL;
-        len = evbuffer_get_length(input);
+        if(output!=NULL){
+            evbuffer_add_buffer(output,input);
+        }else{
+            evbuffer_drain(input,len);
+        }
     }
-server_side_on_read_exit:
     PROXY_LEAVE(proxy);
     return;
 }
@@ -395,7 +408,8 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
 }
 
 static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t data_size){
-    
+    proxy_node* proxy = pair->proxy;
+    PROXY_ENTER(proxy)
     void* msg_buf = (char*)malloc(CLIENT_MSG_HEADER_SIZE+data_size);
     req_sub_msg* con_msg=NULL;
     if(NULL==msg_buf){
@@ -404,7 +418,6 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
     struct evbuffer* evb = bufferevent_get_input(bev);
     evbuffer_remove(evb,msg_buf,CLIENT_MSG_HEADER_SIZE+data_size);
     client_msg_header* msg_header = msg_buf;
-    proxy_node* proxy = pair->proxy;
     struct timeval recv_time;
     switch(msg_header->type){
         case C_SEND_WR:
@@ -425,16 +438,16 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
 client_process_data_exit:
     if(NULL!=msg_buf){free(msg_buf);}
     if(NULL!=con_msg){free(con_msg);}
-    
+    PROXY_LEAVE(proxy)
     return;
 };
 
 // check whether there is enough data on the client evbuffer
 static void client_side_on_read(struct bufferevent* bev,void* arg){
-    
     socket_pair* pair = arg;
-    client_msg_header* header = NULL;
     proxy_node* proxy = pair->proxy;
+    PROXY_ENTER(proxy);
+    client_msg_header* header = NULL;
     struct evbuffer* input = bufferevent_get_input(bev);
     size_t len = 0;
     len = evbuffer_get_length(input);
@@ -455,14 +468,14 @@ static void client_side_on_read(struct bufferevent* bev,void* arg){
         len = evbuffer_get_length(input);
     }
     if(NULL!=header){free(header);}
-    
+    PROXY_LEAVE(proxy) 
     return;
 };
 
 static void client_side_on_err(struct bufferevent* bev,short what,void* arg){
-    
     socket_pair* pair = arg;
     proxy_node* proxy = pair->proxy;
+    PROXY_ENTER(proxy);
     struct timeval recv_time;
     if(what&BEV_EVENT_CONNECTED){
         SYS_LOG(proxy,"Client %lu Connects.\n",pair->key);
@@ -476,7 +489,7 @@ static void client_side_on_err(struct bufferevent* bev,short what,void* arg){
             free(close_msg);
         }
     }
-    
+    PROXY_LEAVE(proxy);
     return;
 }
 
@@ -562,14 +575,14 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
     PROXY_LEAVE(proxy);
     return;
 }
-
+/*
 static void proxy_singnal_handler_sys(int sig){
     
     proxy_node* proxy = hack_arg;
     if(sig&SIGTERM){
         SYS_LOG(proxy,"Node Proxy Received SIGTERM .Now Quit.\n");
         if(proxy->sub_thread!=0){
-            pthread_kill(proxy->sub_thread,SIGQUIT);
+            pthread_kill(proxy->sub_thread,SIGUSR1);
             SYS_LOG(proxy,"Wating Consensus Comp To Quit.\n");
             pthread_join(proxy->sub_thread,NULL);
         }
@@ -578,14 +591,30 @@ static void proxy_singnal_handler_sys(int sig){
     
     return;
 }
-
+*/
 static void proxy_singnal_handler(evutil_socket_t fid,short what,void* arg){
     proxy_node* proxy = arg;
     PROXY_ENTER(proxy);
-    if(what&EV_SIGNAL){
-        SYS_LOG(proxy,"Node Proxy Received SIGUSR2.Now Checking Pending Requests.\n");
-        real_do_action(proxy);
+    int sig;
+    sig = event_get_signal((proxy->sig_handler));
+    SYS_LOG(proxy,"PROXY : GET SIGUSR2,Now Check Pending Requests.\n");
+    real_do_action(proxy);
+    PROXY_LEAVE(proxy);
+    return;
+}
+
+static void proxy_signal_term(evutil_socket_t fid,short what,void* arg){
+    proxy_node* proxy = arg;
+    PROXY_ENTER(proxy);
+    int sig;
+    sig = event_get_signal((proxy->sig_handler));
+    SYS_LOG(proxy,"PROXY : GET SIGTERM.\n");
+    if(proxy->sub_thread!=0){
+        pthread_kill(proxy->sub_thread,SIGUSR1);
+        SYS_LOG(proxy,"PROXY : Waiting Consensus Comp To Quit.\n");
+        pthread_join(proxy->sub_thread,NULL);
     }
+    event_base_loopexit(proxy->base,NULL);
     PROXY_LEAVE(proxy);
     return;
 }
@@ -643,7 +672,7 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
     }
 
     if(!build_log_ret){
-        if(proxy->sys_log || proxy->stat_log){
+        //if(proxy->sys_log || proxy->stat_log){
             char* sys_log_path = (char*)malloc(sizeof(char)*strlen(log_path)+50);
             memset(sys_log_path,0,sizeof(char)*strlen(log_path)+50);
             //err_log("%s.\n",log_path);
@@ -653,11 +682,11 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
                 proxy->sys_log_file = fopen(sys_log_path,"w");
                 free(sys_log_path);
             }
-            if(NULL==proxy->sys_log_file){
+            if(NULL==proxy->sys_log_file && (proxy->sys_log || proxy->stat_log)){
                 err_log("PROXY : System Log File Cannot Be Created.\n");
             }
-        }
-        if(proxy->req_log){
+        //}
+        //if(proxy->req_log){
             char* req_log_path = (char*)malloc(sizeof(char)*strlen(log_path)+50);
             memset(req_log_path,0,sizeof(char)*strlen(log_path)+50);
             if(NULL!=req_log_path){
@@ -666,10 +695,10 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
                 proxy->req_log_file = fopen(req_log_path,"w");
                 free(req_log_path);
             }
-            if(NULL==proxy->req_log_file){
+            if(NULL==proxy->req_log_file && proxy->req_log){
                 err_log("PROXY : Client Request Log File Cannot Be Created.\n");
             }
-        }
+        //}
     }
     proxy->base = base;
     //proxy->do_action = evtimer_new(proxy->base,proxy_do_action,(void*)proxy);
@@ -713,11 +742,13 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
             SIGUSR2,proxy_singnal_handler,proxy);
     evsignal_add(proxy->sig_handler,NULL);
 
-    pthread_create(&proxy->sub_thread,NULL,t_consensus,proxy->con_node);
+    struct event* sig_term = evsignal_new(proxy->base,
+            SIGTERM,proxy_signal_term,proxy);
+    evsignal_add(sig_term,NULL);
 
+    pthread_create(&proxy->sub_thread,NULL,t_consensus,proxy->con_node);
     hack_arg = proxy;
 
-    
 	return proxy;
 
 proxy_exit_error:
@@ -748,6 +779,7 @@ void proxy_run(proxy_node* proxy){
 }
 
 void proxy_exit(proxy_node* proxy){
+    //to-do
     return;
 }
 

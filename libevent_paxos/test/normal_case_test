@@ -73,6 +73,12 @@ if [ ! -d ${LOG_PATH} ];then
     mkdir ${LOG_PATH}
 fi
 
+if [[ -e "${FILEPATH}/log/cur" ]];then
+    rm -rf ${FILEPATH}/log/cur
+fi
+
+ln -s ${LOG_PATH} ${FILEPATH}/log/cur 
+
 exec 2>${LOG_PATH}/script-err${LOG_SUFFIX}
 
 export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib

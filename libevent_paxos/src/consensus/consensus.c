@@ -249,14 +249,18 @@ static int leader_handle_submit_req(struct consensus_component_t* comp,
     if(store_record(comp->db_ptr,sizeof(record_no),&record_no,REQ_RECORD_SIZE(record_data),record_data)){
         goto handle_submit_req_exit;
     }    
-    accept_req* msg = build_accept_req(comp,REQ_RECORD_SIZE(record_data),record_data,&next);
-    if(NULL==msg){
-        goto handle_submit_req_exit;
-    }
-    comp->uc(comp->my_node,ACCEPT_REQ_SIZE(msg),msg,-1);
-    free(msg);
-    view_stamp_inc(&comp->highest_seen_vs);
     ret = 0;
+    view_stamp_inc(&comp->highest_seen_vs);
+    if(comp->group_size>1){
+        accept_req* msg = build_accept_req(comp,REQ_RECORD_SIZE(record_data),record_data,&next);
+        if(NULL==msg){
+            goto handle_submit_req_exit;
+        }
+        comp->uc(comp->my_node,ACCEPT_REQ_SIZE(msg),msg,-1);
+        free(msg);
+    }else{
+        try_to_execute(comp);
+    }
 handle_submit_req_exit: 
     // no need to care about database, every time we will override it.
     if(record_data!=NULL){
@@ -736,6 +740,7 @@ static void deliver_msg_data(consensus_component* comp,view_stamp* vs){
         retrieve_record(comp->db_ptr,sizeof(db_key_type),&vstokey,&data_size,(void**)&data);
         SYS_LOG(comp,"Node %d Deliver View Stamp %u : %u To The User.\n",
         comp->node_id,vs->view_id,vs->req_id);
+        STAT_LOG(comp,"Request:%lu\n",vstokey);
         if(NULL!=data){
             if(comp->ucb!=NULL){
                 comp->ucb(data->data_size,data->data,comp->up_para);
@@ -744,6 +749,7 @@ static void deliver_msg_data(consensus_component* comp,view_stamp* vs){
             }
         }
     }else{
+        STAT_LOG(comp,"Request %lu.\n",vstokey);
         if(comp->ucb!=NULL){
             comp->ucb(sizeof(db_key_type),&vstokey,comp->up_para);
         }else{

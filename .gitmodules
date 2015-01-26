@@ -4,6 +4,3 @@
 [submodule "concoord"]
 	path = concoord
 	url = git://github.com/denizalti/concoord.git
-[submodule "libevent_paxos"]
-	path = libevent_paxos
-	url = git://github.com/milannic/libevent_paxos

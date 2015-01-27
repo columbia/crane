@@ -14,6 +14,12 @@
  *
  * =====================================================================================
  */
+  // tom add 20150127
+ #define _GNU_SOURCE  
+#include <unistd.h>  
+#include <sched.h>  
+#include <assert.h>  
+ //end tom
 #include "../include/proxy/proxy.h"
 #include "../include/config-comp/config-proxy.h"
 #include "../include/replica-sys/message.h"
@@ -622,6 +628,12 @@ static void proxy_signal_term(evutil_socket_t fid,short what,void* arg){
 proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_path,
         const char* log_path,int fake_mode){
     
+    // tom add 20150127
+    cpu_set_t cpuset_0, cpuset_1;
+    int ret, cpu_nums, core_0, core_1;
+    cpu_nums = sysconf(_SC_NPROCESSORS_CONF);/*get the cpu nums*/  
+    assert(cpu_nums > 0);  
+    // end tom add
 
     proxy_node* proxy = (proxy_node*)malloc(sizeof(proxy_node));
 
@@ -639,6 +651,16 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
     proxy->recon_period.tv_sec = 2;
     proxy->recon_period.tv_usec = 0;
     proxy->p_self = pthread_self();
+    // tom add 20150127
+     core_0 = 0 % cpu_nums;  
+     CPU_ZERO(&cpuset_0);  
+     CPU_SET(core_0, &cpuset_0);  
+     ret = pthread_setaffinity_np(proxy->p_self, sizeof(cpu_set_t), &cpuset_0);  
+     assert(ret == 0);  
+     /* Check the actual affinity mask assigned to the thread */  
+     ret = pthread_getaffinity_np(proxy->p_self , sizeof(cpu_set_t), &cpuset_0);  
+     assert(ret == 0);  
+    // end tom add
     if(proxy_read_config(proxy,config_path)){
         err_log("PROXY : Configuration File Reading Error.\n");
         goto proxy_exit_error;
@@ -747,6 +769,16 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
     evsignal_add(sig_term,NULL);
 
     pthread_create(&proxy->sub_thread,NULL,t_consensus,proxy->con_node);
+    // tom add 20150127
+     core_1 = 1 % cpu_nums;  
+     CPU_ZERO(&cpuset_1);  
+     CPU_SET(core_1, &cpuset_1);  
+     ret = pthread_setaffinity_np(&proxy->sub_thread, sizeof(cpu_set_t), &cpuset_1);  
+     assert(ret == 0);  
+     /* Check the actual affinity mask assigned to the thread */  
+     ret = pthread_getaffinity_np(&proxy->sub_thread , sizeof(cpu_set_t), &cpuset_1);  
+     assert(ret == 0);  
+    // end tom add
     hack_arg = proxy;
 
 	return proxy;

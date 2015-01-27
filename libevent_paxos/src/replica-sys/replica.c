@@ -1,6 +1,9 @@
 #include "../include/util/common-header.h"
 #include "../include/replica-sys/node.h"
 #include "../include/config-comp/config-comp.h"
+// tom add 20150126
+#include "../include/proxy/proxy.h"
+// end tom add 20150126
 #include <sys/stat.h>
 
 static int exit_flag = 0;
@@ -466,6 +469,16 @@ static void handle_consensus_msg(node* my_node,consensus_msg* msg){
 
 static void handle_request_submit(node* my_node,
         req_sub_msg* msg,struct bufferevent* evb){
+     // tom add 20150126
+        struct timeval end_t;
+        long  difference;
+        //printf("%lu.%06lu\n", ((proxy_send_msg*)msg->data)->header.received_time.tv_sec, ((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
+        gettimeofday(&end_t,NULL);
+        difference = (end_t.tv_sec*1000000+end_t.tv_usec ) - (((proxy_send_msg*)msg->data)->header.received_time.tv_sec*1000000+((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
+        if(difference > 10000) {
+            printf("Warning from proxy to consensus: %ld\n", difference);
+        }
+        // end tom add 20150126
     SYS_LOG(my_node,"Node %d Received Consensus Submit Request\n",
             my_node->node_id);
     SYS_LOG(my_node,"The Data Size Is %lu \n",

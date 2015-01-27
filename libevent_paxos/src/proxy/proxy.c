@@ -773,10 +773,10 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
      core_1 = 1 % cpu_nums;  
      CPU_ZERO(&cpuset_1);  
      CPU_SET(core_1, &cpuset_1);  
-     ret = pthread_setaffinity_np(&proxy->sub_thread, sizeof(cpu_set_t), &cpuset_1);  
+     ret = pthread_setaffinity_np(proxy->sub_thread, sizeof(cpu_set_t), &cpuset_1);  
      assert(ret == 0);  
      /* Check the actual affinity mask assigned to the thread */  
-     ret = pthread_getaffinity_np(&proxy->sub_thread , sizeof(cpu_set_t), &cpuset_1);  
+     ret = pthread_getaffinity_np(proxy->sub_thread , sizeof(cpu_set_t), &cpuset_1);  
      assert(ret == 0);  
     // end tom add
     hack_arg = proxy;

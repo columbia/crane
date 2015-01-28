@@ -406,6 +406,11 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
         ((proxy_close_msg*)close_msg->data)->header.received_time = recv_time;
         if(NULL!=close_msg && NULL!=proxy->con_conn){
             bufferevent_write(proxy->con_conn,close_msg,REQ_SUB_SIZE(close_msg));
+	// tom add 20150128
+	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+	size_t len = evbuffer_get_length(output);
+	printf("Warning: output evbuffer has %lu bytes left when P_CLOSE\n", (unsigned long)len);
+	// end tom add
             free(close_msg);
         }
     }
@@ -434,6 +439,11 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
             ((proxy_send_msg*)con_msg->data)->header.received_time = recv_time;
             if(NULL!=con_msg && NULL!=proxy->con_conn){
                 bufferevent_write(proxy->con_conn,con_msg,REQ_SUB_SIZE(con_msg));
+		// tom add 20150128
+		struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+		size_t len = evbuffer_get_length(output);
+		printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
+		// end tom add
             }
             break;
         default:
@@ -574,6 +584,11 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
         req_msg = build_req_sub_msg(new_conn->key,new_conn->counter++,P_CONNECT,0,NULL); 
         ((proxy_connect_msg*)req_msg->data)->header.received_time = recv_time;
         bufferevent_write(proxy->con_conn,req_msg,REQ_SUB_SIZE(req_msg));
+	// tom add 20150128
+	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+	size_t len = evbuffer_get_length(output);
+	printf("Warning: output evbuffer has %lu bytes left when P_CONNECT\n", (unsigned long)len);
+	// end tom add
     }
     if(req_msg!=NULL){
         free(req_msg);

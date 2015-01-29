@@ -536,6 +536,9 @@ static void replica_on_read(struct bufferevent* bev,void* arg){
     len = evbuffer_get_length(input);
     SYS_LOG(my_node,"Enter Consensus Communication Module.\n");
     int counter = 0;
+    // tom add 20150129
+    printf("Warning: consensus input evbuffer has %u bytes left\n", (unsigned)len);
+    // end tom add
     SYS_LOG(my_node,"There Is %u Bytes Data In The Buffer In Total.\n",
             (unsigned)len);
     while(len>=SYS_MSG_HEADER_SIZE){

@@ -28,6 +28,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// tom add 20150129
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+// end tom add 20150129
+
 static void* hack_arg=NULL;
 
 //helper function
@@ -344,11 +349,22 @@ void consensus_on_event(struct bufferevent* bev,short ev,void* arg){
 //void consensus_on_read(struct bufferevent* bev,void*);
 void connect_consensus(proxy_node* proxy){
     
+// tom add 20150129
+int fd;
+// end tom add
+
     proxy->con_conn = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(proxy->con_conn,NULL,NULL,consensus_on_event,proxy);
     bufferevent_enable(proxy->con_conn,EV_READ|EV_WRITE|EV_PERSIST);
-    bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
-    
+    //bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
+    // tom add 20150129
+    fd = bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
+    // end tom add
+ // tom add 20150129
+        int enable = 1;
+        setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
+        // end tom add
+
     return;
 }
 
@@ -410,6 +426,7 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
 	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	size_t len = evbuffer_get_length(output);
 	printf("Warning: output evbuffer has %lu bytes left when P_CLOSE\n", (unsigned long)len);
+                printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
             free(close_msg);
         }
@@ -443,6 +460,7 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
 		struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 		size_t len = evbuffer_get_length(output);
 		printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
+                                printf("Warning: P_SEND timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 		// end tom add
             }
             break;
@@ -588,6 +606,7 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
 	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	size_t len = evbuffer_get_length(output);
 	printf("Warning: output evbuffer has %lu bytes left when P_CONNECT\n", (unsigned long)len);
+                printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
     }
     if(req_msg!=NULL){

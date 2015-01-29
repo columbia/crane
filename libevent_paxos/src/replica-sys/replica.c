@@ -371,28 +371,28 @@ static void replica_on_error_cb(struct bufferevent* bev,short ev,void *arg){
 
 static void replica_on_accept(struct evconnlistener* listener,evutil_socket_t fd,struct sockaddr *address,int socklen,void *arg){
 
-        // tom add 20150129
-        struct timeval start_t;
-        gettimeofday(&start_t,NULL);
-        printf("Warning: replica_on_accept timestamp  %lu.%06lu\n", start_t.tv_sec, start_t.tv_usec);
-        // end tom add
+    // tom add 20150129
+    struct timeval start_t;
+    gettimeofday(&start_t,NULL);
+    printf("Warning: replica_on_accept timestamp  %lu.%06lu\n", start_t.tv_sec, start_t.tv_usec);
+    // end tom add
 
-        // tom add 20150129
-        int enable = 1;
-        setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
-        // end tom add
+    // tom add 20150129
+    int enable = 1;
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
+    // end tom add
 
     node* my_node = arg;
     SYS_LOG(my_node, "A New Connection Is Established.\n");
     struct bufferevent* new_buff_event = bufferevent_socket_new(my_node->base,fd,BEV_OPT_CLOSE_ON_FREE);
     // tom add 20150129
-     //bufferevent_setwatermark(new_buff_event, EV_READ, 72, 0);
+    // bufferevent_setwatermark(new_buff_event, EV_READ, 72, 0);
     // end tom add
     bufferevent_setcb(new_buff_event,replica_on_read,NULL,replica_on_error_cb,(void*)my_node);
     // tom add 20150129
-     // set a read timeout of 1000 us
-        //struct timeval tv = {0, 10000};
-        //bufferevent_set_timeouts(new_buff_event, &tv, NULL);
+    // set a read timeout of 1000 us
+    // struct timeval tv = {0, 10000};
+    // bufferevent_set_timeouts(new_buff_event, &tv, NULL);
     // end tom add
     bufferevent_enable(new_buff_event,EV_READ|EV_PERSIST|EV_WRITE);
     CHECK_EXIT
@@ -496,16 +496,16 @@ static void handle_consensus_msg(node* my_node,consensus_msg* msg){
 
 static void handle_request_submit(node* my_node,
         req_sub_msg* msg,struct bufferevent* evb){
-     // tom add 20150126
-        struct timeval end_t;
-        long  difference;
-        //printf("%lu.%06lu\n", ((proxy_send_msg*)msg->data)->header.received_time.tv_sec, ((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
-        gettimeofday(&end_t,NULL);
-        difference = (end_t.tv_sec*1000000+end_t.tv_usec ) - (((proxy_send_msg*)msg->data)->header.received_time.tv_sec*1000000+((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
-        if(difference > 10000) {
-            printf("Warning from proxy to consensus: %ld,  timestamp: %lu.%06lu\n", difference, end_t.tv_sec, end_t.tv_usec);
-        }
-        // end tom add 20150126
+    // tom add 20150126
+    struct timeval end_t;
+    long  difference;
+    //printf("%lu.%06lu\n", ((proxy_send_msg*)msg->data)->header.received_time.tv_sec, ((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
+    gettimeofday(&end_t,NULL);
+    difference = (end_t.tv_sec*1000000+end_t.tv_usec ) - (((proxy_send_msg*)msg->data)->header.received_time.tv_sec*1000000+((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
+    if(difference > 10000) {
+        printf("Warning from proxy to consensus: %ld,  timestamp: %lu.%06lu\n", difference, end_t.tv_sec, end_t.tv_usec);
+    }
+    // end tom add 20150126
     SYS_LOG(my_node,"Node %d Received Consensus Submit Request\n",
             my_node->node_id);
     SYS_LOG(my_node,"The Data Size Is %lu \n",
@@ -557,11 +557,11 @@ handle_msg_exit:
 //general data handler by the user, test if there is enough data to read
 static void replica_on_read(struct bufferevent* bev,void* arg){
 
-        // tom add 20150129
-        struct timeval start_t;
-        gettimeofday(&start_t,NULL);
-        printf("Warning: replica_on_read time  %lu.%06lu\n", start_t.tv_sec, start_t.tv_usec);
-        // end tom add
+    // tom add 20150129
+    struct timeval start_t;
+    gettimeofday(&start_t,NULL);
+    printf("Warning: replica_on_read time  %lu.%06lu\n", start_t.tv_sec, start_t.tv_usec);
+    // end tom add
 
     node* my_node = arg;
     sys_msg_header* buf = NULL;;

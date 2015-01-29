@@ -14,12 +14,12 @@
  *
  * =====================================================================================
  */
-  // tom add 20150127
- #define _GNU_SOURCE  
+// tom add 20150127
+#define _GNU_SOURCE  
 #include <unistd.h>  
 #include <sched.h>  
 #include <assert.h>  
- //end tom
+//end tom
 #include "../include/proxy/proxy.h"
 #include "../include/config-comp/config-proxy.h"
 #include "../include/replica-sys/message.h"
@@ -348,22 +348,19 @@ void consensus_on_event(struct bufferevent* bev,short ev,void* arg){
 
 //void consensus_on_read(struct bufferevent* bev,void*);
 void connect_consensus(proxy_node* proxy){
-    
-// tom add 20150129
-int fd;
-// end tom add
-
-    proxy->con_conn = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
+    // tom add 20150129
+    evutil_socket_t fd;
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    proxy->con_conn = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
+    // end tom add
+    // proxy->con_conn = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(proxy->con_conn,NULL,NULL,consensus_on_event,proxy);
     bufferevent_enable(proxy->con_conn,EV_READ|EV_WRITE|EV_PERSIST);
-    //bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
+    bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
     // tom add 20150129
-    fd = bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
+    int enable = 1;
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
     // end tom add
- // tom add 20150129
-        int enable = 1;
-        setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
-        // end tom add
 
     return;
 }

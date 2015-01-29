@@ -359,7 +359,8 @@ void connect_consensus(proxy_node* proxy){
     bufferevent_socket_connect(proxy->con_conn,(struct sockaddr*)&proxy->sys_addr.c_addr,proxy->sys_addr.c_sock_len);
     // tom add 20150129
     int enable = 1;
-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
+    if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+        printf("Proxy-side: TCP_NODELAY SETTING ERROR!\n");
     // end tom add
 
     return;

@@ -379,7 +379,8 @@ static void replica_on_accept(struct evconnlistener* listener,evutil_socket_t fd
 
     // tom add 20150129
     int enable = 1;
-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable));
+    if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+        printf("Consensus-side: TCP_NODELAY SETTING ERROR!\n");
     // end tom add
 
     node* my_node = arg;

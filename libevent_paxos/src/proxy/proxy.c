@@ -15,6 +15,7 @@
  * =====================================================================================
  */
 // tom add 20150127
+// used for set affinity, and now set affinity is useless, please ignore it
 #define _GNU_SOURCE  
 #include <unistd.h>  
 #include <sched.h>  
@@ -29,6 +30,7 @@
 #include <stdlib.h>
 
 // tom add 20150129
+// to use TCP_NODELAY, and the setting is useful
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 // end tom add 20150129

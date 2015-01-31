@@ -117,12 +117,23 @@ static void peer_node_on_event(struct bufferevent* bev,short ev,void* arg){
 
 static void connect_peer(peer* peer_node){
     node* my_node = peer_node->my_node;
-    peer_node->my_buff_event = bufferevent_socket_new(peer_node->base,-1,BEV_OPT_CLOSE_ON_FREE);
+    // tom add 20150130
+    evutil_socket_t fd;
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    peer_node->my_buff_event = bufferevent_socket_new(peer_node->base,fd,BEV_OPT_CLOSE_ON_FREE);
+    // end tom add
+    //peer_node->my_buff_event = bufferevent_socket_new(peer_node->base,-1,BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(peer_node->my_buff_event,peer_node_on_read,NULL,peer_node_on_event,peer_node);
     bufferevent_enable(peer_node->my_buff_event,EV_READ|EV_WRITE|EV_PERSIST);
     bufferevent_socket_connect(peer_node->my_buff_event,(struct sockaddr*)peer_node->peer_address,peer_node->sock_len);
+    // tom add 20150130
+    int enable = 1;
+    if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+        printf("Peers-side: TCP_NODELAY SETTING ERROR!\n");
+    // end tom add
     CHECK_EXIT;
 };
+
 
 static void peer_node_on_timeout(int fd,short what,void* arg){
     peer* p = arg;

@@ -222,7 +222,7 @@ static void do_action_connect(int data_size,void* data,void* arg){
         fd = socket(AF_INET, SOCK_STREAM, 0);
         ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
         // end tom add
-        ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
+        //ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
         bufferevent_setcb(ret->p_s,server_side_on_read,NULL,server_side_on_err,ret);
         bufferevent_enable(ret->p_s,EV_READ|EV_PERSIST|EV_WRITE);
         bufferevent_socket_connect(ret->p_s,(struct sockaddr*)&proxy->sys_addr.s_addr,proxy->sys_addr.s_sock_len);

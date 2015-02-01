@@ -150,7 +150,7 @@ def which(name, flags=os.X_OK):
 
 #def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap):
 #tom add 2015-01-23
-def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config):
+def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config, time_extra_0, time_extra_1, time_extra_2, time_extra_3,concensusmap_extra_0,concensusmap_extra_1,concensusmap_extra_2,concensusmap_extra_3, extra_response_0,extra_response_1):
 #end tom add 2015-01-23
 	try:
 		import numpy
@@ -182,6 +182,20 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 
 	time1_avg = numpy.average(time1)
 	time1_std = numpy.std(time1)
+	# tom add 20150131
+	time_extra_0_avg = numpy.average(time_extra_0)
+	time_extra_0_std = numpy.std(time_extra_0)
+	time_extra_1_avg = numpy.average(time_extra_1)
+	time_extra_1_std = numpy.std(time_extra_1)
+	time_extra_2_avg = numpy.average(time_extra_2)
+	time_extra_2_std = numpy.std(time_extra_2)
+	time_extra_3_avg = numpy.average(time_extra_3)
+	time_extra_3_std = numpy.std(time_extra_3)
+	extra_response_0_avg = numpy.average(extra_response_0)
+	extra_response_0_std = numpy.std(extra_response_0)
+	extra_response_1_avg = numpy.average(extra_response_1)
+	extra_response_1_std = numpy.std(extra_response_1)
+	# end tom add
 	time2_avg = numpy.average(time2)
 	time2_std = numpy.std(time2)
 	if len(lengths) > 0:
@@ -191,16 +205,56 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 	with open("stats.txt", "w") as stats:
 		# tom add 20150126
 		if Perf_Test_Flag == 1:
-			stats.write('Concensus Time('+str(len(time1))+'):\n')
+			stats.write('Concensus Time====Overall('+str(len(time1))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(time1_avg))
 			stats.write('\tstd:{0}\n'.format(time1_std))
+			# tom add 20150131
+			stats.write('Concensus Time====from proxy to consensus('+str(len(time_extra_0))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(time_extra_0_avg))
+			stats.write('\tstd:{0}\n'.format(time_extra_0_std))
+			stats.write('Concensus Time====ACCEPT_REQ from leader to node_1('+str(len(time_extra_1))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(time_extra_1_avg))
+			stats.write('\tstd:{0}\n'.format(time_extra_1_std))
+			stats.write('Concensus Time====ACCEPT_ACK from node_1 to leader('+str(len(time_extra_2))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(time_extra_2_avg))
+			stats.write('\tstd:{0}\n'.format(time_extra_2_std))
+			stats.write('Concensus Time====from get ACK to Cheng consensus timestamp('+str(len(time_extra_3))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(time_extra_3_avg))
+			stats.write('\tstd:{0}\n'.format(time_extra_3_std))
+			# end tom add
 			for t in concensusmap:
-				stats.write('\t{0}({1}):\n'.format(t, len(concensusmap[t])))
+				stats.write('\t{0}====Overall({1}):\n'.format(t, len(concensusmap[t])))
 				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap[t])))
 				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap[t])))
-			stats.write('Response Time('+str(len(time2))+'):\n')
+			# tom add 20150131
+			for t in concensusmap_extra_0:
+				stats.write('\t{0}====from proxy to consensus({1}):\n'.format(t, len(concensusmap_extra_0[t])))
+				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap_extra_0[t])))
+				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap_extra_0[t])))
+			for t in concensusmap_extra_1:
+				stats.write('\t{0}====ACCEPT_REQ from leader to node_1({1}):\n'.format(t, len(concensusmap_extra_1[t])))
+				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap_extra_1[t])))
+				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap_extra_1[t])))
+			for t in concensusmap_extra_2:
+				stats.write('\t{0}====ACCEPT_ACK from node_1 to leader({1}):\n'.format(t, len(concensusmap_extra_2[t])))
+				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap_extra_2[t])))
+				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap_extra_2[t])))
+			for t in concensusmap_extra_3:
+				stats.write('\t{0}====from get ACK to Cheng consensus timestamp({1}):\n'.format(t, len(concensusmap_extra_3[t])))
+				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap_extra_3[t])))
+				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap_extra_3[t])))
+			# end tom add
+			stats.write('Response Time====Overall('+str(len(time2))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(time2_avg))
 			stats.write('\tstd:{0}\n'.format(time2_std))
+			# tom add 20150131
+			stats.write('Response Time====from the end of consensus time to wake up including lock('+str(len(extra_response_0))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(extra_response_0_avg))
+			stats.write('\tstd:{0}\n'.format(extra_response_0_std))
+			stats.write('Response Time====from wake up to Cheng end time('+str(len(extra_response_1))+'):\n')
+			stats.write('\tmean:{0} us\n'.format(extra_response_1_avg))
+			stats.write('\tstd:{0}\n'.format(extra_response_1_std))
+			# end tom add
 			for t in responsemap:
 				stats.write('\t{0}({1}):\n'.format(t, len(responsemap[t])))
 				stats.write('\t\tmean:{0} us\n'.format(numpy.average(responsemap[t])))
@@ -429,6 +483,25 @@ def processBench(config, bench):
 	responsemap = {}
 	# tom add 20150126
 	op_index = []
+	timestamp_0 = []
+	timestamp_1 = []
+	timestamp_2 = []
+	time_extra_0 = []
+	time_extra_1 = []
+	time_extra_2 = []
+	time_extra_3 = []
+
+	concensusmap_extra_0 = {}
+	concensusmap_extra_1 = {}
+	concensusmap_extra_2 = {}
+	concensusmap_extra_3 = {}
+
+	extra_response_0 = []
+	extra_response_1 = []
+	wakeup_t = []
+
+	tt_temp_1 = []
+	tt_temp_2 = []
 	# end tom add 20150126
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-proxy-req.log'
@@ -438,18 +511,23 @@ def processBench(config, bench):
 		lines = (open(log_file_name, 'r').readlines())
 		first = 0
 		for line in lines:
-			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
+			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)#match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
 			if match:
 				if first == 0:
 					first = float(match.group(1)) # used for calculating tp, the first operation's received time
-				time2 += [(-float(match.group(1))+float(match.group(4)))*1000000]
-				last = float(match.group(4)) # used for tp, the last operation's end time
+				time2 += [(-float(match.group(1))+float(match.group(7)))*1000000]
+				last = float(match.group(7)) # used for tp, the last operation's end time#last = float(match.group(4)) # used for tp, the last operation's end time
 				origin_time1 += [float(match.group(1))]
-				origin_time3 += [float(match.group(3))]
+				origin_time3 += [float(match.group(6))]#origin_time3 += [float(match.group(3))]
+				# tom add 20150131
+				timestamp_0 += [float(match.group(3))]
+				timestamp_2 += [float(match.group(5))]
+				# tom add 20150131
 			# tom add 20150126
 			# used for grabbing the operation which costs too much time, so we need to locate it by its index
 			if line.startswith('Request'):
-				op_index += [line.split(':')[1]]		
+				op_index += [line.split(':')[3]]
+				wakeup_t += [float(line.split(':')[1])] 		
 			# end tom add 20150126
 			if line.startswith('Operation'):
 				types += [line.split(' ')[1].translate(None, '.\n')]
@@ -458,6 +536,31 @@ def processBench(config, bench):
 		lines = (open(log_file_name, 'r').readlines())
 		for line in lines:
 			origin_time2 += [float(line.split(':')[0])]
+		# tom add 20150131
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-1-proxy-req.log'
+		print log_file_name
+		if not os.path.isfile(log_file_name):
+			break
+		lines = (open(log_file_name, 'r').readlines())
+		for line in lines:
+			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)#match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
+			if match:			
+				tt_temp_1 += [float(match.group(4))] # timestamp_1
+		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-2-proxy-req.log'
+		print log_file_name
+		if not os.path.isfile(log_file_name):
+			break
+		lines = (open(log_file_name, 'r').readlines())
+		for line in lines:
+			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)#match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
+			if match:			
+				tt_temp_2 += [float(match.group(4))] # timestamp_1
+		for ii in range(len(tt_temp_1)):
+			if tt_temp_1[ii] < tt_temp_2[ii]:
+				timestamp_1 += [tt_temp_1[ii]]
+			else:
+				timestamp_1 += [tt_temp_2[ii]]
+		# end tom add
 		# tom add 2014-12-23
 		if Perf_Test_Flag == 1:
 			per_Xoperation_response_time = [] # to store each X operation's response time which comes from proxy-req.log
@@ -467,8 +570,22 @@ def processBench(config, bench):
 				for i in range(len(origin_time1)):
 					tmpTime = [(origin_time2[i]-origin_time1[i])*1000000]
 					time1 += tmpTime
+					# tom add 20150131
+					time_extra_0 +=  [(timestamp_0[i]-origin_time1[i])*1000000]
+					time_extra_1 +=  [(timestamp_1[i]-timestamp_0[i])*1000000]
+					time_extra_2 +=  [(timestamp_2[i]-timestamp_1[i])*1000000]
+					time_extra_3 +=  [(origin_time2[i]-timestamp_2[i])*1000000]
+					extra_response_0 +=  [(wakeup_t[i]-origin_time2[i])*1000000]
+					extra_response_1 +=  [(origin_time3[i]-wakeup_t[i])*1000000]
+					# end tom add 20150131
 					if types[i] not in concensusmap:
 						concensusmap[types[i]] = tmpTime
+						# tom add 20150131
+						concensusmap_extra_0[types[i]] = [(timestamp_0[i]-origin_time1[i])*1000000]
+						concensusmap_extra_1[types[i]] = [(timestamp_1[i]-timestamp_0[i])*1000000]
+						concensusmap_extra_2[types[i]] = [(timestamp_2[i]-timestamp_1[i])*1000000]
+						concensusmap_extra_3[types[i]] = [(origin_time2[i]-timestamp_2[i])*1000000]
+						# end tom add
 						# tom add 2015-01-22
 						if cmp(types[i], Xoperation) == 0:
 							per_Xoperation_response_time +=  [time2[i]]
@@ -476,6 +593,12 @@ def processBench(config, bench):
 						responsemap[types[i]] = [time2[i]]
 					else:
 						concensusmap[types[i]] += tmpTime
+						# tom add 20150131
+						concensusmap_extra_0[types[i]] += [(timestamp_0[i]-origin_time1[i])*1000000]
+						concensusmap_extra_1[types[i]] += [(timestamp_1[i]-timestamp_0[i])*1000000]
+						concensusmap_extra_2[types[i]] += [(timestamp_2[i]-timestamp_1[i])*1000000]
+						concensusmap_extra_3[types[i]] += [(origin_time2[i]-timestamp_2[i])*1000000]
+						# end tom add
 						# tom add 2014-12-21-20:50
 						if cmp(types[i], Xoperation) == 0:
 							per_Xoperation_response_time +=  [time2[i]]
@@ -509,7 +632,7 @@ def processBench(config, bench):
 	if len(time1) > 0:
 		#write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap)
 		#tom add 2015-01-23
-		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config)
+		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config, time_extra_0, time_extra_1, time_extra_2, time_extra_3, concensusmap_extra_0,concensusmap_extra_1,concensusmap_extra_2,concensusmap_extra_3, extra_response_0,extra_response_1)
 		#end tom add 2015-01-23
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))

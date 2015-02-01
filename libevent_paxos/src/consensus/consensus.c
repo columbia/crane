@@ -18,6 +18,9 @@
 #include "../include/consensus/consensus.h"
 #include "../include/consensus/consensus-msg.h"
 #include "../include/db/db-interface.h"
+// tom add 20150131
+#include "../include/proxy/proxytemp.h"
+// end tom add
 
 typedef struct request_record_t{
     struct timeval created_time; // data created timestamp
@@ -246,6 +249,13 @@ static int leader_handle_submit_req(struct consensus_component_t* comp,
     record_data->data_size = data_size;
     record_data->is_closed = 0;
     memcpy(record_data->data,data,data_size);
+    // tom add 20150131
+    proxy_msg_header* header = record_data->data;
+    struct timeval t_0;
+    gettimeofday(&t_0,NULL);
+    header->timestamp_0.tv_sec = t_0.tv_sec;
+    header->timestamp_0.tv_usec = t_0.tv_usec;
+    // end tom add
     if(store_record(comp->db_ptr,sizeof(record_no),&record_no,REQ_RECORD_SIZE(record_data),record_data)){
         goto handle_submit_req_exit;
     }    
@@ -346,7 +356,13 @@ static void handle_accept_req(consensus_component* comp,void* data){
         record_data->data_size = origin_data->data_size;
         memcpy(record_data->data,origin_data->data,
                 origin_data->data_size);
-
+        // tom add 20150131
+        proxy_msg_header* header = record_data->data;
+        struct timeval t_1;
+        gettimeofday(&t_1,NULL);
+        header->timestamp_1.tv_sec = t_1.tv_sec;
+        header->timestamp_1.tv_usec = t_1.tv_usec;
+    // end tom add
         // record the data persistently 
         if(store_record(comp->db_ptr,sizeof(record_no),&record_no,
                     REQ_RECORD_SIZE(record_data),record_data)!=0){
@@ -387,6 +403,13 @@ static void handle_accept_ack(consensus_component* comp,void* data){
         goto handle_accept_ack_exit;
     }
     update_record(record_data,msg->node_id);
+    // tom add 20150131
+    proxy_msg_header* header = record_data->data;
+    struct timeval t_2;
+    gettimeofday(&t_2,NULL);
+    header->timestamp_2.tv_sec = t_2.tv_sec;
+    header->timestamp_2.tv_usec = t_2.tv_usec;
+    // end tom add
     // we do not care about whether the update is successful, otherwise this can
     // be treated as a message loss
     store_record(comp->db_ptr,sizeof(record_no),&record_no,REQ_RECORD_SIZE(record_data),record_data);

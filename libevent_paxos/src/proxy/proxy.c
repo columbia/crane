@@ -105,9 +105,9 @@ static void real_do_action(proxy_node* proxy){
     size_t data_size=0;
     PROXY_ENTER(proxy);
     db_key_type cur_higest;
-    pthread_mutex_lock(&proxy->lock);
+    //pthread_mutex_lock(&proxy->lock);
     cur_higest = proxy->highest_rec;
-    pthread_mutex_unlock(&proxy->lock);
+    //pthread_mutex_unlock(&proxy->lock);
     SYS_LOG(proxy,"In REAL Do Action,The Current Rec Is %lu\n",proxy->cur_rec);
     SYS_LOG(proxy,"In REAL Do Action,The Highest Rec Is %lu\n",cur_higest);
     FILE* output = NULL;
@@ -115,6 +115,14 @@ static void real_do_action(proxy_node* proxy){
         output = proxy->req_log_file;
     }
     while(proxy->cur_rec<=cur_higest){
+            // tom add 20150131
+            struct timeval wake_up_t;
+            gettimeofday(&wake_up_t,NULL);
+            if(output!=NULL){
+                fprintf(output,"Request:%lu.%06lu:",
+                    wake_up_t.tv_sec,wake_up_t.tv_usec);
+            }
+    // end tom add
         SYS_LOG(proxy,"In REAL Do Action,We Execute Rec %lu\n",proxy->cur_rec);
         data = NULL;
         data_size = 0;
@@ -146,10 +154,19 @@ static void do_action_to_server(int data_size,void* data,void* arg){
     gettimeofday(&endtime,NULL);
     if(proxy->ts_log && output!=NULL){
         //fprintf(output,"\n");
-        fprintf(output,"%lu : %lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu\n",header->connection_id,
+        /*fprintf(output,"%lu : %lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu\n",header->connection_id,
             header->received_time.tv_sec,header->received_time.tv_usec,
             header->created_time.tv_sec,header->created_time.tv_usec,
+            endtime.tv_sec,endtime.tv_usec,endtime.tv_sec,endtime.tv_usec);*/
+        // tom add 20150131
+        fprintf(output,"%lu : %lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu,%lu.%06lu\n",header->connection_id,
+            header->received_time.tv_sec,header->received_time.tv_usec,
+            header->created_time.tv_sec,header->created_time.tv_usec,
+            header->timestamp_0.tv_sec,header->timestamp_0.tv_usec,
+            header->timestamp_1.tv_sec,header->timestamp_1.tv_usec,
+            header->timestamp_2.tv_sec,header->timestamp_2.tv_usec,
             endtime.tv_sec,endtime.tv_usec,endtime.tv_sec,endtime.tv_usec);
+        // end tom add
     }
     switch(header->action){
         case P_CONNECT:
@@ -201,18 +218,18 @@ static void do_action_connect(int data_size,void* data,void* arg){
     }
     if(ret->p_s==NULL){
          // tom add 20150131
-        //evutil_socket_t fd;
-        //fd = socket(AF_INET, SOCK_STREAM, 0);
-        //ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
+        evutil_socket_t fd;
+        fd = socket(AF_INET, SOCK_STREAM, 0);
+        ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
         // end tom add
         ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
         bufferevent_setcb(ret->p_s,server_side_on_read,NULL,server_side_on_err,ret);
         bufferevent_enable(ret->p_s,EV_READ|EV_PERSIST|EV_WRITE);
         bufferevent_socket_connect(ret->p_s,(struct sockaddr*)&proxy->sys_addr.s_addr,proxy->sys_addr.s_sock_len);
         // tom add 20150131
-        //int enable = 1;
-        //if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
-            //printf("Proxy-side to true Server: TCP_NODELAY SETTING ERROR!\n");
+        int enable = 1;
+        if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+            printf("Proxy-side to true Server: TCP_NODELAY SETTING ERROR!\n");
         // end tom add
     }else{
         debug_log("why there is an existing connection?\n");
@@ -603,6 +620,11 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
         new_conn->proxy = proxy;
         bufferevent_setcb(new_conn->p_c,client_side_on_read,NULL,client_side_on_err,new_conn);
         bufferevent_enable(new_conn->p_c,EV_READ|EV_PERSIST|EV_WRITE);
+        // tom add 20150131
+        int enable = 1;
+        if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+            printf("Proxy-side new_conn->p_c: TCP_NODELAY SETTING ERROR!\n");
+        // end tom add
         MY_HASH_SET(new_conn,proxy->hash_map);
         // connect operation should be consistent among all the proxies.
         struct timeval recv_time;

@@ -110,6 +110,11 @@ typedef struct proxy_msg_header_t{
     proxy_action action;
     struct timeval received_time;
     struct timeval created_time;
+    // tom add 20150131
+    struct timeval timestamp_0;
+    struct timeval timestamp_1;
+    struct timeval timestamp_2;
+    // end tom add
     hk_t connection_id;
     counter_t counter;
 }proxy_msg_header;

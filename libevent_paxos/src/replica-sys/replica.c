@@ -383,9 +383,9 @@ static void replica_on_error_cb(struct bufferevent* bev,short ev,void *arg){
 static void replica_on_accept(struct evconnlistener* listener,evutil_socket_t fd,struct sockaddr *address,int socklen,void *arg){
 
     // tom add 20150129
-    struct timeval start_t;
-    gettimeofday(&start_t,NULL);
-    printf("Warning: replica_on_accept timestamp  %lu.%06lu\n", start_t.tv_sec, start_t.tv_usec);
+    //struct timeval start_t;
+    //gettimeofday(&start_t,NULL);
+    //printf("Warning: replica_on_accept timestamp  %lu.%06lu\n", start_t.tv_sec, start_t.tv_usec);
     // end tom add
 
     // tom add 20150129
@@ -422,6 +422,13 @@ static void send_for_consensus_comp(node* my_node,size_t data_size,void* data,in
         for(uint32_t i=0;i<my_node->group_size;i++){
             if(i!=my_node->node_id && my_node->peer_pool[i].active){
                 struct bufferevent* buff = my_node->peer_pool[i].my_buff_event;
+
+    // tom add 20150129
+    struct timeval start_t;
+    gettimeofday(&start_t,NULL);
+    printf("Warning: send_for_consensus_comp time  %d : %lu.%06lu\n", i, start_t.tv_sec, start_t.tv_usec);
+    // end tom add
+
                 bufferevent_write(buff,msg,CONSENSUS_MSG_SIZE(msg));
                 SYS_LOG(my_node,
                         "Send Consensus Msg To Node %u\n",i);
@@ -583,7 +590,7 @@ static void replica_on_read(struct bufferevent* bev,void* arg){
     SYS_LOG(my_node,"Enter Consensus Communication Module.\n");
     int counter = 0;
     // tom add 20150129
-    printf("Warning: consensus input evbuffer has %u bytes left\n", (unsigned)len);
+    //printf("Warning: consensus input evbuffer has %u bytes left\n", (unsigned)len);
     // end tom add
     SYS_LOG(my_node,"There Is %u Bytes Data In The Buffer In Total.\n",
             (unsigned)len);

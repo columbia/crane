@@ -217,19 +217,19 @@ static void do_action_connect(int data_size,void* data,void* arg){
         MY_HASH_SET(ret,proxy->hash_map);
     }
     if(ret->p_s==NULL){
-         // tom add 20150131
-        evutil_socket_t fd;
-        fd = socket(AF_INET, SOCK_STREAM, 0);
-        ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
+        // tom add 20150131
+        //evutil_socket_t fd;
+        //fd = socket(AF_INET, SOCK_STREAM, 0);
+        //ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
         // end tom add
-        //ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
+        ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
         bufferevent_setcb(ret->p_s,server_side_on_read,NULL,server_side_on_err,ret);
         bufferevent_enable(ret->p_s,EV_READ|EV_PERSIST|EV_WRITE);
         bufferevent_socket_connect(ret->p_s,(struct sockaddr*)&proxy->sys_addr.s_addr,proxy->sys_addr.s_sock_len);
         // tom add 20150131
-        int enable = 1;
-        if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
-            printf("Proxy-side to true Server: TCP_NODELAY SETTING ERROR!\n");
+        //int enable = 1;
+        //f(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+        //   printf("Proxy-side to true Server: TCP_NODELAY SETTING ERROR!\n");
         // end tom add
     }else{
         debug_log("why there is an existing connection?\n");
@@ -450,8 +450,8 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
 	// tom add 20150128
 	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	size_t len = evbuffer_get_length(output);
-	printf("Warning: output evbuffer has %lu bytes left when P_CLOSE\n", (unsigned long)len);
-                printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+	//printf("Warning: output evbuffer has %lu bytes left when P_CLOSE\n", (unsigned long)len);
+                //printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
             free(close_msg);
         }
@@ -484,8 +484,8 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
 		// tom add 20150128
 		struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 		size_t len = evbuffer_get_length(output);
-		printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
-                                printf("Warning: P_SEND timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+		//printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
+                                //printf("Warning: P_SEND timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 		// end tom add
             }
             break;
@@ -635,8 +635,8 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
 	// tom add 20150128
 	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	size_t len = evbuffer_get_length(output);
-	printf("Warning: output evbuffer has %lu bytes left when P_CONNECT\n", (unsigned long)len);
-                printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+	//printf("Warning: output evbuffer has %lu bytes left when P_CONNECT\n", (unsigned long)len);
+                //printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
     }
     if(req_msg!=NULL){

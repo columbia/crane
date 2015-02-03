@@ -19,7 +19,7 @@
 #include <unistd.h>  
 #include <sched.h>  
 #include <assert.h>  
-//end tom
+// end tom
 #include "../include/proxy/proxy.h"
 #include "../include/config-comp/config-proxy.h"
 #include "../include/replica-sys/message.h"
@@ -115,14 +115,14 @@ static void real_do_action(proxy_node* proxy){
         output = proxy->req_log_file;
     }
     while(proxy->cur_rec<=cur_higest){
-            // tom add 20150131
-            struct timeval wake_up_t;
-            gettimeofday(&wake_up_t,NULL);
-            if(output!=NULL){
-                fprintf(output,"Request:%lu.%06lu:",
-                    wake_up_t.tv_sec,wake_up_t.tv_usec);
-            }
-    // end tom add
+        // tom add 20150131
+        struct timeval wake_up_t;
+        gettimeofday(&wake_up_t,NULL);
+        if(output!=NULL){
+            fprintf(output,"Request:%lu.%06lu:",
+                wake_up_t.tv_sec,wake_up_t.tv_usec);
+        }
+        // end tom add
         SYS_LOG(proxy,"In REAL Do Action,We Execute Rec %lu\n",proxy->cur_rec);
         data = NULL;
         data_size = 0;
@@ -218,18 +218,18 @@ static void do_action_connect(int data_size,void* data,void* arg){
     }
     if(ret->p_s==NULL){
         // tom add 20150131
-        //evutil_socket_t fd;
-        //fd = socket(AF_INET, SOCK_STREAM, 0);
-        //ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
+        evutil_socket_t fd;
+        fd = socket(AF_INET, SOCK_STREAM, 0);
+        ret->p_s = bufferevent_socket_new(proxy->base,fd,BEV_OPT_CLOSE_ON_FREE);
         // end tom add
-        ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
+        //ret->p_s = bufferevent_socket_new(proxy->base,-1,BEV_OPT_CLOSE_ON_FREE);
         bufferevent_setcb(ret->p_s,server_side_on_read,NULL,server_side_on_err,ret);
         bufferevent_enable(ret->p_s,EV_READ|EV_PERSIST|EV_WRITE);
         bufferevent_socket_connect(ret->p_s,(struct sockaddr*)&proxy->sys_addr.s_addr,proxy->sys_addr.s_sock_len);
         // tom add 20150131
-        //int enable = 1;
-        //f(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
-        //   printf("Proxy-side to true Server: TCP_NODELAY SETTING ERROR!\n");
+        int enable = 1;
+        if(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*)&enable, sizeof(enable)) < 0)
+           printf("Proxy-side to true Server: TCP_NODELAY SETTING ERROR!\n");
         // end tom add
     }else{
         debug_log("why there is an existing connection?\n");
@@ -451,7 +451,7 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
 	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	size_t len = evbuffer_get_length(output);
 	//printf("Warning: output evbuffer has %lu bytes left when P_CLOSE\n", (unsigned long)len);
-                //printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+        //printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
             free(close_msg);
         }
@@ -480,13 +480,19 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
                     msg_header->data_size,((client_msg*)msg_header)->data);
             ((proxy_send_msg*)con_msg->data)->header.received_time = recv_time;
             if(NULL!=con_msg && NULL!=proxy->con_conn){
+
+                printf("P_SEND SIZE: %d\n", REQ_SUB_SIZE(con_msg));
+                struct timeval test_time;
+                gettimeofday(&test_time,NULL);
+                printf("Warning: client_process_data: %lu.%06lu\n", test_time.tv_sec, test_time.tv_usec);
+
                 bufferevent_write(proxy->con_conn,con_msg,REQ_SUB_SIZE(con_msg));
-		// tom add 20150128
-		struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
-		size_t len = evbuffer_get_length(output);
-		//printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
-                                //printf("Warning: P_SEND timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
-		// end tom add
+	// tom add 20150128
+	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+	size_t len = evbuffer_get_length(output);
+	//printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
+                //printf("Warning: P_SEND timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+	// end tom add
             }
             break;
         default:
@@ -631,12 +637,18 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
         gettimeofday(&recv_time,NULL);
         req_msg = build_req_sub_msg(new_conn->key,new_conn->counter++,P_CONNECT,0,NULL); 
         ((proxy_connect_msg*)req_msg->data)->header.received_time = recv_time;
+
+        printf("P_CONNECT SIZE: %d\n", REQ_SUB_SIZE(req_msg));
+        struct timeval test_time;
+        gettimeofday(&test_time,NULL);
+        printf("Warning: proxy_on_accept: %lu.%06lu\n", test_time.tv_sec, test_time.tv_usec);
+
         bufferevent_write(proxy->con_conn,req_msg,REQ_SUB_SIZE(req_msg));
 	// tom add 20150128
 	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	size_t len = evbuffer_get_length(output);
 	//printf("Warning: output evbuffer has %lu bytes left when P_CONNECT\n", (unsigned long)len);
-                //printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+        //printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
     }
     if(req_msg!=NULL){
@@ -716,14 +728,14 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
     proxy->recon_period.tv_usec = 0;
     proxy->p_self = pthread_self();
     // tom add 20150127
-     core_0 = 0 % cpu_nums;  
-     CPU_ZERO(&cpuset_0);  
-     CPU_SET(core_0, &cpuset_0);  
-     ret = pthread_setaffinity_np(proxy->p_self, sizeof(cpu_set_t), &cpuset_0);  
-     assert(ret == 0);  
-     /* Check the actual affinity mask assigned to the thread */  
-     ret = pthread_getaffinity_np(proxy->p_self , sizeof(cpu_set_t), &cpuset_0);  
-     assert(ret == 0);  
+    //core_0 = 0 % cpu_nums;  
+    //CPU_ZERO(&cpuset_0);  
+    //CPU_SET(core_0, &cpuset_0);  
+    //ret = pthread_setaffinity_np(proxy->p_self, sizeof(cpu_set_t), &cpuset_0);  
+    //assert(ret == 0);  
+    //Check the actual affinity mask assigned to the thread
+    //ret = pthread_getaffinity_np(proxy->p_self , sizeof(cpu_set_t), &cpuset_0);  
+    //assert(ret == 0);  
     // end tom add
     if(proxy_read_config(proxy,config_path)){
         err_log("PROXY : Configuration File Reading Error.\n");
@@ -736,13 +748,13 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
     }
     
     // set up base
-	struct event_base* base = event_base_new();
+    struct event_base* base = event_base_new();
 
     if(NULL==base){
         goto proxy_exit_error;
     }
 
-//    proxy->log_file = NULL; 
+    //proxy->log_file = NULL; 
 
     int build_log_ret = 0;
     if(log_path==NULL){
@@ -834,14 +846,14 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
 
     pthread_create(&proxy->sub_thread,NULL,t_consensus,proxy->con_node);
     // tom add 20150127
-     core_1 = 1 % cpu_nums;  
-     CPU_ZERO(&cpuset_1);  
-     CPU_SET(core_1, &cpuset_1);  
-     ret = pthread_setaffinity_np(proxy->sub_thread, sizeof(cpu_set_t), &cpuset_1);  
-     assert(ret == 0);  
+    //core_1 = 1 % cpu_nums;  
+    //CPU_ZERO(&cpuset_1);  
+    //CPU_SET(core_1, &cpuset_1);  
+    //ret = pthread_setaffinity_np(proxy->sub_thread, sizeof(cpu_set_t), &cpuset_1);  
+    //assert(ret == 0);  
      /* Check the actual affinity mask assigned to the thread */  
-     ret = pthread_getaffinity_np(proxy->sub_thread , sizeof(cpu_set_t), &cpuset_1);  
-     assert(ret == 0);  
+    //ret = pthread_getaffinity_np(proxy->sub_thread , sizeof(cpu_set_t), &cpuset_1);  
+    //assert(ret == 0);  
     // end tom add
     hack_arg = proxy;
 

@@ -362,7 +362,7 @@ static void handle_accept_req(consensus_component* comp,void* data){
         gettimeofday(&t_1,NULL);
         header->timestamp_1.tv_sec = t_1.tv_sec;
         header->timestamp_1.tv_usec = t_1.tv_usec;
-    // end tom add
+        // end tom add
         // record the data persistently 
         if(store_record(comp->db_ptr,sizeof(record_no),&record_no,
                     REQ_RECORD_SIZE(record_data),record_data)!=0){

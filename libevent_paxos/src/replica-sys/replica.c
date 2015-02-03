@@ -423,11 +423,11 @@ static void send_for_consensus_comp(node* my_node,size_t data_size,void* data,in
             if(i!=my_node->node_id && my_node->peer_pool[i].active){
                 struct bufferevent* buff = my_node->peer_pool[i].my_buff_event;
 
-    // tom add 20150129
-    struct timeval start_t;
-    gettimeofday(&start_t,NULL);
-    printf("Warning: send_for_consensus_comp time  %d : %lu.%06lu\n", i, start_t.tv_sec, start_t.tv_usec);
-    // end tom add
+                // tom add 20150129
+                //struct timeval start_t;
+                //gettimeofday(&start_t,NULL);
+                //printf("Warning: send_for_consensus_comp time  %d : %lu.%06lu\n", i, start_t.tv_sec, start_t.tv_usec);
+                // end tom add
 
                 bufferevent_write(buff,msg,CONSENSUS_MSG_SIZE(msg));
                 SYS_LOG(my_node,
@@ -516,14 +516,14 @@ static void handle_consensus_msg(node* my_node,consensus_msg* msg){
 static void handle_request_submit(node* my_node,
         req_sub_msg* msg,struct bufferevent* evb){
     // tom add 20150126
-    struct timeval end_t;
-    long  difference;
+    //struct timeval end_t;
+    //long  difference;
     //printf("%lu.%06lu\n", ((proxy_send_msg*)msg->data)->header.received_time.tv_sec, ((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
-    gettimeofday(&end_t,NULL);
-    difference = (end_t.tv_sec*1000000+end_t.tv_usec ) - (((proxy_send_msg*)msg->data)->header.received_time.tv_sec*1000000+((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
-    if(difference > 10000) {
-        printf("Warning from proxy to consensus: %ld,  timestamp: %lu.%06lu\n", difference, end_t.tv_sec, end_t.tv_usec);
-    }
+    //gettimeofday(&end_t,NULL);
+    //difference = (end_t.tv_sec*1000000+end_t.tv_usec ) - (((proxy_send_msg*)msg->data)->header.received_time.tv_sec*1000000+((proxy_send_msg*)msg->data)->header.received_time.tv_usec);
+    //if(difference > 10000) {
+    //   printf("Warning from proxy to consensus: %ld,  timestamp: %lu.%06lu\n", difference, end_t.tv_sec, end_t.tv_usec);
+    //}
     // end tom add 20150126
     SYS_LOG(my_node,"Node %d Received Consensus Submit Request\n",
             my_node->node_id);

@@ -15,10 +15,10 @@
  * =====================================================================================
  */
 // tom add 20150127
-#define _GNU_SOURCE  
-#include <unistd.h>  
-#include <sched.h>  
-#include <assert.h>  
+//#define _GNU_SOURCE  
+//#include <unistd.h>  
+//#include <sched.h>  
+//#include <assert.h>  
 // end tom
 #include "../include/proxy/proxy.h"
 #include "../include/config-comp/config-proxy.h"
@@ -105,9 +105,9 @@ static void real_do_action(proxy_node* proxy){
     size_t data_size=0;
     PROXY_ENTER(proxy);
     db_key_type cur_higest;
-    //pthread_mutex_lock(&proxy->lock);
+    pthread_mutex_lock(&proxy->lock);
     cur_higest = proxy->highest_rec;
-    //pthread_mutex_unlock(&proxy->lock);
+    pthread_mutex_unlock(&proxy->lock);
     SYS_LOG(proxy,"In REAL Do Action,The Current Rec Is %lu\n",proxy->cur_rec);
     SYS_LOG(proxy,"In REAL Do Action,The Highest Rec Is %lu\n",cur_higest);
     FILE* output = NULL;
@@ -291,10 +291,10 @@ static void update_state(int data_size,void* data,void* arg){
     PROXY_ENTER(proxy);
     //SYS_LOG(proxy,"In Update State,The Current Rec Is %lu.\n",*((db_key_type*)(data)));
     db_key_type* rec_no = data;
-    //pthread_mutex_lock(&proxy->lock);
+    pthread_mutex_lock(&proxy->lock);
     proxy->highest_rec = (proxy->highest_rec<*rec_no)?*rec_no:proxy->highest_rec;
     //SYS_LOG(proxy,"In Update State,The Highest Rec Is %lu.\n",proxy->highest_rec);
-    //pthread_mutex_unlock(&proxy->lock);
+    pthread_mutex_unlock(&proxy->lock);
     wake_up(proxy);
     PROXY_LEAVE(proxy);
     return;
@@ -448,11 +448,11 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
         if(NULL!=close_msg && NULL!=proxy->con_conn){
             bufferevent_write(proxy->con_conn,close_msg,REQ_SUB_SIZE(close_msg));
 	// tom add 20150128
-	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
-	size_t len = evbuffer_get_length(output);
+	//struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+	//size_t len = evbuffer_get_length(output);
 	//printf("Warning: output evbuffer has %lu bytes left when P_CLOSE\n", (unsigned long)len);
-        //printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
-	// end tom add
+                //printf("Warning: P_CLOSE timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+                // end tom add
             free(close_msg);
         }
     }
@@ -488,8 +488,8 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
 
                 bufferevent_write(proxy->con_conn,con_msg,REQ_SUB_SIZE(con_msg));
 	// tom add 20150128
-	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
-	size_t len = evbuffer_get_length(output);
+	//struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+	//size_t len = evbuffer_get_length(output);
 	//printf("Warning: output evbuffer has %lu bytes left when P_SEND\n", (unsigned long)len);
                 //printf("Warning: P_SEND timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
@@ -645,10 +645,10 @@ static void proxy_on_accept(struct evconnlistener* listener,evutil_socket_t
 
         bufferevent_write(proxy->con_conn,req_msg,REQ_SUB_SIZE(req_msg));
 	// tom add 20150128
-	struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
-	size_t len = evbuffer_get_length(output);
+	//struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
+	//size_t len = evbuffer_get_length(output);
 	//printf("Warning: output evbuffer has %lu bytes left when P_CONNECT\n", (unsigned long)len);
-        //printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
+                //printf("Warning: P_CONNECT timestamp: %lu.%06lu\n", recv_time.tv_sec, recv_time.tv_usec);
 	// end tom add
     }
     if(req_msg!=NULL){
@@ -705,10 +705,10 @@ proxy_node* proxy_init(int node_id,const char* start_mode,const char* config_pat
         const char* log_path,int fake_mode){
     
     // tom add 20150127
-    cpu_set_t cpuset_0, cpuset_1;
-    int ret, cpu_nums, core_0, core_1;
-    cpu_nums = sysconf(_SC_NPROCESSORS_CONF);/*get the cpu nums*/  
-    assert(cpu_nums > 0);  
+    //cpu_set_t cpuset_0, cpuset_1;
+    //int ret, cpu_nums, core_0, core_1;
+    //cpu_nums = sysconf(_SC_NPROCESSORS_CONF);/*get the cpu nums*/  
+    //assert(cpu_nums > 0);  
     // end tom add
 
     proxy_node* proxy = (proxy_node*)malloc(sizeof(proxy_node));

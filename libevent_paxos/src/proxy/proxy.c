@@ -115,14 +115,7 @@ static void real_do_action(proxy_node* proxy){
         output = proxy->req_log_file;
     }
     while(proxy->cur_rec<=cur_higest){
-        // tom add 20150131
-        struct timeval wake_up_t;
-        gettimeofday(&wake_up_t,NULL);
-        if(output!=NULL){
-            fprintf(output,"Request:%lu.%06lu:",
-                wake_up_t.tv_sec,wake_up_t.tv_usec);
-        }
-        // end tom add
+      
         SYS_LOG(proxy,"In REAL Do Action,We Execute Rec %lu\n",proxy->cur_rec);
         data = NULL;
         data_size = 0;
@@ -130,6 +123,14 @@ static void real_do_action(proxy_node* proxy){
         if(NULL==data){
             cross_view(proxy);
         }else{
+              // tom add 20150131
+            struct timeval wake_up_t;
+            gettimeofday(&wake_up_t,NULL);
+            if(output!=NULL){
+                fprintf(output,"Request:%lu.%06lu:",
+                    wake_up_t.tv_sec,wake_up_t.tv_usec);
+            }
+            // end tom add
             if(output!=NULL){
                 fprintf(output,"Request:%ld:",proxy->cur_rec);
             }
@@ -414,9 +415,12 @@ static void server_side_on_read(struct bufferevent* bev,void* arg){
     len = evbuffer_get_length(input);
     SYS_LOG(proxy,"There Is %u Bytes Data In The Buffer In Total.\n",
             (unsigned)len);
+    //printf("There Is %u Bytes Data In The Buffer In Total.\n",
+    //       (unsigned)len);
     // every time we just send 1024 bytes data to the client
     // max_length_to_be_added
     if(len>0){
+        printf("What 1\n");
         cur_len = len;
         if(pair->p_c!=NULL){
             output = bufferevent_get_output(pair->p_c);
@@ -426,6 +430,8 @@ static void server_side_on_read(struct bufferevent* bev,void* arg){
         }else{
             evbuffer_drain(input,len);
         }
+    } else {
+         printf("What 0\n");
     }
     PROXY_LEAVE(proxy);
     return;
@@ -442,6 +448,10 @@ static void server_side_on_err(struct bufferevent* bev,short what,void* arg){
     if(what & BEV_EVENT_CONNECTED){
         SYS_LOG(proxy,"Connection Has Established Between %lu And The Real Server.\n",pair->key);
     }else if((what & BEV_EVENT_EOF) || ( what & BEV_EVENT_ERROR)){
+    //}else if(what & BEV_EVENT_ERROR){
+        if(what & BEV_EVENT_ERROR) 
+            printf("Error: Got an error from server_side_on_err:%s\n", evutil_socket_error_to_string(EVUTIL_SOCKET_ERROR()));
+
         gettimeofday(&recv_time,NULL);
         req_sub_msg* close_msg = build_req_sub_msg(pair->key,pair->counter++,P_CLOSE,0,NULL);
         ((proxy_close_msg*)close_msg->data)->header.received_time = recv_time;
@@ -480,6 +490,7 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
                     msg_header->data_size,((client_msg*)msg_header)->data);
             ((proxy_send_msg*)con_msg->data)->header.received_time = recv_time;
             if(NULL!=con_msg && NULL!=proxy->con_conn){
+              //if((((client_msg*)msg_header)->data[0] == 'G')){
 
                 printf("P_SEND SIZE: %d\n", REQ_SUB_SIZE(con_msg));
                 struct timeval test_time;
@@ -487,6 +498,7 @@ static void client_process_data(socket_pair* pair,struct bufferevent* bev,size_t
                 printf("Warning: client_process_data: %lu.%06lu\n", test_time.tv_sec, test_time.tv_usec);
 
                 bufferevent_write(proxy->con_conn,con_msg,REQ_SUB_SIZE(con_msg));
+              //}
 	// tom add 20150128
 	//struct evbuffer *output = bufferevent_get_output(proxy->con_conn);
 	//size_t len = evbuffer_get_length(output);

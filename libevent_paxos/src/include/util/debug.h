@@ -55,4 +55,7 @@
 
 #define DEBUG_POINT(x,n) {if(x->sys_log_file){rec_log(((x)->sys_log_file),"Debug Point " #n ".\n")}}
 
+// extra performance data collection
+#define PERF_DEBUG 
+
 #endif

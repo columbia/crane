@@ -9,12 +9,11 @@ import logging
 import os
 import subprocess
 from signal import signal
-# tom add 2014-12-23
+'''
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-# end tom add 2014-12-23
-
+'''
 def getMsmrDefaultOptions():
 	default = {}
 	return default
@@ -148,10 +147,7 @@ def which(name, flags=os.X_OK):
 			result.append(p)
 	return result
 
-#def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap):
-#tom add 2015-01-23
 def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config, time_extra_0, time_extra_1, time_extra_2, time_extra_3,concensusmap_extra_0,concensusmap_extra_1,concensusmap_extra_2,concensusmap_extra_3, extra_response_0,extra_response_1):
-#end tom add 2015-01-23
 	try:
 		import numpy
 	except ImportError:
@@ -180,35 +176,32 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 		plt.savefig('time2.png')
 		plt.clf()
 
-	time1_avg = numpy.average(time1)
-	time1_std = numpy.std(time1)
-	# tom add 20150131
-	time_extra_0_avg = numpy.average(time_extra_0)
-	time_extra_0_std = numpy.std(time_extra_0)
-	time_extra_1_avg = numpy.average(time_extra_1)
-	time_extra_1_std = numpy.std(time_extra_1)
-	time_extra_2_avg = numpy.average(time_extra_2)
-	time_extra_2_std = numpy.std(time_extra_2)
-	time_extra_3_avg = numpy.average(time_extra_3)
-	time_extra_3_std = numpy.std(time_extra_3)
-	extra_response_0_avg = numpy.average(extra_response_0)
-	extra_response_0_std = numpy.std(extra_response_0)
-	extra_response_1_avg = numpy.average(extra_response_1)
-	extra_response_1_std = numpy.std(extra_response_1)
-	# end tom add
-	time2_avg = numpy.average(time2)
-	time2_std = numpy.std(time2)
-	if len(lengths) > 0:
-		length_avg = numpy.average(lengths)
-		length_std = numpy.std(lengths)
+	if Perf_Test_Flag == 1:
+		time1_avg = numpy.average(time1)
+		time1_std = numpy.std(time1)
+		time_extra_0_avg = numpy.average(time_extra_0)
+		time_extra_0_std = numpy.std(time_extra_0)
+		time_extra_1_avg = numpy.average(time_extra_1)
+		time_extra_1_std = numpy.std(time_extra_1)
+		time_extra_2_avg = numpy.average(time_extra_2)
+		time_extra_2_std = numpy.std(time_extra_2)
+		time_extra_3_avg = numpy.average(time_extra_3)
+		time_extra_3_std = numpy.std(time_extra_3)
+		extra_response_0_avg = numpy.average(extra_response_0)
+		extra_response_0_std = numpy.std(extra_response_0)
+		extra_response_1_avg = numpy.average(extra_response_1)
+		extra_response_1_std = numpy.std(extra_response_1)
+		time2_avg = numpy.average(time2)
+		time2_std = numpy.std(time2)
+		if len(lengths) > 0:
+			length_avg = numpy.average(lengths)
+			length_std = numpy.std(lengths)
 	import math
 	with open("stats.txt", "w") as stats:
-		# tom add 20150126
 		if Perf_Test_Flag == 1:
 			stats.write('Concensus Time====Overall('+str(len(time1))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(time1_avg))
 			stats.write('\tstd:{0}\n'.format(time1_std))
-			# tom add 20150131
 			stats.write('Concensus Time====from proxy to consensus('+str(len(time_extra_0))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(time_extra_0_avg))
 			stats.write('\tstd:{0}\n'.format(time_extra_0_std))
@@ -221,12 +214,12 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 			stats.write('Concensus Time====from get ACK to Cheng consensus timestamp('+str(len(time_extra_3))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(time_extra_3_avg))
 			stats.write('\tstd:{0}\n'.format(time_extra_3_std))
-			# end tom add
+
 			for t in concensusmap:
 				stats.write('\t{0}====Overall({1}):\n'.format(t, len(concensusmap[t])))
 				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap[t])))
 				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap[t])))
-			# tom add 20150131
+			'''
 			for t in concensusmap_extra_0:
 				stats.write('\t{0}====from proxy to consensus({1}):\n'.format(t, len(concensusmap_extra_0[t])))
 				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap_extra_0[t])))
@@ -243,49 +236,47 @@ def write_stats(time1, time2, repeats, first, last, lengths, origin_time1, origi
 				stats.write('\t{0}====from get ACK to Cheng consensus timestamp({1}):\n'.format(t, len(concensusmap_extra_3[t])))
 				stats.write('\t\tmean:{0} us\n'.format(numpy.average(concensusmap_extra_3[t])))
 				stats.write('\t\tstd:{0}\n'.format(numpy.std(concensusmap_extra_3[t])))
-			# end tom add
+			'''
+
 			stats.write('Response Time====Overall('+str(len(time2))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(time2_avg))
 			stats.write('\tstd:{0}\n'.format(time2_std))
-			# tom add 20150131
 			stats.write('Response Time====from the end of consensus time to wake up including lock('+str(len(extra_response_0))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(extra_response_0_avg))
 			stats.write('\tstd:{0}\n'.format(extra_response_0_std))
 			stats.write('Response Time====from wake up to Cheng end time('+str(len(extra_response_1))+'):\n')
 			stats.write('\tmean:{0} us\n'.format(extra_response_1_avg))
 			stats.write('\tstd:{0}\n'.format(extra_response_1_std))
-			# end tom add
 			for t in responsemap:
-				stats.write('\t{0}({1}):\n'.format(t, len(responsemap[t])))
+				stats.write('\t{0}====Overall({1}):\n'.format(t, len(responsemap[t])))
 				stats.write('\t\tmean:{0} us\n'.format(numpy.average(responsemap[t])))
 				stats.write('\t\tstd:{0}\n'.format(numpy.std(responsemap[t])))
-			# tom add 20150126
+
 			stats.write('Throughput (from timestamps in libevent_paxos):\n')
 			stats.write('\t{0} operations/s\n'.format(len(time1)/(last-first)))
-			# end tom add 20150126
+
 			if len(lengths) > 0:
 				stats.write('Queue Length:\n')
 				stats.write('\tmean:{0}\n'.format(length_avg))
 				stats.write('\tstd:{0}'.format(length_std))
-		# end tom add 20150126
-		# tom add 2015-01-23
-		#if bench.split(" ")[0]=="apache":
-		stats.write('==============================\n')
-		stats.write('Throughput (from ab log):\n')
-		TP = []
-		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
-			client_dir_name = 'client'+str(i+1)
-			client_output_log_file_name = MSMR_ROOT+'/eval/current/'+client_dir_name+'/client'+str(i+1)+'output.log'
-			if not os.path.isfile(client_output_log_file_name):
-				break
-			lines = (open(client_output_log_file_name, 'r').readlines())
-			for line in lines:
-				if line.startswith('Requests per second'):
-					TP += [float(line.split(':')[1].translate(None, ' [#/sec] (mean)\n'))]
-					#stats.write(line.split(':')[1].translate(None, ' [#/sec] (mean)\n'))
-		stats.write('\t{0} req/s\n'.format(numpy.average(TP)))
-		stats.write('==============================\n')
-		# end tom add 2015-01-23
+
+		if config.get(bench, 'CLIENT_PROGRAM') != "":
+			if  (config.get(bench, 'CLIENT_PROGRAM') ).split("/")[-1] == "ab":
+				stats.write('==============================\n')
+				stats.write('Throughput (from ab log):\n')
+				TP = []
+				for i in range(int(config.get(bench,'CLIENT_COUNT'))):
+					client_dir_name = 'client'+str(i+1)
+					client_output_log_file_name = MSMR_ROOT+'/eval/current/'+client_dir_name+'/client'+str(i+1)+'output.log'
+					if not os.path.isfile(client_output_log_file_name):
+						break
+					lines = (open(client_output_log_file_name, 'r').readlines())
+					for line in lines:
+						if line.startswith('Requests per second'):
+							TP += [float(line.split(':')[1].translate(None, ' [#/sec] (mean)\n'))]
+							#stats.write(line.split(':')[1].translate(None, ' [#/sec] (mean)\n'))
+				stats.write('\t{0} req/s\n'.format(numpy.average(TP)))
+				stats.write('==============================\n')
 	os.system('cat stats.txt')
 
 def preSetting(config, bench, apps_name):
@@ -360,7 +351,11 @@ def preSetting(config, bench, apps_name):
 	'exec 2>./log/${TEST_NAME}_err_${NO}\n'+
 	'export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib\n'+
 	'SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out\n')
-		testscript.write('CONFIG_FILE=nodes.cfg\n')
+		#testscript.write('CONFIG_FILE=nodes.cfg\n')
+		if Perf_Test_Flag == 1:
+			testscript.write('CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/nodes.cfg\n')
+		else:
+			testscript.write('CONFIG_FILE=$MSMR_ROOT/libevent_paxos/target/nodes0.cfg\n')
 		testscript.write('rm -rf $MSMR_ROOT/libevent_paxos/.db\n')
 		for i in range(int(config.get(bench,'SERVER_COUNT'))):
 			port = str(int(config.get(bench,'SERVER_START_PORT'))+i)
@@ -481,7 +476,7 @@ def processBench(config, bench):
 	types = []
 	concensusmap = {}
 	responsemap = {}
-	# tom add 20150126
+
 	op_index = []
 	timestamp_0 = []
 	timestamp_1 = []
@@ -502,7 +497,7 @@ def processBench(config, bench):
 
 	tt_temp_1 = []
 	tt_temp_2 = []
-	# end tom add 20150126
+
 	for i in range(int(repeats)):
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-proxy-req.log'
 		print log_file_name
@@ -510,6 +505,7 @@ def processBench(config, bench):
 			break
 		lines = (open(log_file_name, 'r').readlines())
 		first = 0
+		last = 0
 		for line in lines:
 			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)#match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
 			if match:
@@ -519,24 +515,25 @@ def processBench(config, bench):
 				last = float(match.group(7)) # used for tp, the last operation's end time#last = float(match.group(4)) # used for tp, the last operation's end time
 				origin_time1 += [float(match.group(1))]
 				origin_time3 += [float(match.group(6))]#origin_time3 += [float(match.group(3))]
-				# tom add 20150131
-				timestamp_0 += [float(match.group(3))]
+
+				timestamp_0 += [float(match.group(3))] # timestamp_0
 				timestamp_2 += [float(match.group(5))]
-				# tom add 20150131
-			# tom add 20150126
+
 			# used for grabbing the operation which costs too much time, so we need to locate it by its index
 			if line.startswith('Request'):
 				op_index += [line.split(':')[3]]
-				wakeup_t += [float(line.split(':')[1])] 		
-			# end tom add 20150126
+				wakeup_t += [float(line.split(':')[1])]  # wakeup_timestamp		
+
 			if line.startswith('Operation'):
 				types += [line.split(' ')[1].translate(None, '.\n')]
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-0-consensus-sys.log'
 		print log_file_name
+		if not os.path.isfile(log_file_name):
+			break
 		lines = (open(log_file_name, 'r').readlines())
 		for line in lines:
 			origin_time2 += [float(line.split(':')[0])]
-		# tom add 20150131
+
 		log_file_name = MSMR_ROOT+'/eval/current/'+dir_name+'/log/node-1-proxy-req.log'
 		print log_file_name
 		if not os.path.isfile(log_file_name):
@@ -555,65 +552,63 @@ def processBench(config, bench):
 			match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)#match = re.search(r"([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)",line)
 			if match:			
 				tt_temp_2 += [float(match.group(4))] # timestamp_1
+		# need the less one
 		for ii in range(len(tt_temp_1)):
 			if tt_temp_1[ii] < tt_temp_2[ii]:
 				timestamp_1 += [tt_temp_1[ii]]
 			else:
 				timestamp_1 += [tt_temp_2[ii]]
-		# end tom add
-		# tom add 2014-12-23
+
 		if Perf_Test_Flag == 1:
 			per_Xoperation_response_time = [] # to store each X operation's response time which comes from proxy-req.log
 			Xoperation = 'Sends' # 1)Sends 2)Connects 3)Closes
 			with open("Performance.txt", "w") as perfo:
-			# end tom add 2014-12-23
 				for i in range(len(origin_time1)):
 					tmpTime = [(origin_time2[i]-origin_time1[i])*1000000]
 					time1 += tmpTime
-					# tom add 20150131
+	
 					time_extra_0 +=  [(timestamp_0[i]-origin_time1[i])*1000000]
 					time_extra_1 +=  [(timestamp_1[i]-timestamp_0[i])*1000000]
 					time_extra_2 +=  [(timestamp_2[i]-timestamp_1[i])*1000000]
 					time_extra_3 +=  [(origin_time2[i]-timestamp_2[i])*1000000]
 					extra_response_0 +=  [(wakeup_t[i]-origin_time2[i])*1000000]
 					extra_response_1 +=  [(origin_time3[i]-wakeup_t[i])*1000000]
-					# end tom add 20150131
+	
 					if types[i] not in concensusmap:
 						concensusmap[types[i]] = tmpTime
-						# tom add 20150131
+		
 						concensusmap_extra_0[types[i]] = [(timestamp_0[i]-origin_time1[i])*1000000]
 						concensusmap_extra_1[types[i]] = [(timestamp_1[i]-timestamp_0[i])*1000000]
 						concensusmap_extra_2[types[i]] = [(timestamp_2[i]-timestamp_1[i])*1000000]
 						concensusmap_extra_3[types[i]] = [(origin_time2[i]-timestamp_2[i])*1000000]
-						# end tom add
-						# tom add 2015-01-22
+			
 						if cmp(types[i], Xoperation) == 0:
 							per_Xoperation_response_time +=  [time2[i]]
-						# end tom add 2015-01-22
+			
 						responsemap[types[i]] = [time2[i]]
 					else:
 						concensusmap[types[i]] += tmpTime
-						# tom add 20150131
+			
 						concensusmap_extra_0[types[i]] += [(timestamp_0[i]-origin_time1[i])*1000000]
 						concensusmap_extra_1[types[i]] += [(timestamp_1[i]-timestamp_0[i])*1000000]
 						concensusmap_extra_2[types[i]] += [(timestamp_2[i]-timestamp_1[i])*1000000]
 						concensusmap_extra_3[types[i]] += [(origin_time2[i]-timestamp_2[i])*1000000]
-						# end tom add
-						# tom add 2014-12-21-20:50
+			
 						if cmp(types[i], Xoperation) == 0:
 							per_Xoperation_response_time +=  [time2[i]]
 							# the following codes are used for grabbing the operation which costs too much time
 							if time2[i] > 10000:  # 10000us is just an abnormally high value, and you can set a value higher than it
 								#print("Abnormal OP: %s, response time: %f, index: %s" % (types[i], time2[i], op_index[i]))
 	                						perfo.write("Abnormal OP: %s, response time: %f, index: %s\n" % (types[i], time2[i], op_index[i]))
-						# end tom add 2014-12-21-20:50
+			
 						responsemap[types[i]] += [time2[i]]
-			# tom add 2014-12-23
-			plt.plot(per_Xoperation_response_time)
-			plt.title('each X operation response time')
-			plt.show()
-			plt.savefig('matplot_performance_test.png')
-			# end tom add 2014-12-23
+			
+			#plt.plot(per_Xoperation_response_time)
+			#plt.title('each X operation response time')
+			#plt.show()
+			#plt.savefig('matplot_performance_test.png')
+
+		'''
 		else:
 			for i in range(len(origin_time1)):
 				tmpTime = [(origin_time2[i]-origin_time1[i])*1000000]
@@ -624,16 +619,14 @@ def processBench(config, bench):
 				else:
 					concensusmap[types[i]] += tmpTime
 					responsemap[types[i]] += [time2[i]]
+		'''
 	#print types
 	#print lengths
 	isPlot = False
 	if(config.get(bench, "PLOT_MODE")=="WITH_PLOT"):
 		isPlot = True
-	if len(time1) > 0:
-		#write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap)
-		#tom add 2015-01-23
-		write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config, time_extra_0, time_extra_1, time_extra_2, time_extra_3, concensusmap_extra_0,concensusmap_extra_1,concensusmap_extra_2,concensusmap_extra_3, extra_response_0,extra_response_1)
-		#end tom add 2015-01-23
+	#if len(time1) > 0:
+	write_stats(time1, time2, int(repeats), first, last, lengths, origin_time1, origin_time2, origin_time3, isPlot, concensusmap, responsemap, bench, config, time_extra_0, time_extra_1, time_extra_2, time_extra_3, concensusmap_extra_0,concensusmap_extra_1,concensusmap_extra_2,concensusmap_extra_3, extra_response_0,extra_response_1)
 	# copy exec file
 	#copy_file(os.path.realpath(exec_file), os.path.basename(exec_file))
 	
@@ -649,10 +642,8 @@ def workers(semaphore, lock, configs, bench):
 			logging.debug("FINISH %s" % bench)
 
 if __name__ == "__main__":
-	# tom add 20150126
 	# add -v(verbose) to generate performance data: Performance.txt, matplot_performance_test.png
 	Perf_Test_Flag = 0		
-	# end tom add 20150126
 
 	logger = logging.getLogger()
 	formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s","%Y%b%d-%H:%M:%S")
@@ -677,10 +668,8 @@ if __name__ == "__main__":
 		type=str,
 		default = ["msmr.cfg"],
 		help = "list of configuration files (default: msmr.cfg)")
-	# tom add 20150126
 	# verbose : performance data
 	parser.add_argument('-v', action='store_true')
-	# end tom add 20150126
 	args = parser.parse_args()
 
 	if args.filename.__len__() == 0:
@@ -706,11 +695,9 @@ if __name__ == "__main__":
 	default_options = getMsmrDefaultOptions()
 	git_info = getGitInfo()
 	root_dir = os.getcwd()
-	# tom add 20150126
 	if args.v == True:
 		Perf_Test_Flag = 1
 		logging.debug(Perf_Test_Flag)
-	# end tom add 20150126
 	for config_file in args.filename:
 		logging.info("processing '" + config_file + "'")
 		full_path = getConfigFullPath(config_file)

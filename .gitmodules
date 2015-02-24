@@ -4,3 +4,6 @@
 [submodule "xtern_with_paxos"]
 	path = xtern_with_paxos
 	url = https://github.com/hemingcui/xtern_with_paxos
+[submodule "xtern"]
+	path = xtern
+	url = https://github.com/hemingcui/xtern_with_paxos

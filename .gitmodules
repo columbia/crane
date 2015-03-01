@@ -4,3 +4,6 @@
 [submodule "xtern"]
 	path = xtern
 	url = https://github.com/hemingcui/xtern_with_paxos
+[submodule "libevent_paxos"]
+	path = libevent_paxos
+	url = https://github.com/hemingcui/libevent_paxos

@@ -1,0 +1,95 @@
+[1] 16:49:39 [SUCCESS] bug00.cs.columbia.edu
+
+[1] 16:49:45 [SUCCESS] bug01.cs.columbia.edu
+[2] 16:49:45 [SUCCESS] bug02.cs.columbia.edu
+
+This is ApacheBench, Version 2.3 <$Revision: 1604373 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking 128.59.17.171 (be patient).....done
+
+
+Server Software:        Apache/2.4.10
+Server Hostname:        128.59.17.171
+Server Port:            9000
+
+Document Path:          /
+Document Length:        45 bytes
+
+Concurrency Level:      10
+Time taken for tests:   0.018 seconds
+Complete requests:      10
+Failed requests:        0
+Total transferred:      2890 bytes
+HTML transferred:       450 bytes
+Requests per second:    550.06 [#/sec] (mean)
+Time per request:       18.180 [ms] (mean)
+Time per request:       1.818 [ms] (mean, across all concurrent requests)
+Transfer rate:          155.24 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   0.1      1       1
+Processing:    16   17   0.3     17      17
+Waiting:        9   10   0.8     10      11
+Total:         17   17   0.4     17      18
+
+Percentage of the requests served within a certain time (ms)
+  50%     17
+  66%     18
+  75%     18
+  80%     18
+  90%     18
+  95%     18
+  98%     18
+  99%     18
+ 100%     18 (longest request)
+
+[1] 16:49:55 [SUCCESS] bug00.cs.columbia.edu
+Restart Proxy
+
+
+This is ApacheBench, Version 2.3 <$Revision: 1604373 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking 128.59.17.172 (be patient).....done
+
+
+Server Software:        Apache/2.4.10
+Server Hostname:        128.59.17.172
+Server Port:            9001
+
+Document Path:          /
+Document Length:        45 bytes
+
+Concurrency Level:      10
+Time taken for tests:   0.022 seconds
+Complete requests:      10
+Failed requests:        0
+Total transferred:      2890 bytes
+HTML transferred:       450 bytes
+Requests per second:    456.75 [#/sec] (mean)
+Time per request:       21.894 [ms] (mean)
+Time per request:       2.189 [ms] (mean, across all concurrent requests)
+Transfer rate:          128.91 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   0.1      1       1
+Processing:    20   21   0.3     21      21
+Waiting:       18   18   0.1     18      18
+Total:         21   21   0.3     21      22
+
+Percentage of the requests served within a certain time (ms)
+  50%     21
+  66%     21
+  75%     22
+  80%     22
+  90%     22
+  95%     22
+  98%     22
+  99%     22
+ 100%     22 (longest request)
+

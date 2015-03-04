@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 
-from optparse import OptionParser
+import argparse
 import time
 import logging
 import datetime
@@ -11,18 +11,18 @@ import subprocess
 
 logger = logging.getLogger("Benchmark.Master")
 
-MSMR_ROOT = '/home/ruigu/Workspace/m-smr'
+MSMR_ROOT = ''
 cur_env = os.environ.copy()
 
-def kill_previous_process():
-    cmd = 'killall -9 worker-run.py server.out httpd'
+def kill_previous_process(args):
+    cmd = 'killall -9 worker-run.py server.out ' + args.app
     rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
         command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
 
-def run_servers():
+def run_servers(args):
     cmd = '"~/worker-run.py"'
     rcmd = 'parallel-ssh -v -p 1 -i -t 10 -h head {command}'.format(
         command=cmd)
@@ -37,7 +37,7 @@ def run_servers():
     output, err = p.communicate()
     print output
 
-def restart_head():
+def restart_head(args):
     cmd = '"~/head-restart.py"'
     rcmd_head = 'parallel-ssh -v -p 1 -i -t 10 -h head {command}'.format(
         command=cmd)
@@ -45,21 +45,21 @@ def restart_head():
     output, err = p.communicate()
     print output
 
-def run_clients():
+def run_clients(args):
     cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.171:9000/'
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
     
-def run_clients2():
+def run_clients2(args):
     cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.172:9001/'
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
 
-def main(options):
+def main(args):
     """
     Main module of master.py
     """
@@ -75,41 +75,48 @@ def main(options):
     #console_log = "%s/console.log" % log_dir
 
     # Killall the previous experiment
-    kill_previous_process() 
+    kill_previous_process(args) 
 
     # Clean up the directory
 
-    run_servers() 
+    run_servers(args) 
     time.sleep(5)
 
-    run_clients()
+    run_clients(args)
     time.sleep(5)
 
-    restart_head()
+    restart_head(args)
     time.sleep(20)
 
-    run_clients2()
-    #kill_previous_process() 
+    run_clients2(args)
+    kill_previous_process(args) 
 
     logger.info("Done")
 
     
 if __name__ == "__main__":
-    parser = OptionParser(description="Microbenchmark experiment tool.")
+    parser = argparse.ArgumentParser(description='Explauncher.')
 
-    parser.add_option("-a", "--application", dest="app", action="store", 
-            type="string",
+    parser.add_argument('-a', type=str, dest="app", action="store",
             help="Name of the application. e.g. microbenchmark.")
 
-    (options, args) = parser.parse_args()
+    parser.add_argument('-x', type=int, dest="xtern", action="store",
+            help="Whether xtern is enabled.")
+
+    parser.add_argument('-d', type=str, dest="msmr_root", action="store",
+            help="The directory of m-smr.")
+
     
-    # Check missing argument
-    if not options.app:
-        parser.error("Missing --application")
+    args = parser.parse_args()
+    print "Replaying parameters:"
+    print "App : " + args.app
+    print "xtern : " + str(args.xtern)
+    print "MSMR_ROOT : " + args.msmr_root
 
     main_start_time = time.time()
 
-    main(options)
+    MSMR_ROOT = args.msmr_root
+    main(args)
 
     main_end_time = time.time()
 

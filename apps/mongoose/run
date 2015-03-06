@@ -34,6 +34,7 @@ sleep 2
 # Run the aget client.
 cd $MSMR_ROOT/apps/mongoose
 # The 8080 is the listening port of mongoose server.
-$MSMR_ROOT/apps/mongoose/ab -n10 -c2 http://localhost:8080/llvm-gcc-4.2-2.7.source.tgz
+#$MSMR_ROOT/apps/mongoose/ab -n10 -c2 http://localhost:8080/llvm-gcc-4.2-2.7.source.tgz
+$MSMR_ROOT/apps/mongoose/ab -n10 -c2 http://127.0.0.1:8080/llvm-gcc-4.2-2.7.source.tgz
 killall -9 mg-server &> /dev/null
 

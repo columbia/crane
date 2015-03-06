@@ -12,6 +12,7 @@ logger = logging.getLogger("Benchmark.Worker")
 
 #Remote directory enviroment variable
 MSMR_ROOT = ''
+XTERN_ROOT = ''
 cur_env = os.environ.copy()
 
 def execute_proxy(args):
@@ -28,14 +29,9 @@ def execute_proxy(args):
         #tcmd = 'cp XXXX .'
         #subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
 
-    #cur_env['CONFIG_FILE'] = MSMR_ROOT + '/libevent_paxos/target/nodes.local.cfg'
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'
-    if args.xtern == 1:
-        print "XTERN is enabled."
-        # Load xtern library here
-        # cur_env[] = MSMR_ROOT + ''
-
+    
     cmd = 'rm -rf ./.db ./log && mkdir ./log && \
            $SERVER_PROGRAM -n %d -r -m %s -c $CONFIG_FILE -l ./log 1> ./log/node_%d_stdout 2>./log/node_%d_stderr &' % (
            args.node_id, args.mode, args.node_id, args.node_id)
@@ -44,10 +40,14 @@ def execute_proxy(args):
 
 def execute_servers(args):
 
-    #cmd = '$MSMR_ROOT/apps/apache/install/bin/apachectl -f $MSMR_ROOT/apps/apache/install/conf/httpd.conf -k start'
     cmd = args.scmd
     print "replay real server command:"
     print cmd
+
+    if args.xtern == 1:
+        print "XTERN is enabled. Preload library."
+        # PreLoad xtern library here
+        cur_env['LD_PRELOAD'] = XTERN_ROOT + '/dync_hook/interpose.so'
 
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
 
@@ -67,11 +67,10 @@ def main(args):
     """
     Main module of worker-run.py
     """
-
     execute_servers(args)
     # Wait a while fot the real server to set up
     time.sleep(5)
-    # Wait a while fot the proxy server to set up
+    # Wait a while for the proxy server to set up
     execute_proxy(args)
 
 
@@ -99,6 +98,7 @@ if __name__ == "__main__":
     main_start_time = time.time()
 
     MSMR_ROOT = args.msmr_root_server
+    XTERN_ROOT = MSMR_ROOT + '/xtern_with_paxos'
     main(args)
 
     main_end_time = time.time()

@@ -18,8 +18,23 @@ def execute_proxy(args):
 
     # Preparing the environment
     cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + '/libevent_paxos/.local/lib'
-    cur_env['CONFIG_FILE'] = MSMR_ROOT + '/libevent_paxos/target/nodes.local.cfg'
+    if not os.path.isfile('nodes.local.cfg'):
+        print "Copy nodes.local.cfg to current folder"
+        tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
+        subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    # Copy the xtern configuration file to the current folder 
+    #if not os.path.isfile('XXXX'):
+        #print "Copy XXXX to current folder"
+        #tcmd = 'cp XXXX .'
+        #subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+
+    #cur_env['CONFIG_FILE'] = MSMR_ROOT + '/libevent_paxos/target/nodes.local.cfg'
+    cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'
+    if args.xtern == 1:
+        print "XTERN is enabled."
+        # Load xtern library here
+        # cur_env[] = MSMR_ROOT + ''
 
     cmd = 'rm -rf ./.db ./log && mkdir ./log && \
            $SERVER_PROGRAM -n %d -r -m %s -c $CONFIG_FILE -l ./log 1> ./log/node_%d_stdout 2>./log/node_%d_stderr &' % (

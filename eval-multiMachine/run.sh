@@ -2,6 +2,7 @@
 
 # This is the starter file of the whole experiment.
 
+# Setups for Apache
 #app="httpd"                                           # app name appears in process list
 #xtern=0                                               # 1 use xtern, 0 otherwise.
 #msmr_root_client="/home/ruigu/Workspace/m-smr"        # root dir for m-smr

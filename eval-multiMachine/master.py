@@ -48,7 +48,8 @@ def run_servers(args):
         print output
 
 def restart_head(args):
-    cmd = '"~/head-restart.py"'
+    #cmd = '"~/head-restart.py"'
+    cmd = 'killall -9 server.out'
     rcmd_head = 'parallel-ssh -v -p 1 -i -t 10 -h head {command}'.format(
         command=cmd)
     p = subprocess.Popen(rcmd_head, shell=True, stdout=subprocess.PIPE)

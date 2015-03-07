@@ -24,10 +24,10 @@ def execute_proxy(args):
         tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
         subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     # Copy the xtern configuration file to the current folder 
-    #if not os.path.isfile('XXXX'):
-        #print "Copy XXXX to current folder"
-        #tcmd = 'cp XXXX .'
-        #subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    if not os.path.isfile('local.options'):
+        print "Copy default.options to current folder"
+        tcmd = 'cp $XTERN_ROOT/default.options ~/local.options'
+        subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
 
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'

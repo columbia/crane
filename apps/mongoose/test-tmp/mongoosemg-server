@@ -1,0 +1,79 @@
+#! /bin/bash
+
+NUM_HTTP_REQUESTS=1
+NUM_THREADS=1
+#WITH_PROXY=0
+#WITH_XTERN=0
+
+INPUT_FILE=test.php
+#index.txt
+#llvm-2.7.tgz
+#llvm-gcc-4.2-2.7.source.tgz
+
+
+
+TEST_NAME=mongoosemg-server
+killall mg-server
+killall -9 client
+killall -15 server.out
+NO=${1}
+LOG_SUFFIX=.log
+SLEEP_TIME=1
+SECONDARIES_SIZE=0
+if [ ! -d ./log ];then
+	mkdir ./log
+fi
+exec 2>./log/${TEST_NAME}_err_${NO}
+export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib
+SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out
+CONFIG_FILE=nodes.cfg
+rm -rf $MSMR_ROOT/libevent_paxos/.db
+
+
+if [ ${WITH_XTERN}"X" = "1X" ];
+then
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+  $MSMR_ROOT/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t ${NUM_THREADS} &> server.txt &
+else
+  $MSMR_ROOT/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t ${NUM_THREADS} &> server.txt &
+fi
+#../server7000/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &
+REAL_SERVER_PID_0=$!
+sleep ${SLEEP_TIME}
+
+
+if [ ${WITH_PROXY}"X" = "1X" ];
+then
+  ${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} -l ./log &> proxy.txt &
+  #1>./log/node_0_${NO}_stdout 2>./log/node_0_${NO}_stderr &
+  PRIMARY_PID=$!
+  for i in $(seq ${SECONDARIES_SIZE});do
+	${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} -l ./log 1>./log/node_${i}_${NO}_stdout 2>./log/node_${i}_${NO}_stderr &
+  declare NODE_${i}=$!
+  done
+  echo "sleep some time"
+  sleep ${SLEEP_TIME}
+fi
+
+if [ ${WITH_PROXY}"X" = "1X" ];
+then
+LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so \
+	../client1/client -n ${NUM_HTTP_REQUESTS} -c ${NUM_THREADS} http://127.0.0.1:9000/${INPUT_FILE}
+else
+  ../client1/client -n ${NUM_HTTP_REQUESTS} -c ${NUM_THREADS} http://127.0.0.1:7000/${INPUT_FILE}
+fi
+
+# &> ../client1/client1output${LOG_SUFFIX}
+echo "sleep another time"
+sleep ${SLEEP_TIME}
+kill -15 ${PRIMARY_PID} &>/dev/null
+for i in $(echo ${!NODE*});do
+	kill -15 ${!i} &>/dev/null
+done
+for i in $(echo ${!SERVER*});do
+	kill -9 ${!i} &>/dev/null
+killall -15 server.out
+killall -9 client
+done
+kill -9 ${REAL_SERVER_PID_1} &>/dev/null
+killall mg-server

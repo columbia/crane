@@ -24,8 +24,9 @@ def kill_previous_process(args):
     #print output
 
 def run_servers(args):
-    cmd = "~/worker-run.py -a %s -x %d -c %s -m s -i 0 --scmd %s" % (args.app,
-            args.xtern, args.msmr_root_server, args.scmd)
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --scmd %s" % (
+            args.app, args.xtern, args.proxy, args.checkpoint,
+            args.msmr_root_server, args.scmd)
     print "replaying server master node command: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 10 -h head \"%s\"" % (cmd)
@@ -35,9 +36,13 @@ def run_servers(args):
     output, err = p.communicate()
     print output
 
+    if args.proxy == 0:
+        return
+
     for node_id in xrange(1, 3):
-        wcmd = "~/worker-run.py -a %s -x %d -c %s -m r -i %d --scmd %s" % (
-                args.app, args.xtern, args.msmr_root_server, node_id, args.scmd)
+        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --scmd %s" % (
+                args.app, args.xtern, args.proxy, args.checkpoint,
+                args.msmr_root_server, node_id, args.scmd)
         rcmd_workers = "parallel-ssh -v -p 1 -i -t 10 -h worker%d \"%s\"" % (
                 node_id, wcmd)
         print "Master: replaying master node command: "
@@ -58,7 +63,10 @@ def restart_head(args):
 
 def run_clients(args):
     cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
-    cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.171:9000/'
+    if args.proxy == 1:
+        cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.171:9000/'
+    else:
+        cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.171:8080/'
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
@@ -88,18 +96,18 @@ def main(args):
     # Killall the previous experiment
     kill_previous_process(args) 
 
-    # Clean up the directory
-
     run_servers(args) 
     time.sleep(10)
 
     run_clients(args)
     time.sleep(5)
 
-    restart_head(args)
-    time.sleep(20)
+    if args.proxy == 1:
+        restart_head(args)
+        time.sleep(20)
 
-    run_clients2(args)
+        run_clients2(args)
+
     kill_previous_process(args) 
 
 
@@ -113,6 +121,10 @@ if __name__ == "__main__":
             help="Name of the application. e.g. microbenchmark.")
     parser.add_argument('-x', type=int, dest="xtern", action="store",
             help="Whether xtern is enabled.")
+    parser.add_argument('-p', type=int, dest="proxy", action="store",
+            help="Whether proxy is enabled.")
+    parser.add_argument('-k', type=int, dest="checkpoint", action="store",
+            help="Whether checkpointing on replicas is enabled.")
     parser.add_argument('-c', type=str, dest="msmr_root_client", action="store",
             help="The directory of m-smr.")
     parser.add_argument('-s', type=str, dest="msmr_root_server", action="store",

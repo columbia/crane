@@ -1,3 +1,6 @@
+# This file syncs the source file of libevent_paxos between your local machine
+# and the remote server. It also compiles the synced code on the remote server.
+
 rsync -r /home/ruigu/SSD/m-smr/libevent_paxos/src/ bug00.cs.columbia.edu:/home/ruigu/SSD/m-smr/libevent_paxos/src
 rsync -r /home/ruigu/SSD/m-smr/libevent_paxos/src/ bug01.cs.columbia.edu:/home/ruigu/SSD/m-smr/libevent_paxos/src
 rsync -r /home/ruigu/SSD/m-smr/libevent_paxos/src/ bug02.cs.columbia.edu:/home/ruigu/SSD/m-smr/libevent_paxos/src

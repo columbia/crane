@@ -70,8 +70,8 @@ def main(args):
     execute_servers(args)
     # Wait a while fot the real server to set up
     time.sleep(5)
-    # Wait a while for the proxy server to set up
-    execute_proxy(args)
+    if args.proxy == 1:
+        execute_proxy(args)
 
 
 ###############################################################################
@@ -83,6 +83,10 @@ if __name__ == "__main__":
             help="Name of the application. e.g. microbenchmark.")
     parser.add_argument('-x', type=int, dest="xtern", action="store",
             help="Whether xtern is enabled.")
+    parser.add_argument('-p', type=int, dest="proxy", action="store",
+            help="Whether proxy is enabled.")
+    parser.add_argument('-k', type=int, dest="checkpoint", action="store",
+            help="Whether checkpointing on replicas is enabled.")
     parser.add_argument('-c', type=str, dest="msmr_root_server", action="store",
             help="The directory of m-smr.")
     parser.add_argument('-m', type=str, dest="mode", action="store",

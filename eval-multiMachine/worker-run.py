@@ -30,7 +30,7 @@ def execute_proxy(args):
         print "Copy default.options to current folder"
         tcmd = 'cp $XTERN_ROOT/default.options ~/local.options'
         proc = subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    os.system("sed -i -e 's/sched_with_paxos = [0-9]\+/sched_with_paxos = " + str(args.sp) + "/g' nodes.local.cfg")
+    os.system("sed -i -e 's/sched_with_paxos = [0-9]\+/sched_with_paxos = " + str(args.sp) + "/g' local.options")
 
         
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'

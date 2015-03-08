@@ -22,13 +22,17 @@ def execute_proxy(args):
     if not os.path.isfile('nodes.local.cfg'):
         print "Copy nodes.local.cfg to current folder"
         tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
-        subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        proc =subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    os.system("sed -i -e 's/sched_with_dmt = [0-9]\+/sched_with_dmt = " + str(args.sd) + "/g' nodes.local.cfg")
+
     # Copy the xtern configuration file to the current folder 
     if not os.path.isfile('local.options'):
         print "Copy default.options to current folder"
         tcmd = 'cp $XTERN_ROOT/default.options ~/local.options'
-        subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    os.system("sed -i -e 's/sched_with_paxos = [0-9]\+/sched_with_paxos = " + str(args.sp) + "/g' nodes.local.cfg")
 
+        
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'
     
@@ -93,6 +97,10 @@ if __name__ == "__main__":
             help="The mode of the node, main or secondary.")
     parser.add_argument('-i', type=int, dest="node_id", action="store",
             help="The id of the node.")
+    parser.add_argument('--sp', type=int, dest="sp", action="store",
+            help="Schedule with paxos.")
+    parser.add_argument('--sd', type=int, dest="sd", action="store",
+            help="Schedule with DMT.")
     parser.add_argument('--scmd', type=str, dest="scmd", action="store",
             help="The command to execute the real server.")
 

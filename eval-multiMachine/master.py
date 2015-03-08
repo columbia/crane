@@ -16,7 +16,7 @@ cur_env = os.environ.copy()
 
 def kill_previous_process(args):
     print "Killing previous related processes"
-    cmd = 'killall -9 worker-run.py server.out %s &> /dev/null' % (args.app)
+    cmd = 'sudo killall -9 worker-run.py server.out %s &> /dev/null' % (args.app)
     rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -24,9 +24,9 @@ def kill_previous_process(args):
     #print output
 
 def run_servers(args):
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --scmd %s" % (
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
-            args.msmr_root_server, args.scmd)
+            args.msmr_root_server, args.sp, args.sd, args.scmd)
     print "replaying server master node command: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 10 -h head \"%s\"" % (cmd)
@@ -40,9 +40,9 @@ def run_servers(args):
         return
 
     for node_id in xrange(1, 3):
-        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --scmd %s" % (
+        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
-                args.msmr_root_server, node_id, args.scmd)
+                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd)
         rcmd_workers = "parallel-ssh -v -p 1 -i -t 10 -h worker%d \"%s\"" % (
                 node_id, wcmd)
         print "Master: replaying master node command: "
@@ -54,7 +54,7 @@ def run_servers(args):
 
 def restart_head(args):
     #cmd = '"~/head-restart.py"'
-    cmd = 'killall -9 server.out'
+    cmd = 'sudo killall -9 server.out'
     rcmd_head = 'parallel-ssh -v -p 1 -i -t 10 -h head {command}'.format(
         command=cmd)
     p = subprocess.Popen(rcmd_head, shell=True, stdout=subprocess.PIPE)
@@ -129,6 +129,10 @@ if __name__ == "__main__":
             help="The directory of m-smr.")
     parser.add_argument('-s', type=str, dest="msmr_root_server", action="store",
             help="The directory of m-smr.")
+    parser.add_argument('--sp', type=int, dest="sp", action="store",
+            help="Schedule with paxos.")
+    parser.add_argument('--sd', type=int, dest="sd", action="store",
+            help="Schedule with DMT.")
     parser.add_argument('--scmd', type=str, dest="scmd", action="store",
             help="The command to execute the real server.")
 

@@ -16,12 +16,12 @@ cur_env = os.environ.copy()
 
 def kill_previous_process(args):
     print "Killing previous related processes"
-    cmd = 'sudo killall -9 worker-run.py server.out %s &> /dev/null' % (args.app)
+    cmd = 'sudo killall -9 worker-run.py server.out %s ' % (args.app)
     rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
-    #print output
+    print output
 
 def run_servers(args):
     cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (

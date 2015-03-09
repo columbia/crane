@@ -1,0 +1,41 @@
+diff -ruN mongoose/Makefile mongoose-modified/Makefile
+--- mongoose/Makefile	2013-01-18 18:42:35.000000000 +0800
++++ mongoose-modified/Makefile	2015-03-09 23:06:31.840008782 +0800
+@@ -28,7 +28,7 @@
+ LUA         = lua-5.2.1/src
+ LUA_FLAGS   = -DUSE_LUA -I$(LUA) -L$(LUA) -llua -lm
+ 
+-CFLAGS      = -std=c99 -O2 -W -Wall -pedantic $(COPT)
++CFLAGS      = -std=c99 -O2 -W -Wall -pedantic $(COPT) -g -I$(XTERN_ROOT)/include -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ LIB         = lib$(PROG).so$(MONGOOSE_LIB_SUFFIX)
+ 
+ # Make sure that the compiler flags come last in the compilation string.
+diff -ruN mongoose/mongoose.c mongoose-modified/mongoose.c
+--- mongoose/mongoose.c	2013-01-18 02:16:21.000000000 +0800
++++ mongoose-modified/mongoose.c	2015-03-09 23:25:03.851988868 +0800
+@@ -18,6 +18,8 @@
+ // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ // THE SOFTWARE.
+ 
++#include <tern/user.h>
++
+ #if defined(_WIN32)
+ #define _CRT_SECURE_NO_WARNINGS // Disable deprecation warning in VS2005
+ #else
+@@ -3263,6 +3265,7 @@
+     goto done;
+   }
+ 
++  soba_wait(0);
+   pid = spawn_process(conn, p, blk.buf, blk.vars, fd_stdin[0], fd_stdout[1],
+                       dir);
+   // spawn_process() must close those!
+@@ -5191,6 +5194,8 @@
+   mg_start_thread(master_thread, ctx);
+ 
+   // Start worker threads
++  int num_workers = atoi(ctx->config[NUM_THREADS]);
++  soba_init(0, num_workers, 20*num_workers);
+   for (i = 0; i < atoi(ctx->config[NUM_THREADS]); i++) {
+     if (mg_start_thread(worker_thread, ctx) != 0) {
+       cry(fc(ctx), "Cannot start worker thread: %d", ERRNO);

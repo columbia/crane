@@ -9,6 +9,7 @@ source configs/mongoose.sh
 scp worker-run.py bug00.cs.columbia.edu:~/
 scp worker-run.py bug01.cs.columbia.edu:~/
 scp worker-run.py bug02.cs.columbia.edu:~/
+#scp worker-run.py bug03.cs.columbia.edu:~/
 
 ./master.py -a ${app} -x ${xtern} -p ${proxy} -k ${checkpoint} \
         -c ${msmr_root_client} -s ${msmr_root_server} --sp ${sch_paxos} \

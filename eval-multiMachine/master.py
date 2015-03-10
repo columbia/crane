@@ -22,6 +22,14 @@ def kill_previous_process(args):
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
+    # killall criu-cr.py via sudo
+    # bug02 worker2
+    cmd = 'sudo killall -9 criu-cr.py &> /dev/null' 
+    rcmd = 'parallel-ssh -v -p 1 -i -t 10 -h worker2 {command}'.format(
+            command=cmd)
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
 
 def run_servers(args):
     cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
@@ -78,6 +86,24 @@ def run_clients2(args):
     output, err = p.communicate()
     print output
 
+# note: must use sudo
+# we run criu on node 2(bug02), so parallel-ssh should -h worker2
+def run_criu(args):
+    shcmd = "sudo ~/criu-cr.py -s %s -t %d &> ~/criu-cr.log" % (args.app, args.checkpoint_period)
+    psshcmd = "parallel-ssh -v -p 1 -i -t 5 -h worker2 \"%s\""%(shcmd)
+    print "Master: replaying master node command: "
+    print psshcmd
+    p = subprocess.Popen(psshcmd, shell=True, stdout=subprocess.PIPE)
+    '''
+    # below is for debugging
+    output, err = p.communicate()
+    print output
+    if "FAILURE" in output:
+        print "killall directly"
+        kill_previous_process(args) 
+        sys.exit(0)
+    '''
+
 def main(args):
     """
     Main module of master.py
@@ -98,6 +124,16 @@ def main(args):
 
     run_servers(args) 
     time.sleep(10)
+
+    if args.checkpoint == 1:
+        # run CRIU on bug02(Node 2)
+	run_criu(args)
+	# make sure wait for at least 20s before running client
+	# to let CRIU run in the appropriate environment
+	# rest assured. real server and libevent_paxos still run normally without influence
+	# even if when the CRIU does dump work, beacuse CRIU does dump and then let the
+	# checkpointed process run again will be finished in a flash, about 20~60ms
+	time.sleep(20)
 
     run_clients(args)
     time.sleep(5)
@@ -125,6 +161,8 @@ if __name__ == "__main__":
             help="Whether proxy is enabled.")
     parser.add_argument('-k', type=int, dest="checkpoint", action="store",
             help="Whether checkpointing on replicas is enabled.")
+    parser.add_argument('-t', type=int, dest="checkpoint_period", action="store",
+            help="Period of CRIU checkpoint")
     parser.add_argument('-c', type=str, dest="msmr_root_client", action="store",
             help="The directory of m-smr.")
     parser.add_argument('-s', type=str, dest="msmr_root_server", action="store",
@@ -140,6 +178,8 @@ if __name__ == "__main__":
     print "Replaying parameters:"
     print "App : " + args.app
     print "xtern : " + str(args.xtern)
+    print "checkpoint : " + str(args.checkpoint)
+    print "checkpoint_period : " + str(args.checkpoint_period)
     print "MSMR_ROOT : " + args.msmr_root_client
 
     main_start_time = time.time()

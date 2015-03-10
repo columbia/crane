@@ -11,7 +11,10 @@ scp worker-run.py bug01.cs.columbia.edu:~/
 scp worker-run.py bug02.cs.columbia.edu:~/
 #scp worker-run.py bug03.cs.columbia.edu:~/
 
-./master.py -a ${app} -x ${xtern} -p ${proxy} -k ${checkpoint} \
+# Update criu-cr.py to the bug02 (a.k.a. Node 2)
+scp criu-cr.py bug02.cs.columbia.edu:~/
+
+./master.py -a ${app} -x ${xtern} -p ${proxy} -k ${checkpoint} -t ${checkpoint_period} \
         -c ${msmr_root_client} -s ${msmr_root_server} --sp ${sch_paxos} \
         --sd ${sch_dmt} --scmd "${server_cmd}"
 #./master.py -a ${app} -f ${flavor} -p ${conf_file} -q ${conf_client_file} \

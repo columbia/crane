@@ -1,7 +1,0 @@
-#!/bin/bash
-
-CMAKE_C_COMPILER=clang CMAKE_C_FLAGS='-fsanitize=thread -g'\
-	CMAKE_CXX_COMPILER=clang++ CMAKE_CXX_FLAGS='-fsanitize=thread -g'\
-	CMAKE_EXE_LINKER_FLAGS='-fsanitize=thread'\
-	MYSQL_BUILD_ALLOW_UNDEFINED=1 $APPS_DIR/mysql/mk-mysql $1
-

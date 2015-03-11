@@ -1,0 +1,22 @@
+--- configure.orig	2012-12-17 21:00:23.666689048 -0500
++++ configure	2012-12-17 21:00:39.178688517 -0500
+@@ -8677,7 +8677,7 @@
+   # mysqld requires -fno-implicit-templates.
+   # Disable exceptions as they seams to create problems with gcc and threads.
+   # mysqld doesn't use run-time-type-checking, so we disable it.
+-  CXXFLAGS="$CXXFLAGS -fno-implicit-templates -fno-exceptions -fno-rtti"
++  CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-rtti"
+ 
+   # If you are using 'gcc' 3.0 (not g++) to compile C++ programs on Linux,
+   # we will gets some problems when linking static programs.
+--- cmd-line-utils/libedit/fgetln.c.orig	2012-12-17 23:22:27.966431405 -0500
++++ cmd-line-utils/libedit/fgetln.c	2012-12-17 23:22:35.238431037 -0500
+@@ -5,7 +5,7 @@
+ 
+ #ifdef HAVE_GETLINE
+ 
+-extern int getline (char **lineptr, size_t *n, FILE *stream);
++// extern int getline (char **lineptr, size_t *n, FILE *stream);
+ 
+ #else
+ 

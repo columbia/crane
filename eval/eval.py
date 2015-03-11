@@ -308,11 +308,22 @@ def preSetting(config, bench, apps_name):
 	'SERVER_PROGRAM=$MSMR_ROOT/libevent_paxos/target/server.out\n')
 		testscript.write('CONFIG_FILE=nodes.cfg\n')
 		testscript.write('rm -rf $MSMR_ROOT/libevent_paxos/.db\n')
+		testscript.write('rm -rf .db\n')
 		for i in range(int(config.get(bench,'SERVER_COUNT'))):
 			port = str(int(config.get(bench,'SERVER_START_PORT'))+i)
+			testscript.write('\n# Start the application server\n')
+			testscript.write('if [ $MY_XTERN"X" = "1X" ]; then\n')
+			testscript.write('LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \\\n')
 			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',port)+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', port)+' &> ../server'+port+'/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
+			testscript.write('else\n')
+			testscript.write('$MSMR_ROOT/apps/'+bench.split(' ')[0]+bench.split(' ')[1].replace('<port>',port)+' '+config.get(bench, 'SERVER_INPUT').replace('<port>', port)+' &> ../server'+port+'/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &\nREAL_SERVER_PID_'+str(i)+'=$!\n')
+			testscript.write('fi\n\n')
+			testscript.write('echo "sleep some time"\n'+'sleep ${SLEEP_TIME}\n')
 		if config.get(bench,'PROXY_MODE').startswith('WITH_PROXY'):
-			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} -l ./log 1>./log/node_0_${NO}_stdout 2>./log/node_0_${NO}_stderr &\n'+
+			testscript.write('\n# Start our proxy\n')
+			testscript.write('if [ $MY_PROXY"X" = "1X" ]; then\n')
+			testscript.write('${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} -l ./log 1>./log/node_0_${NO}_stdout 2>./log/node_0_${NO}_stderr &\n')
+			testscript.write('fi\n\n'+
 	'PRIMARY_PID=$!\n'+
 	'for i in $(seq ${SECONDARIES_SIZE});do\n'+
 	'\t${SERVER_PROGRAM} -n ${i} -r -m r -c ${CONFIG_FILE} -l ./log 1>./log/node_${i}_${NO}_stdout 2>./log/node_${i}_${NO}_stderr &\n'+
@@ -326,10 +337,16 @@ def preSetting(config, bench, apps_name):
 			testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client -i '+config.get(bench, 'CLIENT_INPUT')+' &')
 		for i in range(int(config.get(bench,'CLIENT_COUNT'))):
 			if config.get(bench,'PROXY_MODE').startswith('WITH_PROXY'):
+				testscript.write('if [ $MY_PROXY"X" = "1X" ]; then\n')
 				testscript.write('LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so '+'../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT')+' &')
+				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
+				testscript.write('\nelse\n')
+				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
+				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
+				testscript.write('\nfi\n')
 			else:
 				testscript.write('../client'+str(int(i)+1)+'/client '+config.get(bench,'CLIENT_INPUT').replace('9000','7000')+' &')
-			testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
+				testscript.write('> ../client'+str(i+1)+'/client'+str(i+1)+'output${LOG_SUFFIX}')
 			testscript.write('\n')
 		testscript.write('echo "sleep another time"\nsleep ${SLEEP_TIME}\n'+
 	'kill -15 ${PRIMARY_PID} &>/dev/null\n'+

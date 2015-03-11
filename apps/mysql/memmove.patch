@@ -1,0 +1,13 @@
+--- include/my_config.h	2014-09-29 15:27:58.178684804 -0400
++++ include/my_config.h	2014-09-29 15:31:18.797488914 -0400
+@@ -194,8 +194,8 @@
+ #define HAVE_DECL_TGOTO 1
+ /* #undef HAVE_DECL_MHA_MAPSIZE_VA */
+ #define HAVE_MALLOC_INFO 1
+-/* #undef HAVE_MEMCPY */
+-/* #undef HAVE_MEMMOVE */
++#define HAVE_MEMCPY 1
++#define HAVE_MEMMOVE 1
+ #define HAVE_MKSTEMP 1
+ #define HAVE_MLOCKALL 1
+ #define HAVE_MMAP 1

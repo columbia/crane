@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# TODO: Currently we only have one version of dbt2.
+DBT2_VER=0.40
+
+# install dbt2 benchmark
+rm -rf dbt2-$DBT2_VER
+tar xzvf $APPS_DIR/sys/dbt2-$DBT2_VER.tar.gz
+cd dbt2-$DBT2_VER/
+./configure --with-mysql=$PWD/../mysql-install --enable-nosp
+make
+

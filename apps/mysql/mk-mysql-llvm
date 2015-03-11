@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# This script only generates mysqld.bc. It does not initialize the database,
+# because mysql_install_db has some problems with library formats
+# such as /usr/lib/pthread.a. 
+
+if [ "$APPS_DIR" = "" ]; then
+	echo '$APPS_DIR not defined, do `export APPRS_DIR=`'
+	exit 1
+fi
+
+# install mysql
+if [ -z $1 ]; then
+	# No version number
+	echo "Usage: <version number: e.g. 4.0.12>"
+	exit 1
+fi
+VER=$1
+
+rm -rf mysql-$VER
+tar xzvf $APPS_DIR/sys/mysql-$VER.tar.gz
+cd mysql-$VER
+
+if [ "$VER" = "5.1.35" ]; then
+	patch -p1 < $APPS_DIR/mysql/fix-mysql-$VER.patch
+fi
+if [ "$VER" = "4.1.1-alpha" ]; then
+	patch -p0 < $APPS_DIR/mysql/fix-mysql-$VER.patch
+fi
+
+switch-compiler cl
+CFLAGS='-g' CXXFLAGS='-g' ./configure --prefix=$PWD/../mysql-install
+make
+switch-compiler gcc
+
+if [ -f sql/mysqld.bc ]; then
+	cp sql/mysqld.bc ../
+	# in green
+	echo -e "\e[0;32msuccessfully built mysqld.bc\e[m"
+else
+	# in red
+	echo -e "\e[0;31mfailed to build mysqld.bc\e[m"
+fi

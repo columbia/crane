@@ -1,0 +1,74 @@
+#!/bin/bash
+
+if [ "$APPS_DIR" = "" ]; then
+	echo '$APPS_DIR not defined, do `export APPS_DIR=`'
+	exit 1
+fi
+
+# install mysql
+if [ -z $1 ]; then
+	# No version number
+	echo "Usage: <version number: e.g. 4.0.12>"
+	exit 1
+fi
+VER=$1
+
+rm -rf mysql-$VER
+rm -rf mysql-install
+[ ! -f $APPS_DIR/sys/mysql-$VER.tar.gz ] && wget -O $APPS_DIR/sys/mysql-$VER.tar.gz http://downloads.mysql.com/archives/get/file/mysql-$VER.tar.gz
+tar xzvf $APPS_DIR/sys/mysql-$VER.tar.gz
+cd mysql-$VER
+
+if [ "$VER" = "5.1.35" ]; then
+	patch -p1 < $APPS_DIR/mysql/fix-mysql-5.1.35.patch
+fi
+
+if [ "$VER" = "4.0.12" ] || [ "$VER" = "3.23.56" ]; then
+	# MySQL 4.0.12 hangs if compiled with gcc-4.4
+	# and could not be compiled with gcc-4.3
+	# and gcc-4.2 is obsolete in Ubuntu 10.04
+	# Therefore, we use llvm-gcc and llvm-g++ instead
+	# and it works fine
+	CC=clang CXX=clang++ ./configure --prefix=$PWD/../mysql-install
+elif [ "$VER" = "4.1.1-alpha" ]; then
+	CC=clang CXX=clang++ ./configure --prefix=$PWD/../mysql-install\
+		--without-libedit
+elif [ "$VER" \> "5.6" ]; then
+	# get rid of the --no-undefined flag for shared libraries (for tsan)
+	if [ $MYSQL_BUILD_ALLOW_UNDEFINED ]; then
+		cd cmake/os
+		awk '{ if ($2 != "\"-Wl,--no-undefined\")") { print $0 } }'\
+		Linux.cmake > Linux-allow-undefined.cmake
+		mv -vf Linux-allow-undefined.cmake Linux.cmake
+		cd ../..
+	fi
+	if [ $CMAKE_C_COMPILER ]; then
+		cmake -DCMAKE_C_COMPILER=$CMAKE_C_COMPILER\
+		-DCMAKE_C_FLAGS="$CMAKE_C_FLAGS"\
+		-DCMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER\
+		-DCMAKE_CXX_FLAGS="$CMAKE_CXX_FLAGS"\
+		-DCMAKE_EXE_LINKER_FLAGS="$CMAKE_EXE_LINKER_FLAGS"\
+		-DCMAKE_INSTALL_PREFIX=$PWD/../mysql-install .
+		patch -p0 < $APPS_DIR/mysql/memmove.patch
+	else
+		cmake -DCMAKE_INSTALL_PREFIX=$PWD/../mysql-install .
+	fi
+else
+	./configure --prefix=$PWD/../mysql-install
+fi
+
+make
+make install
+cd ..
+
+if [ -e /etc/mysql/my.cnf ]; then
+	echo 'The global config may conflict with the version you are installing.'
+	echo 'Consider removing /etc/mysql/my.cnf'
+	exit 1
+fi
+if [ "$VER" \> "5.6" ]; then
+	cd mysql-install
+	scripts/mysql_install_db
+else
+	mysql-install/bin/mysql_install_db
+fi

@@ -1,0 +1,11 @@
+--- mysql-5.1.35/configure.orig	2012-10-01 18:45:40.098731581 -0400
++++ mysql-5.1.35/configure	2012-10-01 18:45:57.215368166 -0400
+@@ -17952,7 +17952,7 @@
+   # We should use -Wno-invalid-offsetof flag to disable some warnings from gcc
+   # regarding offset() usage in C++ which are done in a safe manner in the
+   # server
+-  CXXFLAGS="$CXXFLAGS -fno-implicit-templates -fno-exceptions -fno-rtti"
++  CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-rtti"
+ 
+ cat >>confdefs.h <<\_ACEOF
+ #define HAVE_EXPLICIT_TEMPLATE_INSTANTIATION 1

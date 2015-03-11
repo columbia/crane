@@ -1,0 +1,20 @@
+diff -ruN httpd-2.2.11/server/mpm/worker/worker.c httpd-2.2.11-modified/server/mpm/worker/worker.c
+--- httpd-2.2.11/server/mpm/worker/worker.c	2007-07-17 22:48:25.000000000 +0800
++++ httpd-2.2.11-modified/server/mpm/worker/worker.c	2015-03-12 02:04:49.628722686 +0800
+@@ -1128,6 +1128,7 @@
+     }
+ }
+ 
++#include <tern/user.h>
+ static void child_main(int child_num_arg)
+ {
+     apr_thread_t **threads;
+@@ -1255,6 +1256,8 @@
+         apr_signal(SIGTERM, dummy_signal_handler);
+         /* Watch for any messages from the parent over the POD */
+         while (1) {
++            tern_detach();/* Heming: hint, remove current thread from xtern scheduling because 
++                          this thread is listening from another process and never gets back in normal case. */
+             rv = ap_mpm_pod_check(pod);
+             if (rv == AP_NORESTART) {
+                 /* see if termination was triggered while we slept */

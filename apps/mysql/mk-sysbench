@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ "$APPS_DIR" = "" ]; then
+	echo '$APPS_DIR not defined, do `export APPRS_DIR=`'
+	exit 1
+fi
+
+if [ -z $1 ]; then
+	echo "Usage: <Sysbench version number: e.g. 0.4.0>"
+	exit 1
+fi
+SYSBENCH_VER=$1
+
+rm -rf sysbench-$SYSBENCH_VER
+rm -rf sysbench-install
+
+tar zxvf $APPS_DIR/sys/sysbench-$SYSBENCH_VER.tar.gz
+cd sysbench-$SYSBENCH_VER
+./configure \
+	--prefix=$PWD/../sysbench-install \
+	--with-mysql-includes=$PWD/../mysql-install/include \
+	--with-mysql-libs=$PWD/../mysql-install/lib
+
+# "sysbench" needs libmysqlclient_r for unknown reasons
+pushd .
+cd ../mysql-install/lib/mysql
+ln -sf libmysqlclient.so libmysqlclient_r.so
+popd
+
+make
+# DT - 4/14/2013: Sysbench 0.4.12 fails here; I think libtool needs root.
+make install

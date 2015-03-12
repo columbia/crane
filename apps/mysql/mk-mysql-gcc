@@ -1,0 +1,58 @@
+#!/bin/bash
+
+if [ "$APPS_DIR" = "" ]; then
+	echo '$APPS_DIR not defined, do `export APPS_DIR=`'
+	exit 1
+fi
+
+# install mysql
+if [ -z $1 ]; then
+	# No version number
+	echo "Usage: <version number: e.g. 4.0.12>"
+	exit 1
+fi
+VER=$1
+
+rm -rf mysql-$VER
+rm -rf mysql-install
+tar xzvf $APPS_DIR/sys/mysql-$VER.tar.gz
+cd mysql-$VER
+
+# Ubuntu changed the default system shell to dash
+# but MySQL compile requires bash
+sed -i -e 's/^#! \/bin\/sh/#! \/bin\/bash/' configure
+
+if [ "$VER" = "5.1.35" ]; then
+	patch -p1 < $APPS_DIR/mysql/fix-mysql-5.1.35.patch
+fi
+
+if [ "$VER" = "4.0.12" ] || [ "$VER" = "3.23.56" ]; then
+	# MySQL 4.0.12 hangs if compiled with gcc-4.4
+	# and could not be compiled with gcc-4.3
+	# and gcc-4.2 is obsolete in Ubuntu 10.04
+	# so compile gcc-4.1.2
+	# and it works fine
+	CC=gcc-4.1 CXX=g++-4.1 ./configure --prefix=$PWD/../mysql-install
+elif [ "$VER" = "4.1.1-alpha" ]; then
+	CC=gcc-4.1 CXX=g++-4.1 ./configure --prefix=$PWD/../mysql-install\
+		--without-libedit
+elif [ "$VER" \> "5.6" ]; then
+	CC=gcc-4.1 CXX=g++-4.1 cmake -DCMAKE_INSTALL_PREFIX=$PWD/../mysql-install .
+else
+	./configure --prefix=$PWD/../mysql-install
+fi
+make
+make install
+cd ..
+
+if [ -e /etc/mysql/my.cnf ]; then
+	echo 'The global config may conflict with the version you are installing.'
+	echo 'Consider removing /etc/mysql/my.cnf'
+	exit 1
+fi
+if [ "$VER" \> "5.6" ]; then
+	cd mysql-install
+	scripts/mysql_install_db
+else
+	mysql-install/bin/mysql_install_db
+fi

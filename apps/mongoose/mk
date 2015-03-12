@@ -28,6 +28,7 @@ if [ ! -f mongoose-$VER.tgz ]; then
 fi
 tar zxvf mongoose-$VER.tgz
 cd mongoose
+patch -p1 < ../add-soba-hint.patch
 make linux
 mv mongoose ../mg-server
 cd $MSMR_ROOT/apps/mongoose

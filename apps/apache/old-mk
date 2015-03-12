@@ -22,7 +22,10 @@
 # apache benchmark (ab) source code at: httpd-2.4.10/support/ab.c
 
 # variables
+APR_VER=1.5.1
+UTIL_VER=1.5.4
 HTTPD_VER=2.2.11
+PCRE_VER=8.36
 APP_DIR=$MSMR_ROOT/apps/apache
 
 # working folder
@@ -31,18 +34,43 @@ cd $APP_DIR
 # remove folder
 rm -rf httpd-$VER
 rm -rf install
+rm -rf pcre
+rm -rf pcre-$PCRE_VER
 
 # download and extract
 if [ ! -f httpd-$HTTPD_VER.tar.gz ]; then
     #wget http://mirror.metrocast.net/apache//httpd/httpd-$HTTPD_VER.tar.gz
-    wget https://archive.apache.org/dist/httpd/httpd-$HTTPD_VER.tar.gz
+    https://archive.apache.org/dist/httpd/httpd-$HTTPD_VER.tar.gz
 fi
 tar zxvf httpd-$HTTPD_VER.tar.gz
 
-cd $APP_DIR/httpd-$HTTPD_VER
-patch -p1 < ../add-detach-for-pod-check-thread.patch
+# build dependencies
+if [ ! -f pcre-$PCRE_VER.tar.gz ]; then
+    wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-$PCRE_VER.tar.gz
+fi
+tar zxvf pcre-$PCRE_VER.tar.gz
+cd pcre-$PCRE_VER
+./configure --prefix=$APP_DIR/pcre
+make -j16
+make install
+
+cd ../httpd-$HTTPD_VER/srclib
+
+if [ ! -f apr-$APR_VER.tar.gz ]; then
+    wget http://apache.mirrors.pair.com//apr/apr-$APR_VER.tar.gz
+fi
+tar zxvf apr-$APR_VER.tar.gz
+mv apr-$APR_VER apr
+
+if [ ! -f apr-util-$UTIL_VER.tar.gz ]; then
+    wget http://apache.mirrors.pair.com//apr/apr-util-$UTIL_VER.tar.gz
+fi
+tar zxvf apr-util-$UTIL_VER.tar.gz
+mv apr-util-$UTIL_VER apr-util
 
 # build
+cd ../
+mkdir ../install
 #./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all \
 #	--with-pcre=$APP_DIR/pcre \
 #	--enable-mpm=worker --enable-module=all
@@ -61,5 +89,4 @@ make install
 cd $MSMR_ROOT/apps/apache/install/conf
 sed -e "s/Listen 80/Listen 7000/g"  httpd.conf > httpd.conf.tmp
 mv httpd.conf.tmp httpd.conf
-echo "ServerName localhost" >> httpd.conf
-echo "ServerLimit 1" >> httpd.conf
+

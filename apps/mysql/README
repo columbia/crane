@@ -1,0 +1,24 @@
+Scripts:
+
+* prepare-sysbench: Init the database for SysBench.
+Assume the MySQL server has already started. 
+
+* run-sysbench: Run the SysBench. 
+Assume the MySQL server has already started. 
+
+* mk-mysql: Build the MySQL server.
+
+* mk-dbt2: Build the DBT2 benchmark.
+
+* mk-sysbench: build the sysbench benchmark
+
+Workflow:
+
+* mk-mysql: This script installs the mysql server and the mysql client, and
+initializes the database.
+
+* mk-sysbench
+
+* prepare-sysbench
+
+* run-sysbench

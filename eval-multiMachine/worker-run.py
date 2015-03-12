@@ -13,10 +13,10 @@ logger = logging.getLogger("Benchmark.Worker")
 #Remote directory enviroment variable
 MSMR_ROOT = ''
 XTERN_ROOT = ''
-cur_env = os.environ.copy()
 
 def execute_proxy(args):
 
+    cur_env = os.environ.copy()
     # Preparing the environment
     cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + '/libevent_paxos/.local/lib'
     if not os.path.isfile('nodes.local.cfg'):
@@ -38,14 +38,18 @@ def execute_proxy(args):
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'
     
-    cmd = 'rm -rf ./.db ./log && mkdir ./log && \
+    cmd = 'rm -rf ./.db ./log && mkdir ./log && ulimit -c unlimited && \
            $SERVER_PROGRAM -n %d -r -m %s -c $CONFIG_FILE -l ./log 1> ./log/node_%d_stdout 2>./log/node_%d_stderr &' % (
            args.node_id, args.mode, args.node_id, args.node_id)
+    print "Replaying Proxy cmd : " + cmd
 
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
 
 def execute_servers(args):
 
+    cur_env = os.environ.copy()
     cmd = args.scmd
     print "replay real server command:"
     print cmd
@@ -54,10 +58,15 @@ def execute_servers(args):
         print "XTERN is enabled. Preload library."
         # PreLoad xtern library here
         cur_env['LD_PRELOAD'] = XTERN_ROOT + '/dync_hook/interpose.so'
+        # Sleep a while to load the lib
+        time.sleep(2)
 
+    # Don't add print
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
 
 def restart_proxy(args):
+
+    cur_env = os.environ.copy()
     # Preparing the environment
     cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + '/libevent_paxos/.local/lib'
     cur_env['CONFIG_FILE'] = MSMR_ROOT + '/libevent_paxos/target/nodes.local.cfg'
@@ -75,7 +84,7 @@ def main(args):
     """
     execute_servers(args)
     # Wait a while fot the real server to set up
-    time.sleep(5)
+    time.sleep(1)
     if args.proxy == 1:
         execute_proxy(args)
 

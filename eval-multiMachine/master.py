@@ -130,11 +130,11 @@ def main(args):
     time.sleep(5)
 
     # Starts the leader election demo
-    if args.proxy == 1:
-        restart_head(args)
-        time.sleep(20)
+    #if args.proxy == 1:
+        #restart_head(args)
+        #time.sleep(20)
 
-        run_clients(args)
+        #run_clients(args)
 
     kill_previous_process(args) 
 

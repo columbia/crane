@@ -18,6 +18,8 @@ def execute_proxy(args):
 
     cur_env = os.environ.copy()
     # Preparing the environment
+    #cur_env['MSMR_ROOT'] = MSMR_ROOT
+    #cur_env['XTERN_ROOT'] = XTERN_ROOT
     cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + '/libevent_paxos/.local/lib'
     if not os.path.isfile('nodes.local.cfg'):
         print "Copy nodes.local.cfg to current folder"

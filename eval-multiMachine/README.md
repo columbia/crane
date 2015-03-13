@@ -2,6 +2,7 @@
 Experiment launcher for general distributed applications
 
 A brief introduction for each component of the experiment launcher.
+
 1. run.sh
 This file is aiming at generating all the configuration parameters and
 feed them to the following scripts.
@@ -28,6 +29,10 @@ server machines.
 For example, right now, I've created symbolic links to make sure all my MSMR_ROOT
 folder on different servers will have the same path. 
 
+3. In eval-multiMachine folder, run the following to start all the expriment.
+> ./run.sh
+
+
 Notice:
 
 1. In run.sh, change the parameters listed in the beginning. It's highly
@@ -50,3 +55,7 @@ in your home folder instead of the original conf file in the source code repo.
 5. My scripts couldn't properly remove the tmp file created by xtern. So if you
 find that client can't receive responses, try cleaning the tmp files first.
 Right now, they're 3 of them. 1 under your home folder. 2 in /dev/shm ahd /tmp.
+
+6. If you want to let server load some content and client query that content. You
+only need to change the content in client_cmd and server_cmd in run.sh. Make
+sure the content all put in your home folder.

@@ -12,7 +12,6 @@ import subprocess
 logger = logging.getLogger("Benchmark.Master")
 
 MSMR_ROOT = ''
-cur_env = os.environ.copy()
 
 def kill_previous_process(args):
     print "Killing previous related processes"
@@ -73,23 +72,20 @@ def restart_head(args):
     print output
 
 def run_clients(args):
+    cur_env = os.environ.copy()
     cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     if args.proxy == 1:
-        cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.174:9000/'
         #cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.174:9000/test.php'
+        print "client cmd reply : " + args.ccmd
+        cmd = args.ccmd
     else:
+        # TODO
         cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.171:7000/'
+
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
     
-def run_clients2(args):
-    cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
-    cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.172:9001/'
-    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    output, err = p.communicate()
-    print output
-
 # note: must use sudo
 # we run criu on node 2(bug02), so parallel-ssh should -h worker2
 def run_criu(args):
@@ -137,7 +133,7 @@ def main(args):
         restart_head(args)
         time.sleep(20)
 
-        run_clients2(args)
+        run_clients(args)
 
     kill_previous_process(args) 
 
@@ -168,6 +164,8 @@ if __name__ == "__main__":
             help="Schedule with DMT.")
     parser.add_argument('--scmd', type=str, dest="scmd", action="store",
             help="The command to execute the real server.")
+    parser.add_argument('--ccmd', type=str, dest="ccmd", action="store",
+            help="The command to execute the client.")
 
     args = parser.parse_args()
     print "Replaying parameters:"

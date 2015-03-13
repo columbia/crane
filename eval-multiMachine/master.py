@@ -130,11 +130,11 @@ def main(args):
     time.sleep(5)
 
     # Starts the leader election demo
-    #if args.proxy == 1:
-        #restart_head(args)
-        #time.sleep(20)
+    if args.leader_ele == 1 and args.proxy == 1:
+        restart_head(args)
+        time.sleep(20)
 
-        #run_clients(args)
+        run_clients(args)
 
     kill_previous_process(args) 
 
@@ -151,6 +151,8 @@ if __name__ == "__main__":
             help="Whether xtern is enabled.")
     parser.add_argument('-p', type=int, dest="proxy", action="store",
             help="Whether proxy is enabled.")
+    parser.add_argument('-l', type=int, dest="leader_ele", action="store",
+            help="Whether demo leader election.")
     parser.add_argument('-k', type=int, dest="checkpoint", action="store",
             help="Whether checkpointing on replicas is enabled.")
     parser.add_argument('-t', type=int, dest="checkpoint_period", action="store",
@@ -170,8 +172,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print "Replaying parameters:"
-    print "App : " + args.app
+    print "app : " + args.app
     print "xtern : " + str(args.xtern)
+    print "leader election : " + str(args.leader_ele)
     print "checkpoint : " + str(args.checkpoint)
     print "checkpoint_period : " + str(args.checkpoint_period)
     print "MSMR_ROOT : " + args.msmr_root_client

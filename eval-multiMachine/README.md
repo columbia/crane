@@ -29,6 +29,7 @@ For example, right now, I've created symbolic links to make sure all my MSMR_ROO
 folder on different servers will have the same path. 
 
 Notice:
+
 1. In run.sh, change the parameters listed in the beginning. It's highly
 suggested that the paths across all servers are consistent. For example,
 create a symbolic link in the home folder to MSMR_ROOT will do.

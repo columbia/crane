@@ -21,6 +21,7 @@ def kill_previous_process(args):
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
+
     # killall criu-cr.py via sudo
     # bug02 worker2
     cmd = 'sudo killall -9 criu-cr.py &> /dev/null' 

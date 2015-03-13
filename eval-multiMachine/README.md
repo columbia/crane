@@ -16,6 +16,7 @@ This is the remote script that will be put on the remote server.
 It starts the proxies and server applications. 
 
 How can I use the script:
+
 1. The current scenario is in order to use these scripts, you need to have 4
 machines. 1 serves as client, 3 serve as servers. My scripts will need to be
 started on this client machines and all the configurations are only need to 

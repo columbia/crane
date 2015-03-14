@@ -44,12 +44,13 @@ tar zxvf httpd-$HTTPD_VER.tar.gz
 
 cd $APP_DIR/httpd-$HTTPD_VER
 patch -p1 < ../add-detach-for-pod-check-thread.patch
+patch -p1 < ../add-soba-httpd.patch
 
 # build
 #./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all \
 #	--with-pcre=$APP_DIR/pcre \
 #	--enable-mpm=worker --enable-module=all
-CFLAGS="-I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot" \
+CFLAGS="-g -I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot" \
 ./configure \
         --with-mpm=worker \
         --prefix=$APP_DIR/install \
@@ -67,6 +68,8 @@ if [ ! -f php-$PHP_VER.tar.gz ]; then
 fi
 tar zxvf php-$PHP_VER.tar.gz
 cd php-$PHP_VER
+patch -p1 < ../add-soba-php.patch
+CFLAGS="-g -I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot" \
 	./configure --prefix=$MSMR_ROOT/apps/apache/install-php --with-apxs2=$MSMR_ROOT/apps/apache/install/bin/apxs --disable-dom --disable-simplexml
 make -j16
 make install
@@ -78,6 +81,9 @@ sed -e "s/Listen 80/Listen 7000/g"  httpd.conf > httpd.conf.tmp
 mv httpd.conf.tmp httpd.conf
 echo "ServerName localhost" >> httpd.conf
 echo "ServerLimit 1" >> httpd.conf
+echo "ThreadsPerChild 8" >> httpd.conf
+cp $MSMR_ROOT/apps/apache/test.php $MSMR_ROOT/apps/apache/install/htdocs/
+cp $MSMR_ROOT/apps/apache/test.php ~/
 
 # add php filter.
 sed -e "s/#AddType text\/html \.shtml/AddType application\/x-httpd-php \.php/g" httpd.conf > httpd.conf.tmp

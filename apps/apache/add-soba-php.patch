@@ -1,0 +1,19 @@
+diff -ruN php-5.4.0/sapi/apache2handler/sapi_apache2.c php-5.4.0-modified/sapi/apache2handler/sapi_apache2.c
+--- php-5.4.0/sapi/apache2handler/sapi_apache2.c	2012-01-01 08:15:04.000000000 -0500
++++ php-5.4.0-modified/sapi/apache2handler/sapi_apache2.c	2015-03-14 15:18:36.160785364 -0400
+@@ -533,6 +533,7 @@
+ 	}
+ }
+ 
++#include <tern/user.h>
+ static int php_handler(request_rec *r)
+ {
+ 	php_struct * volatile ctx;
+@@ -663,6 +664,7 @@
+ 		zfd.free_filename = 0;
+ 		zfd.opened_path = NULL;
+ 
++                soba_wait(0);
+ 		if (!parent_req) {
+ 			php_execute_script(&zfd TSRMLS_CC);
+ 		} else {

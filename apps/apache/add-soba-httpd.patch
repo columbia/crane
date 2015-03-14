@@ -1,0 +1,15 @@
+diff -ruN httpd-2.2.11/server/mpm/worker/worker.c httpd-2.2.11-modified/server/mpm/worker/worker.c
+--- httpd-2.2.11/server/mpm/worker/worker.c	2007-07-17 10:48:25.000000000 -0400
++++ httpd-2.2.11-modified/server/mpm/worker/worker.c	2015-03-14 15:16:18.771450817 -0400
+@@ -942,8 +942,11 @@
+  *     never be cleaned up; for now there is an APLOG_DEBUG message issued
+  *     every so often when this condition occurs
+  */
++#include <tern/user.h>
+ static void * APR_THREAD_FUNC start_threads(apr_thread_t *thd, void *dummy)
+ {
++    const int numworkers = 8;
++    soba_init(0, numworkers, 100*numworkers);
+     thread_starter *ts = dummy;
+     apr_thread_t **threads = ts->threads;
+     apr_threadattr_t *thread_attr = ts->threadattr;

@@ -131,7 +131,7 @@ def main(args):
 
         run_clients(args)
 
-    #kill_previous_process(args) 
+    kill_previous_process(args) 
 
 
 ###############################################################################

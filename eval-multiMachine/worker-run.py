@@ -53,7 +53,7 @@ def execute_servers(args):
 
     cur_env = os.environ.copy()
     cmd = args.scmd
-    print "replay real server command:"
+    print "Replay real server command:"
     print cmd
 
     if args.xtern == 1:
@@ -86,7 +86,7 @@ def main(args):
     """
     execute_servers(args)
     # Wait a while fot the real server to set up
-    time.sleep(1)
+    time.sleep(5)
     if args.proxy == 1:
         execute_proxy(args)
 

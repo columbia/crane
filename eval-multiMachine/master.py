@@ -14,8 +14,18 @@ logger = logging.getLogger("Benchmark.Master")
 MSMR_ROOT = ''
 
 def kill_previous_process(args):
-    print "Killing previous related processes"
-    cmd = 'sudo killall -9 worker-run.py server.out %s ' % (args.app)
+    print "Removing temporaries"
+    cmd = 'rm -rf /dev/shm/*-$USER; \
+           rm -rf /tmp/paxos_queue_file_lock; \
+           rm -rf ~/paxos_queue_file_lock'
+    rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
+            command=cmd)
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+
+    print "Killing residual processes"
+    cmd = 'sudo killall -9 worker-run.py server.out %s' % (args.app)
     rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -74,8 +84,8 @@ def restart_head(args):
 
 def run_clients(args):
     cur_env = os.environ.copy()
-    cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
-    #cmd = '$MSMR_ROOT/apps/apache/install/bin/ab -n 10 -c 10 http://128.59.17.174:9000/test.php'
+    if args.proxy == 1:
+        cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     print "client cmd reply : " + args.ccmd
 
     p = subprocess.Popen(args.ccmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
@@ -112,14 +122,14 @@ def main(args):
     time.sleep(10)
 
     if args.checkpoint == 1:
-        # run CRIU on bug02(Node 2)
-	run_criu(args)
-	# make sure wait for at least 20s before running client
-	# to let CRIU run in the appropriate environment
-	# rest assured. real server and libevent_paxos still run normally without influence
-	# even if when the CRIU does dump work, beacuse CRIU does dump and then let the
-	# checkpointed process run again will be finished in a flash, about 20~60ms
-	time.sleep(20)
+        # run CRIU on bug02(Node 2
+        run_criu(args)
+        # make sure wait for at least 20s before running client
+        # to let CRIU run in the appropriate environment
+        # rest assured. real server and libevent_paxos still run normally without influence
+        # even if when the CRIU does dump work, beacuse CRIU does dump and then let the
+        # checkpointed process run again will be finished in a flash, about 20~60ms
+        time.sleep(20)
 
     run_clients(args)
     time.sleep(5)

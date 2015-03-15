@@ -1,5 +1,8 @@
-# Setups for Apache
-app="httpd"                                           # app name appears in process list
+# Setups for Proftpd
+# Notice :
+# You need to manually change the port number m-smr/apps/proftpd/install/etc/proftpd.conf
+
+app="proftpd"                                         # app name appears in process list
 xtern=1                                               # 1 use xtern, 0 otherwise.
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
@@ -13,10 +16,10 @@ input_url="127.0.0.1"                                 # url for client to query
 
 if [ $proxy -eq 1 ]
 then
-    client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.172:9000/test.php"
+    client_cmd="cd ${msmr_root_client}/apps/proftpd/benchmark && ./bin/dkftpbench -hlocalhost -P9000 -n20 -c20 -t10 -k1 -uftpuser -pftpuser -v1 -fx10k.dat"
 else
-    client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.174:7000/test.php"
+    client_cmd="cd ${msmr_root_client}/apps/proftpd/benchmark && ./bin/dkftpbench -hlocalhost -P7000 -n20 -c20 -t10 -k1 -uftpuser -pftpuser -v1 -fx10k.dat"
 fi
                                                       # command to start the clients
-server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl -f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"
+server_cmd="'cd ${msmr_root_server}/apps/proftpd/install && sudo ./sbin/proftpd -c ${msmr_root_server}/apps/proftpd/install/etc/proftpd.conf -d 10'"
                                                       # command to start the real server

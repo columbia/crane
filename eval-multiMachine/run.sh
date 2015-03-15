@@ -2,10 +2,10 @@
 
 # This is the starter file of the whole experiment.
 
-#source configs/mongoose.sh
+source configs/mongoose.sh
 #source configs/apache.sh
 #source configs/ssdb.sh
-source configs/pgsql.sh
+#source configs/pgsql.sh
 
 # Update worker-run.py to the server
 scp worker-run.py bug03.cs.columbia.edu:~/

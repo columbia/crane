@@ -14,8 +14,18 @@ logger = logging.getLogger("Benchmark.Master")
 MSMR_ROOT = ''
 
 def kill_previous_process(args):
-    print "Killing previous related processes"
-    cmd = 'sudo killall -9 worker-run.py server.out %s ' % (args.app)
+    print "Removing temporaries"
+    cmd = 'rm -rf /dev/shm/*-$USER; \
+           rm -rf /tmp/paxos_queue_file_lock; \
+           rm -rf ~/paxos_queue_file_lock'
+    rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
+            command=cmd)
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+
+    print "Killing residual processes"
+    cmd = 'sudo killall -9 worker-run.py server.out %s' % (args.app)
     rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)

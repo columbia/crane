@@ -20,5 +20,3 @@ fi
                                                       # command to start the clients
 server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl -f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"
                                                       # command to start the real server
-echo $client_cmd
-exit

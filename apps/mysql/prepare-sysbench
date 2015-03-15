@@ -1,5 +1,9 @@
 #!/bin/bash
 
+cd $MSMR_ROOT/apps/mysql
+./mysql-install/libexec/mysqld &
+sleep 1;
+
 mysql-install/bin/mysql -u root -e 'drop database sysbench_db;'
 # need not sleep here
 # "mysql" blocks until the command finishes. 
@@ -7,10 +11,15 @@ mysql-install/bin/mysql -u root -e 'create database sysbench_db;'
 
 LD_LIBRARY_PATH=mysql-install/lib/mysql/ \
 sysbench-install/bin/sysbench \
+        --mysql-socket=/tmp/mysql.sock \
 	--mysql-user=root \
 	--test=oltp \
 	--oltp-table-size=20000 \
 	--oltp-table-name=sbtest \
+	--mysql-table-engine=InnoDB \
+	--mysql-engine-trx=yes \
 	--mysql-db=sysbench_db \
 	prepare
 
+
+killall -9 mysqld

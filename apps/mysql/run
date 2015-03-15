@@ -1,47 +1,14 @@
 #!/bin/bash
 
-#
-# Copyright (c) 2014,  Regents of the Columbia University 
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
-# materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
-# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+killall -9 mysqld
+cd $MSMR_ROOT/apps/mysql
 
-# variables
-SRV_DIR=$MSMR_ROOT/apps/mysql/install
-BEN_DIR=$MSMR_ROOT/apps/mysql/benchmark
+# Start the server at port 7000 and sock file /tmp/mysql.sock
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+./mysql-install/libexec/mysqld --defaults-file=./my.cnf &
+sleep 1;
 
-
-# start server, wait till socket is there
-cd $SRV_DIR
-bin/mysqld --defaults-file=$SRV_DIR/my.cnf --basedir=$SRV_DIR --datadir=$SRV_DIR/data --log-error=$SRV_DIR/data/mysql.err --pid-file=$SRV_DIR/mysql.pid --socket=$SRV_DIR/mysql.sock --port=3366 --explicit_defaults_for_timestamp=TRUE &
-sleep 5
-# while [ ! -S $APP_DIR/install/mysql.sock ] ; do
-#     sleep 1
-# done;
-
-
-# perform test
-cd $BEN_DIR
-bin/sysbench --test=oltp --oltp-table-size=10000 --mysql-socket=$SRV_DIR/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password prepare
-bin/sysbench --test=oltp --oltp-table-size=10000 --oltp-test-mode=complex --num-threads=10 --max-time=60 --mysql-socket=$SRV_DIR/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password run
-bin/sysbench --test=oltp --mysql-socket=$SRV_DIR/mysql.sock --mysql-db=dbtest --mysql-user=root --mysql-password=password cleanup
-
-
-# stop server
-cd $SRV_DIR
-bin/mysqladmin --user=root --password=password --socket=$SRV_DIR/mysql.sock shutdown
-cd ../
-
+# Run sysbench, with 2 threads.
+./run-sysbench -p 7000 -t 4
+sleep 1;
+killall -9 mysqld

@@ -1,24 +1,17 @@
 #!/bin/bash
 
-if [ "$APPS_DIR" = "" ]; then
-	echo '$APPS_DIR not defined, do `export APPRS_DIR=`'
-	exit 1
-fi
-
-if [ -z $1 ]; then
-	echo "Usage: <Sysbench version number: e.g. 0.4.0>"
-	exit 1
-fi
-SYSBENCH_VER=$1
-
+SYSBENCH_VER=0.4.8
+wget ftp://ftp.dk.netbsd.org/ftp/index/OS/4.3bsd/NetBSD/packages/distfiles/sysbench-$SYSBENCH_VER.tar.gz
+#wget https://row-cache-for-innodb.googlecode.com/files/sysbench-$SYSBEN_VER.tar.gz
+#wget http://pkgs.fedoraproject.org/repo/pkgs/sysbench/sysbench-0.4.12.tar.gz/3a6d54fdd3fe002328e4458206392b9d/sysbench-$SYSBENCH_VER.tar.gz
 rm -rf sysbench-$SYSBENCH_VER
 rm -rf sysbench-install
 
-tar zxvf $APPS_DIR/sys/sysbench-$SYSBENCH_VER.tar.gz
+tar zxvf sysbench-$SYSBENCH_VER.tar.gz
 cd sysbench-$SYSBENCH_VER
 ./configure \
 	--prefix=$PWD/../sysbench-install \
-	--with-mysql-includes=$PWD/../mysql-install/include \
+	--with-mysql-includes=$PWD/../mysql-install/include/mysql \
 	--with-mysql-libs=$PWD/../mysql-install/lib
 
 # "sysbench" needs libmysqlclient_r for unknown reasons

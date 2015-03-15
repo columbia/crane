@@ -9,9 +9,11 @@ import numpy
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Run sysbench")
-    parser.add_argument("-p", default = 1, type = int,
+    parser.add_argument("-t", default = 1, type = int,
                         help = "# of threads")
-    parser.add_argument("-n", default = 10000, type = int,
+    parser.add_argument("-p", default = 3306, type = int,
+                        help = "mysqld port")
+    parser.add_argument("-n", default = 100, type = int,
                         help = "# of requests")
     parser.add_argument("-r", default = 1, type = int,
                         help = "# of runs")
@@ -20,13 +22,20 @@ if __name__ == "__main__":
     cmd = "LD_LIBRARY_PATH=" + os.getcwd() + "/mysql-install/lib/mysql/"
     cmd += " sysbench-install/bin/sysbench"
     cmd += " --mysql-user=root"
-    cmd += " --num-threads=" + str(args.p)
+    cmd += " --mysql-port=" + str(args.p)
+    cmd += " --num-threads=" + str(args.t)
     cmd += " --max-requests=" + str(args.n)
     cmd += " --test=oltp"
     cmd += " --oltp-table-size=20000"
     cmd += " --mysql-socket=/tmp/mysql.sock"
     cmd += " --oltp-table-name=sbtest"
     cmd += " --mysql-db=sysbench_db"
+    cmd += " --oltp-test-mode=complex"
+    cmd += " --mysql-engine-trx=yes"
+    cmd += " --mysql-table-engine=InnoDB"
+    cmd += " --oltp-index-updates=200"
+    cmd += " --oltp-non-index-updates=200"
+    cmd += " "
     cmd += " run"
 
     results = []

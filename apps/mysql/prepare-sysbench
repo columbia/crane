@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd $MSMR_ROOT/apps/mysql
-./mysql-install/libexec/mysqld &
+./mysql-install/libexec/mysqld --defaults-file=./my.cnf &
 sleep 1;
 
 mysql-install/bin/mysql -u root -e 'drop database sysbench_db;'
@@ -11,7 +11,8 @@ mysql-install/bin/mysql -u root -e 'create database sysbench_db;'
 
 LD_LIBRARY_PATH=mysql-install/lib/mysql/ \
 sysbench-install/bin/sysbench \
-        --mysql-socket=/tmp/mysql.sock \
+	--mysql-host=127.0.0.1 \
+	--mysql-port=7000 \
 	--mysql-user=root \
 	--test=oltp \
 	--oltp-table-size=20000 \

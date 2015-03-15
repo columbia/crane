@@ -12,7 +12,7 @@ cd sysbench-$SYSBENCH_VER
 ./configure \
 	--prefix=$PWD/../sysbench-install \
 	--with-mysql-includes=$PWD/../mysql-install/include/mysql \
-	--with-mysql-libs=$PWD/../mysql-install/lib
+	--with-mysql-libs=$PWD/../mysql-install/lib/mysql
 
 # "sysbench" needs libmysqlclient_r for unknown reasons
 pushd .

@@ -9,8 +9,8 @@ wget http://downloads.mysql.com/archives/get/file/mysql-$VER.tar.gz
 tar xzvf mysql-$VER.tar.gz
 cd mysql-$VER
 
-
-./configure --prefix=$PWD/../mysql-install
+CFLAGS="-g -I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot" \
+	./configure --prefix=$PWD/../mysql-install
 
 make -j16
 make install

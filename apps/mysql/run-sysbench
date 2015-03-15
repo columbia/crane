@@ -19,15 +19,14 @@ if __name__ == "__main__":
                         help = "# of runs")
     args = parser.parse_args()
 
-    cmd = "LD_LIBRARY_PATH=" + os.getcwd() + "/mysql-install/lib/mysql/"
-    cmd += " sysbench-install/bin/sysbench"
+    cmd = "LD_LIBRARY_PATH=$MSMR_ROOT/apps/mysql/mysql-install/lib/mysql/"
+    cmd += " $MSMR_ROOT/apps/mysql/sysbench-install/bin/sysbench"
     cmd += " --mysql-user=root"
     cmd += " --mysql-port=" + str(args.p)
     cmd += " --num-threads=" + str(args.t)
     cmd += " --max-requests=" + str(args.n)
     cmd += " --test=oltp"
     cmd += " --oltp-table-size=20000"
-    cmd += " --mysql-socket=/tmp/mysql.sock"
     cmd += " --oltp-table-name=sbtest"
     cmd += " --mysql-db=sysbench_db"
     cmd += " --oltp-test-mode=complex"

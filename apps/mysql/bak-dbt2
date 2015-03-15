@@ -4,9 +4,12 @@
 DBT2_VER=0.40
 
 # install dbt2 benchmark
+cd $MSMR_ROOT/apps/mysql
 rm -rf dbt2-$DBT2_VER
-tar xzvf $APPS_DIR/sys/dbt2-$DBT2_VER.tar.gz
+http://www.mirrorservice.org/sites/downloads.sourceforge.net/o/os/osdldbt/dbt2/0.40/dbt2-0.40.tar.gz
+tar xzvf dbt2-$DBT2_VER.tar.gz
 cd dbt2-$DBT2_VER/
+LIBS+="-L$MSMR_ROOT/apps/mysql/mysql-install/lib/mysql/ -Wl,--rpath,$MSMR_ROOT/apps/mysql/mysql-install/lib/mysql/ -lmysqlclient" \
 ./configure --with-mysql=$PWD/../mysql-install --enable-nosp
 make
 

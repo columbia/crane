@@ -4,7 +4,7 @@ killall -9 mysqld
 cd $MSMR_ROOT/apps/mysql
 
 # Start the server at port 7000 and sock file /tmp/mysql.sock
-LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+L2D_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
 ./mysql-install/libexec/mysqld --defaults-file=./my.cnf &
 sleep 1;
 

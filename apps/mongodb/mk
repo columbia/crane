@@ -39,17 +39,22 @@ tar zxvf mongodb-src-r$APP_VER.tar.gz
 
 # build
 cd mongodb-src-r$APP_VER
-scons mongod
+scons mongod mongo -j16
 mkdir ../install
 mkdir ../install/bin
 mkdir ../install/data
 cp mongod ../install/bin
 cp mongo ../install/bin
+cd ../
+tar zcvf install.tar.gz install
 
 # download benchmark
-cd ../
 curl -O https://cloud.github.com/downloads/brianfrankcooper/YCSB/ycsb-0.1.4.tar.gz
 tar zxvf ycsb-0.1.4.tar.gz
 cd ycsb-0.1.4
 mvn clean package
 
+# download sysbench-mongodb
+cd $APP_DIR
+git clone https://github.com/kgorman/sysbench-mongodb
+wget http://central.maven.org/maven2/org/mongodb/mongo-java-driver/2.13.0/mongo-java-driver-2.13.0.jar

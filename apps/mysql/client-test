@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ -z $1 ]; then
         # No version number
-        echo "Usage: <./client-test 127.59.17.172>"
+        echo "Usage: <./client-test 128.59.17.172>"
         exit 1
 fi
 

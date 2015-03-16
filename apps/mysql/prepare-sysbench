@@ -4,6 +4,9 @@ cd $MSMR_ROOT/apps/mysql
 ./mysql-install/libexec/mysqld --defaults-file=./my.cnf &
 sleep 1;
 
+mysql-install/bin/mysql -u root -e 'GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'';
+mysql-install/bin/mysql -u root -e 'FLUSH PRIVILEGES;'
+
 mysql-install/bin/mysql -u root -e 'drop database sysbench_db;'
 # need not sleep here
 # "mysql" blocks until the command finishes. 

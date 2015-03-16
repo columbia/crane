@@ -14,4 +14,6 @@ mysql-install/bin/mysql -u root -e 'drop database sysbench_db;'
 # "mysql" blocks until the command finishes. 
 mysql-install/bin/mysql -u root -e 'create database sysbench_db;'
 
-echo "Mysqld has started. Please remember to kill me in a few minutes: killall -9 mysqld;"
+echo ""
+echo "Mysqld has started. Please remember to kill me ASAP after this sample run: killall -9 mysqld;"
+echo ""

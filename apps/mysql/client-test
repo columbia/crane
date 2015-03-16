@@ -7,6 +7,7 @@ fi
 
 IP=$1;
 
+cd $MSMR_ROOT/apps/mysql
 LD_LIBRARY_PATH=mysql-install/lib/mysql/ \
 sysbench-install/bin/sysbench \
         --mysql-host=$IP \

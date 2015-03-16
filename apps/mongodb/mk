@@ -22,6 +22,7 @@
 # variables
 APP_VER=2.6.5
 APP_DIR=$MSMR_ROOT/apps/mongodb
+NUMCPU=`nproc`
 
 # working folder
 cd $APP_DIR
@@ -39,17 +40,21 @@ tar zxvf mongodb-src-r$APP_VER.tar.gz
 
 # build
 cd mongodb-src-r$APP_VER
-scons mongod
+scons mongod mongo -j $NUMCPU
 mkdir ../install
 mkdir ../install/bin
 mkdir ../install/data
 cp mongod ../install/bin
 cp mongo ../install/bin
+cd ../
+tar zcvf install.tar.gz install
 
 # download benchmark
-cd ../
 curl -O https://cloud.github.com/downloads/brianfrankcooper/YCSB/ycsb-0.1.4.tar.gz
 tar zxvf ycsb-0.1.4.tar.gz
 cd ycsb-0.1.4
 mvn clean package
 
+# prepare for database.
+cd $MSMR_ROOT/apps/mongodb/sysbench-mongodb
+./prepare-sysbench

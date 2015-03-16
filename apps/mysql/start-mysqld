@@ -1,4 +1,6 @@
 #!/bin/bash
+killall -9 mysqld mysqld_safe
+sudo rm /tmp/mysql.sock
 
 cd $MSMR_ROOT/apps/mysql
 ./mysql-install/libexec/mysqld --defaults-file=./my.cnf &

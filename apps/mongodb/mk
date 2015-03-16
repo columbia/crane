@@ -55,3 +55,6 @@ tar zxvf ycsb-0.1.4.tar.gz
 cd ycsb-0.1.4
 mvn clean package
 
+# prepare for database.
+cd $MSMR_ROOT/apps/mongodb/sysbench-mongodb
+./prepare-sysbench

@@ -22,6 +22,7 @@
 # variables
 APP_VER=2.6.5
 APP_DIR=$MSMR_ROOT/apps/mongodb
+NUMCPU=`nproc`
 
 # working folder
 cd $APP_DIR
@@ -39,7 +40,7 @@ tar zxvf mongodb-src-r$APP_VER.tar.gz
 
 # build
 cd mongodb-src-r$APP_VER
-scons mongod mongo -j16
+scons mongod mongo -j $NUMCPU
 mkdir ../install
 mkdir ../install/bin
 mkdir ../install/data
@@ -54,7 +55,3 @@ tar zxvf ycsb-0.1.4.tar.gz
 cd ycsb-0.1.4
 mvn clean package
 
-# download sysbench-mongodb
-cd $APP_DIR
-git clone https://github.com/kgorman/sysbench-mongodb
-wget http://central.maven.org/maven2/org/mongodb/mongo-java-driver/2.13.0/mongo-java-driver-2.13.0.jar

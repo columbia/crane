@@ -1,0 +1,4 @@
+- add insert governer for loader
+- improve command line argument passing
+  - use "--argument value" syntax
+  - add defaults

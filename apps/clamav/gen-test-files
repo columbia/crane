@@ -1,0 +1,29 @@
+cd $MSMR_ROOT/apps/clamav
+rm -rf test-files
+mkdir -p test-files
+cd test-files
+wget https://distfiles.macports.org/clamav/clamav-0.97.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.1.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.2.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.3.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.4.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.5.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.6.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.7.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.97.8.tar.gz
+
+wget https://distfiles.macports.org/clamav/clamav-0.96.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.96.1.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.96.2.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.96.3.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.96.4.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.96.5.tar.gz
+
+wget https://distfiles.macports.org/clamav/clamav-0.95.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.95.1.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.95.2.tar.gz
+wget https://distfiles.macports.org/clamav/clamav-0.95.3.tar.gz
+
+wget https://distfiles.macports.org/clamav/clamav-0.94.tar.gz
+
+cd $MSMR_ROOT/apps/clamav

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+VER=0.98.6
+
+cd $MSMR_ROOT/apps/clamav
+rm clamav-$VER install database *.conf* -rf
+
+if [ ! -f clamav-$VER.tar.gz ]; then
+wget https://distfiles.macports.org/clamav/clamav-$VER.tar.gz
+fi
+tar zxvf clamav-$VER.tar.gz
+mkdir database
+
+cd clamav-$VER
+./configure --prefix=$MSMR_ROOT/apps/clamav/install \
+	--with-dbdir=$$MSMR_ROOT/apps/clamav/install/database
+make -j`nproc`
+make install
+
+cd $MSMR_ROOT/apps/clamav
+sed '/Example/d' install/etc/freshclam.conf.sample > freshclam.conf
+sed '/Example/d' install/etc/clamd.conf.sample > clamd.conf
+CURPATH=`echo $MSMR_ROOT`/apps/clamav
+DBPATH=$CURPATH/database
+echo "DatabaseDirectory $DBPATH" >> freshclam.conf
+echo "LogFile $CURPATH/server.log" >> clamd.conf
+echo "DatabaseDirectory $DBPATH" >> clamd.conf
+echo "TCPSocket 7000" >> clamd.conf
+echo "TCPAddr 127.0.0.1" >> clamd.conf
+echo "LogVerbose yes" >> clamd.conf
+
+# Prepare database
+echo "Initiliazing clamav database..."
+./install/bin/freshclam --config-file=./freshclam.conf

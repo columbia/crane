@@ -13,6 +13,8 @@ if __name__ == "__main__":
                         help = "# of threads")
     parser.add_argument("-p", default = 3306, type = int,
                         help = "mysqld port")
+    parser.add_argument("-i", default = "127.0.0.1", type = str,
+                        help = "mysqld host ip address")
     parser.add_argument("-n", default = 100, type = int,
                         help = "# of requests")
     parser.add_argument("-r", default = 1, type = int,
@@ -21,7 +23,7 @@ if __name__ == "__main__":
 
     cmd = "LD_LIBRARY_PATH=$MSMR_ROOT/apps/mysql/mysql-install/lib/mysql/"
     cmd += " $MSMR_ROOT/apps/mysql/sysbench-install/bin/sysbench"
-    cmd += " --mysql-host=127.0.0.1"
+    cmd += " --mysql-host=" + args.i
     cmd += " --mysql-user=root"
     cmd += " --mysql-port=" + str(args.p)
     cmd += " --num-threads=" + str(args.t)

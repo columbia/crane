@@ -55,6 +55,7 @@ def run_servers(args):
     print output
 
     # We only test one node for now
+    # Don't forget to change nodes.local.cfg on bug03!!!!!
     #return
 
     if args.proxy == 0:

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+$VER=1.10
+wget http://pkgs.fedoraproject.org/repo/pkgs/clamsmtp/clamsmtp-1.10.tar.gz/b068ba6e444859782bbdd88f290c1abf/clamsmtp-$VER.tar.gz
+
+# copy clamsmtpd.conf to install/etc/
+
+# follow the readme instructions to configure postfix and clamsmtpd.

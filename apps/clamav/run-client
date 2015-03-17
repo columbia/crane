@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ ! $1 ];
+then
+        echo "Usage: $0 <mongodb server IP> <mongdb server port> <absolute path of a big file in the server side.>"
+	echo "$0 127.0.0.1 7000 /home/heming/hku/m-smr/apps/mongodb/mongodb-src-r2.6.5.tar.gz"
+        exit 1;
+fi
+
+if [ ! $2 ];
+then
+	echo "Usage: $0 <mongodb server IP> <mongdb server port> <absolute path of a big file in the server side.>"
+	echo "$0 127.0.0.1 7000 /home/heming/hku/m-smr/apps/mongodb/mongodb-src-r2.6.5.tar.gz"
+        exit 1;
+fi
+
+if [ ! $3 ];
+then
+        echo "Usage: $0 <mongodb server IP> <mongdb server port> <absolute path of a big file in the server side.>"        
+        echo "$0 127.0.0.1 7000 /home/heming/hku/m-smr/apps/mongodb/mongodb-src-r2.6.5.tar.gz"
+        exit 1;
+fi
+
+cd $MSMR_ROOT/apps/clamav/
+./pyclamdscan-0.1_alpha/clamdscan.py -t $1 -p $2 $3 $3 $3
+#./pyclamdscan-0.1_alpha/clamdscan.py -t $1 -p $2 $3 &
+#./pyclamdscan-0.1_alpha/clamdscan.py -t $1 -p $2 $3 &

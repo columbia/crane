@@ -1,17 +1,24 @@
 #!/bin/bash
 if [ -z $1 ]; then
-        # No version number
-        echo "Usage: <./client-test 128.59.17.172>"
+        # No ip address
+        echo "Usage: <./client-test 128.59.17.172 9000>"
+        exit 1
+fi
+
+if [ -z $2 ]; then
+        # No port number
+        echo "Usage: <./client-test 128.59.17.172 9000>"
         exit 1
 fi
 
 IP=$1;
+PORT=$2;
 
 cd $MSMR_ROOT/apps/mysql
 LD_LIBRARY_PATH=mysql-install/lib/mysql/ \
 sysbench-install/bin/sysbench \
         --mysql-host=$IP \
-        --mysql-port=7000 \
+        --mysql-port=$PORT \
         --mysql-user=root \
         --test=oltp \
         --oltp-table-size=20000 \

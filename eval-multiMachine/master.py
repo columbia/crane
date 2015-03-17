@@ -17,7 +17,7 @@ def kill_previous_process(args):
     print "Removing temporaries"
     cmd = 'rm -rf /dev/shm/*-$USER; \
            rm -rf /tmp/paxos_queue_file_lock; \
-           rm -rf ~/paxos_queue_file_lock'
+           rm -rf $HOME/paxos_queue_file_lock'
     rcmd = 'parallel-ssh -v -p 3 -i -t 10 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -55,6 +55,7 @@ def run_servers(args):
     print output
 
     # We only test one node for now
+    # Don't forget to change nodes.local.cfg on bug03!!!!!
     #return
 
     if args.proxy == 0:
@@ -95,7 +96,7 @@ def run_clients(args):
 # note: must use sudo
 # we run criu on node 2(bug02), so parallel-ssh should -h worker2
 def run_criu(args):
-    shcmd = "sudo ~/criu-cr.py -s %s -t %d &> ~/criu-cr.log" % (args.app, args.checkpoint_period)
+    shcmd = "sudo python2.7 ~/criu-cr.py -s %s -t %d &> ~/criu-cr.log" % (args.app, args.checkpoint_period)
     psshcmd = "parallel-ssh -v -p 1 -i -t 5 -h worker2 \"%s\""%(shcmd)
     print "Master: replaying master node command: "
     print psshcmd

@@ -40,7 +40,7 @@ export NUM_COLLECTIONS=16
 
 # number of documents to maintain per collection
 #   valid values : integer > 0
-export NUM_DOCUMENTS_PER_COLLECTION=1000000
+export NUM_DOCUMENTS_PER_COLLECTION=10000
 
 # total number of documents to insert per "batch"
 #   valid values : integer > 0
@@ -48,11 +48,12 @@ export NUM_DOCUMENTS_PER_INSERT=10000
 
 # total number of simultaneous insertion threads (for loader)
 #   valid values : integer > 0
-export NUM_LOADER_THREADS=4
+export NUM_LOADER_THREADS=2
 
 # total number of simultaneous benchmark threads
 #   valid values : integer > 0
-export NUM_WRITER_THREADS=4
+export NUM_WRITER_THREADS=2
+# Heming: at this setting, there are already 10 threads in Mongodb server.
 
 # run the benchmark for this many minutes
 #   valid values : intever > 0

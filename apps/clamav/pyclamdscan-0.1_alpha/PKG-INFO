@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pyclamdscan
+Version: 0.1_alpha
+Summary: Partial clamdscan replacement that allows using a remote clamd
+Home-page: http://qwest.com
+Author: Jay Deiman
+Author-email: jdeiman@qwest.net
+License: GPLv2
+Description: UNKNOWN
+Platform: unix

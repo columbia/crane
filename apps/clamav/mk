@@ -28,6 +28,7 @@ echo "DatabaseDirectory $DBPATH" >> clamd.conf
 echo "TCPSocket 7000" >> clamd.conf
 echo "TCPAddr 127.0.0.1" >> clamd.conf
 echo "LogVerbose yes" >> clamd.conf
+echo "Foreground yes" >> clamd.conf
 
 # Prepare database
 echo "Initiliazing clamav database..."

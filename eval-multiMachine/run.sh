@@ -8,7 +8,8 @@
 #source configs/pgsql.sh
 #source configs/mongod.sh
 #source configs/proftpd.sh
-source configs/mysqld.sh
+#source configs/mysqld.sh
+source configs/clamav.sh
 
 # Update worker-run.py to the server
 scp worker-run.py bug03.cs.columbia.edu:~/

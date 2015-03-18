@@ -3,7 +3,7 @@
 # You need to manually change ip & port number in prepare-sysbench
 
 app="mysqld"                                          # app name appears in process list
-xtern=0                                               # 1 use xtern, 0 otherwise.
+xtern=1                                               # 1 use xtern, 0 otherwise.
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=0                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=0                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise

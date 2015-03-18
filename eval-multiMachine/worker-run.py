@@ -86,7 +86,7 @@ def main(args):
     """
     execute_servers(args)
     # Wait a while fot the real server to set up
-    time.sleep(5)
+    time.sleep(8)
     if args.proxy == 1:
         execute_proxy(args)
 

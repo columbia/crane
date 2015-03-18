@@ -56,7 +56,7 @@ def run_servers(args):
 
     # We only test one node for now
     # Don't forget to change nodes.local.cfg on bug03!!!!!
-    return
+    #return
 
     if args.proxy == 0:
         return
@@ -87,6 +87,7 @@ def run_clients(args):
     cur_env = os.environ.copy()
     # Agly hack on the applications that requires client and server on the same side
     if args.proxy == 1 and args.app != "clamd":
+        print "Preload client library"
         cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     print "client cmd reply : " + args.ccmd
 
@@ -140,9 +141,9 @@ def main(args):
         time.sleep(20)
 
     # Sending requests after the expriments
-    print "Client starts : !!! After checkpoint !!!"
-    run_clients(args)
-    time.sleep(5)
+    #print "Client starts : !!! After checkpoint !!!"
+    #run_clients(args)
+    #time.sleep(5)
 
     # Starts the leader election demo
     if args.leader_ele == 1 and args.proxy == 1:

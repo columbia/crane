@@ -4,18 +4,26 @@ V=0.12.1
 
 cd $MSMR_ROOT/apps/mediatomb/
 rm -rf .mediatomb
+
+# start the server to generate .mediatomb
 killall -9 mediatomb
 sleep 1
 ./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD &
 sleep 5
 killall -9 mediatomb
-./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD --add /home/heming/hku/m-smr/apps/mediatomb/mediatomb-sample.avi &
-echo "Adding an avi file to mediatomb to prepare for benchmark, wait..."
-sleep 7
-killall -9 mediatomb
+sleep 1
+
+# generate xml.
 sed -e 's/<transcoding enabled="no">/<transcoding enabled="yes">/g' .mediatomb/config.xml > bak.xml
 sed -e 's/<profile name="vlcmpeg" enabled="no"/<profile name="vlcmpeg" enabled="yes"/g' bak.xml > bak2.xml
 sed '/"vlc"/d' bak2.xml > bak.xml
 sed -e 's/<buffer size="14400000"/<agent command="mencoder" arguments="\%in -oac copy -ovc lavc -lavcopts vcodec=mpeg1video -of mpeg -really-quiet -o \%out"\/>\n\t<buffer size="14400000"/g' bak.xml > bak2.xml
 mv bak2.xml .mediatomb/config.xml
 rm *.xml
+
+# generate database
+echo ""
+echo "Adding an avi file to mediatomb to prepare for benchmark. You must wait for about 10 seconds, and then manually \"Ctrl C\" on this script."
+echo ""
+./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD --add /home/heming/hku/m-smr/apps/mediatomb/mediatomb-sample.avi &> out.txt
+

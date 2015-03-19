@@ -28,12 +28,6 @@ mv bak.h src/zmm/zmm.h
 make -j `nproc`
 make install
 
-# Start server to prepare
-cd $MSMR_ROOT/apps/mediatomb
-if [ ! -f mediatomb-sample.avi ];
-then
-	wget www.cs.columbia.edu/~heming/unlink/mediatomb-sample.avi
-fi
-
 # generate database. you can also manually rerun this script for re generating database.
+cd $MSMR_ROOT/apps/mediatomb/
 ./generate-database

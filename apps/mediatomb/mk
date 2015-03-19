@@ -1,0 +1,53 @@
+#!/bin/bash
+
+V=0.12.1
+
+cd $MSMR_ROOT/apps/mediatomb/
+rm -rf mediatomb-$V install .mediatomb
+
+if [ ! -f mediatomb-$V.tar.gz ];
+then
+	wget http://downloads.sourceforge.net/mediatomb/mediatomb-$V.tar.gz
+fi
+tar zxvf mediatomb-$V.tar.gz
+cd mediatomb-$V
+./configure --prefix=$MSMR_ROOT/apps/mediatomb/install/
+
+sed -e 's/search/this->search/g' src/hash/dso_hash.h > bak.h
+mv bak.h src/hash/dso_hash.h
+
+sed -e 's/search/this->search/g' src/hash/dbo_hash.h > bak.h
+mv bak.h src/hash/dbo_hash.h
+
+sed -e 's/search/this->search/g' src/hash/dbr_hash.h > bak.h
+mv bak.h src/hash/dbr_hash.h
+
+sed -e 's/#include "nil.h"/#include <cstddef>\n#include "nil.h"/g' src/zmm/zmm.h > bak.h
+mv bak.h src/zmm/zmm.h
+
+make -j `nproc`
+make install
+
+# Start server to prepare
+cd $MSMR_ROOT/apps/mediatomb
+if [ ! -f mediatomb-$V.tar.gz ];
+then
+wget www.cs.columbia.edu/~heming/unlink/mediatomb-sample.avi
+fi
+killall -9 mediatomb
+sleep 1
+./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD -d
+sleep 1
+killall -9 mediatomb
+./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD --add /home/heming/hku/m-smr/apps/mediatomb/mediatomb-sample.avi &
+echo "Adding an avi file to mediatomb to prepare for benchmark, wait..."
+sleep 7
+killall -9 mediatomb
+sed -e 's/<transcoding enabled="no">/<transcoding enabled="yes">/g' .mediatomb/config.xml > bak.xml
+sed -e 's/<profile name="vlcmpeg" enabled="no"/<profile name="vlcmpeg" enabled="yes"/g' bak.xml > bak2.xml
+sed '/"vlc"/d' bak2.xml > bak.xml
+sed -e 's/<buffer size="14400000"/<agent command="mencoder" arguments="\%in -oac copy -ovc lavc -lavcopts vcodec=mpeg1video -of mpeg -really-quiet -o \%out"\/>\n\t<buffer size="14400000"/g' bak.xml > bak2.xml
+mv bak2.xml .mediatomb/config.xml
+rm *.xml
+#<agent command="mencoder" arguments="%in -oac copy -ovc lavc -lavcopts vcodec=mpeg1video -of mpeg -really-quiet -o %out"/>
+exit 0

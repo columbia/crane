@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ ! $1 ];
+then
+        echo "Usage: $0 <server IP> <server port>"
+	echo "$0 127.0.0.1 7000"
+        exit 1;
+fi
+
+if [ ! $2 ];
+then
+        echo "Usage: $0 <server IP> <server port>"
+        echo "$0 127.0.0.1 7000"
+        exit 1;
+fi
+
+NUM_REQ=128
+NUM_T=8
+
+cd $MSMR_ROOT/apps/mongoose
+
+$MSMR_ROOT/apps/apache/install/bin/ab -n $NUM_REQ -c $NUM_T http://$1:$2/test.php

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+killall -9 mg-server server.out
+sleep 1
+killall -9 mg-server server.out
+cd $MSMR_ROOT/apps/mongoose/
+rm .db -rf
+
+NUM_THREADS=8
+
+if [ ! $1 ];
+then
+        echo "Usage: $0 <server port>"
+        echo "$0 7000"
+        exit 1;
+fi
+
+
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+$MSMR_ROOT/apps/mongoose/mg-server -I /usr/bin/php-cgi -p $1 -t $NUM_THREADS &
+
+sleep 1

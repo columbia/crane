@@ -1,7 +1,10 @@
 #!/bin/bash
 
-killall -9 clamd
+killall -9 clamd server.out
+sleep 1
+killall -9 clamd server.out
 cd $MSMR_ROOT/apps/clamav/
+rm .db -rf
 
 if [ ! $1 ];
 then
@@ -20,3 +23,4 @@ echo "Clamd will be started in about 10 seconds, you could run: ps -ef | grep cl
 echo ""
 echo "Please don't run client now, wait about 10 seconds for clamd to start up."
 echo ""
+sleep 10

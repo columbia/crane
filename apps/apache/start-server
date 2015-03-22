@@ -1,0 +1,21 @@
+#!/bin/bash
+
+killall -9 httpd server.out
+sleep 1
+killall -9 httpd server.out
+cd $MSMR_ROOT/apps/apache/
+rm .db -rf
+
+
+#if [ ! $1 ];
+#then
+#        echo "Usage: $0 <server port>"
+#        echo "$0 7000"
+#        exit 1;
+#fi
+
+
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+$MSMR_ROOT/apps/apache/install/bin/apachectl -f \
+$MSMR_ROOT/apps/apache/install/conf/httpd.conf -k start
+sleep 1

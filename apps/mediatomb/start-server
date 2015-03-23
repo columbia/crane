@@ -16,10 +16,13 @@ fi
 
 
 cd $MSMR_ROOT/apps/mediatomb
-killall -9 mediatomb server.out wget mencoder
+killall -9 mediatomb server.out wget mencoder ab &> /dev/null
+sleep 1
+killall -9 mediatomb server.out wget mencoder ab &> /dev/null
+rm -rf .db
 
 # Note: the -m $PWD option is for setting up the server with the
 # config database MSMR_ROOT/apps/mediatomb/.mediatomb
-#LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
 ./install/bin/mediatomb -i $1 -p $2 -m $PWD &> out.txt &
 sleep 5

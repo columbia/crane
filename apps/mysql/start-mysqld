@@ -1,18 +1,11 @@
 #!/bin/bash
-killall -9 mysqld mysqld_safe
+killall -9 server.out sysbench mysqld mysqld_safe &> /dev/null
 sudo rm /tmp/mysql.sock
 
 cd $MSMR_ROOT/apps/mysql
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
 ./mysql-install/libexec/mysqld --defaults-file=./my.cnf &
 sleep 1;
-
-mysql-install/bin/mysql -u root -e 'GRANT ALL PRIVILEGES ON *.* TO "root"@"%"';
-mysql-install/bin/mysql -u root -e 'FLUSH PRIVILEGES;'
-
-mysql-install/bin/mysql -u root -e 'drop database sysbench_db;'
-# need not sleep here
-# "mysql" blocks until the command finishes. 
-mysql-install/bin/mysql -u root -e 'create database sysbench_db;'
 
 echo ""
 echo "Mysqld has started. Please remember to kill me ASAP after this sample run: killall -9 mysqld;"

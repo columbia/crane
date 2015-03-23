@@ -21,8 +21,9 @@ if __name__ == "__main__":
                         help = "# of runs")
     args = parser.parse_args()
 
-    cmd = "LD_LIBRARY_PATH=$MSMR_ROOT/apps/mysql/mysql-install/lib/mysql/"
-    cmd += " $MSMR_ROOT/apps/mysql/sysbench-install/bin/sysbench"
+#    cmd = "LD_LIBRARY_PATH=$MSMR_ROOT/apps/mysql/mysql-install/lib/mysql/"
+#    cmd += " $MSMR_ROOT/apps/mysql/sysbench-install/bin/sysbench"
+    cmd = "/usr/bin/sysbench "
     cmd += " --mysql-host=" + args.i
     cmd += " --mysql-user=root"
     cmd += " --mysql-port=" + str(args.p)

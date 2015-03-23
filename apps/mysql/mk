@@ -1,18 +1,21 @@
-
 #!/bin/bash
-APP_DIR=$MSMR_ROOT/apps/
+
+cd $MSMR_ROOT/apps/mysql
 VER=5.1.72
 
+rm -rf sysbench*
 rm -rf mysql-$VER
 rm -rf mysql-install
-wget http://downloads.mysql.com/archives/get/file/mysql-$VER.tar.gz
+if [ ! -f mysql-$VER.tar.gz ]; then
+	wget http://downloads.mysql.com/archives/get/file/mysql-$VER.tar.gz
+fi
 tar xzvf mysql-$VER.tar.gz
 cd mysql-$VER
 
 CFLAGS="-g -I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot" \
 	./configure --prefix=$PWD/../mysql-install
 
-make -j16
+make -j `nproc`
 make install
 cd ..
 
@@ -20,12 +23,5 @@ cd ..
 sed -e "s/3306/7000/g"  ./mysql-install/share/mysql/my-large.cnf > ./my.cnf
 ./mysql-install/bin/mysql_install_db --defaults-file=./my.cnf
 
-if [ -e /etc/mysql/my.cnf ]; then
-	echo 'The global config may conflict with the version you are installing.'
-	echo 'Consider removing /etc/mysql/my.cnf'
-	exit 1
-fi
-
 # Prepare sysbench.
-./mk-sysbench
 ./prepare-sysbench

@@ -30,5 +30,5 @@ mv bak2.xml .mediatomb/config.xml
 echo ""
 echo "Adding an avi file to mediatomb to prepare for benchmark. You must wait for about 10 seconds, and then manually \"Ctrl C\" on this script."
 echo ""
-./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD --add /home/heming/hku/m-smr/apps/mediatomb/mediatomb-sample.avi &> out.txt
+./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD --add $MSMR_ROOT/apps/mediatomb/mediatomb-sample.avi &> out.txt
 

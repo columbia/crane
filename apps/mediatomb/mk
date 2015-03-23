@@ -11,7 +11,9 @@ then
 fi
 tar zxvf mediatomb-$V.tar.gz
 cd mediatomb-$V
+patch -p1 < ../disable-multicast.patch
 ./configure --prefix=$MSMR_ROOT/apps/mediatomb/install/
+
 
 sed -e 's/search/this->search/g' src/hash/dso_hash.h > bak.h
 mv bak.h src/hash/dso_hash.h

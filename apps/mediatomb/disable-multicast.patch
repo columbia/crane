@@ -1,0 +1,30 @@
+diff -ruN mediatomb-0.12.1/tombupnp/upnp/src/genlib/net/sock.c mediatomb-0.12.1-modified/tombupnp/upnp/src/genlib/net/sock.c
+--- mediatomb-0.12.1/tombupnp/upnp/src/genlib/net/sock.c	2010-03-25 10:58:12.000000000 -0400
++++ mediatomb-0.12.1-modified/tombupnp/upnp/src/genlib/net/sock.c	2015-03-23 09:41:41.289728667 -0400
+@@ -316,6 +316,7 @@
+            IN size_t bufsize,
+            INOUT int *timeoutSecs )
+ {
++    return read(info->socket, buffer, bufsize);
+ //    return sock_read_write( info, buffer, bufsize, timeoutSecs, TRUE );
+     int sockfd = info->socket; 
+     int retCode;
+@@ -466,6 +467,7 @@
+             IN size_t bufsize,
+             INOUT int *timeoutSecs )
+ {
++    return send(info->socket, buffer, bufsize, MSG_DONTROUTE|MSG_NOSIGNAL);
+ //    return sock_read_write( info, buffer, bufsize, timeoutSecs, FALSE );
+     int sockfd = info->socket;
+     int retCode;
+diff -ruN mediatomb-0.12.1/tombupnp/upnp/src/ssdp/ssdp_server.c mediatomb-0.12.1-modified/tombupnp/upnp/src/ssdp/ssdp_server.c
+--- mediatomb-0.12.1/tombupnp/upnp/src/ssdp/ssdp_server.c	2010-03-22 06:39:49.000000000 -0400
++++ mediatomb-0.12.1-modified/tombupnp/upnp/src/ssdp/ssdp_server.c	2015-03-23 09:42:47.482393172 -0400
+@@ -104,6 +104,7 @@
+                             IN char *ServiceType,
+                             int Exp )
+ {
++    return UPNP_E_SUCCESS;
+     int i,
+       j;
+     int defaultExp = DEFAULT_MAXAGE;

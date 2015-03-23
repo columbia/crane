@@ -14,17 +14,12 @@ then
         exit 1;
 fi
 
-NUM_THREADS=1
+NT=8
 cd $MSMR_ROOT/apps/mediatomb
 
 # Note: the -m $PWD option is for setting up the server with the
 # config database MSMR_ROOT/apps/mediatomb/.mediatomb
-x=1
-echo "Starting $NUM_THREADS parallel connections to ask mediatomb server to transcode an avi file to mp4."
-while [ $x -le $NUM_THREADS ];
-do
-  echo "Starting the $x client"
-  x=`expr $x + 1`
-  time wget -O result$x.mp4 \
-	http://$1:$2/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1 &
-done
+
+LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so \
+$MSMR_ROOT/apps/apache/install/bin/ab -n $NT -c $NT \
+http://$1:$2/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1

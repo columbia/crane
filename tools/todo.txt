@@ -1,0 +1,19 @@
+Hi Heming,
+Qiushan has integrated his code into my script sets. The scenario is after I start 3 remote servers and proxies, Qiushan's script eval-multiMachine/criu-cr.py starts checkpointing both the server application and proxy on Bug02. The script keeps checkpoint and never stops. When it finds a successful dump, it kills both real server and proxy and try to restore. The restore will be always successful if the dump is successful. There is a daemon running aside will catch the process when it appears. After restore, Qiushan's script will keep checkpoint and restore forever.
+
+How to use checkpoint:
+1. Start the daemon
+sudo $MSMR_ROOT/tools/criu/criu_daemon.sh  &
+
+2. Start my scripts on any application(Recommend mongoose)
+$MSMR_ROOT/eval-multiMachine/run.sh
+
+3. Go to bug02
+The log criu-cr.log will be in your home folder.
+
+When will checkpoint fail:
+Error (file-lock.c:222): Some file locks are hold by dumping tasks!You can try --file-locks to dump them.
+Error (cr-dump.c:1616): Dump files (pid: 12355) failed with -1
+Error (cr-dump.c:1979): Dumping FAILED.
+
+CRIU gives this suggestion. Qiushan didn't put this --file-locks parameter in his script. I didn't have time to try it out. But since it's the only reason CRIU fails, it may help.

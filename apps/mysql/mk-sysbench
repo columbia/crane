@@ -1,7 +1,10 @@
 #!/bin/bash
 
-SYSBENCH_VER=0.4.8
-wget ftp://ftp.dk.netbsd.org/ftp/index/OS/4.3bsd/NetBSD/packages/distfiles/sysbench-$SYSBENCH_VER.tar.gz
+SYSBENCH_VER=0.4.12
+cd $MSMR_ROOT/apps/mysql
+if [ ! -f sysbench-$SYSBENCH_VER.tar.gz ]; then
+	wget ftp://ftp.dk.netbsd.org/ftp/index/OS/4.3bsd/NetBSD/packages/distfiles/sysbench-$SYSBENCH_VER.tar.gz
+fi
 #wget https://row-cache-for-innodb.googlecode.com/files/sysbench-$SYSBEN_VER.tar.gz
 #wget http://pkgs.fedoraproject.org/repo/pkgs/sysbench/sysbench-0.4.12.tar.gz/3a6d54fdd3fe002328e4458206392b9d/sysbench-$SYSBENCH_VER.tar.gz
 rm -rf sysbench-$SYSBENCH_VER

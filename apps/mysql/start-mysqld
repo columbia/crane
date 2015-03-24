@@ -4,7 +4,7 @@ sudo rm /tmp/mysql.sock
 
 cd $MSMR_ROOT/apps/mysql
 LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
-./mysql-install/libexec/mysqld --defaults-file=./my.cnf &
+./mysql-install/libexec/mysqld --defaults-file=./my.cnf &> out.txt &
 sleep 1;
 
 echo ""

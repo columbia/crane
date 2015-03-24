@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TABLE_SIZE=2000000
+
 SQL_SOCK=/tmp/mysql.sock
 cd $MSMR_ROOT/apps/mysql
 rm -rf .db
@@ -27,7 +29,7 @@ mysql-install/bin/mysql -u root -S $SQL_SOCK -e 'create database sysbench_db;'
         --mysql-port=7000 \
         --mysql-user=root \
         --test=oltp \
-        --oltp-table-size=20000 \
+        --oltp-table-size=$TABLE_SIZE \
         --oltp-table-name=sbtest \
         --mysql-table-engine=InnoDB \
         --mysql-engine-trx=yes \

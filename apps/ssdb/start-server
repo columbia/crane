@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd $MSMR_ROOT/apps/ssdb
+
+killall -9 ssdb-server ssdb-bench server.out
+rm -rf .db ./ssdb-master/var/ssdb.pid
+
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+./ssdb-master/ssdb-server -d ./ssdb-master/ssdb.conf
+
+sleep 1

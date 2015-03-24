@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd $MSMR_ROOT/apps/memcached
+./benchmark/bin/memslap -s 127.0.0.1:7000 --concurrency=2 \
+--execute-number=10000

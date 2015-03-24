@@ -45,7 +45,7 @@ tar zxvf memcached-$APP_VER.tar.gz
 cd memcached-$APP_VER
 mkdir ../install
 ./configure --prefix=$APP_DIR/install
-make
+make -j `nproc`
 make install
 
 
@@ -61,6 +61,6 @@ tar zxvf libmemcached-$BEN_VER.tar.gz
 cd libmemcached-$BEN_VER
 mkdir ../benchmark
 ./configure --prefix=$APP_DIR/benchmark
-make
+make -j `nproc`
 make install
 

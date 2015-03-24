@@ -38,7 +38,7 @@ tar zxvf master.tar.gz
 
 # build
 cd ssdb-master
-make
+CFLAGS="-g -O0" CXXFLAGS="-g -O0" make
 
 # config
 #cp ssdb.conf

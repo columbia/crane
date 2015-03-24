@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd $MSMR_ROOT/apps/memcached
+killall -9 memcached server.out memslap &> /dev/null
+sleep 1
+killall -9 memcached server.out memslap &> /dev/null
+rm server.pid .db -rf
+
+L2D_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+./install/bin/memcached -p $1 -P $MSMR_ROOT/apps/memcached/server.pid &
+sleep 2

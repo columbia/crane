@@ -15,7 +15,7 @@ rm -rf $DIR
 mkdir $DIR
 CRIU_PATH=/home/bluecloudmatrix/criu/deps/criu-x86_64
 CRIU_PROGRAM=$CRIU_PATH/criu
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CRIU_PATH/../x86_64-linux-gnu/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CRIU_PATH/../x86_64-linux-gnu/lib
 
 # Dump.
 $CRIU_PROGRAM dump -D $DIR -t $PID --shell-job --tcp-established --leave-running --file-locks

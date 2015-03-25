@@ -14,18 +14,19 @@ logger = logging.getLogger("Benchmark.Master")
 MSMR_ROOT = ''
 
 def kill_previous_process(args):
-    print "Removing temporaries"
-    cmd = 'rm -rf /dev/shm/*-$USER; \
-           rm -rf /tmp/paxos_queue_file_lock; \
-           rm -rf $HOME/paxos_queue_file_lock'
+    
+    print "Killing residual processes"
+    cmd = 'sudo killall -9 worker-run.py server.out %s' % (args.app)
     rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
 
-    print "Killing residual processes"
-    cmd = 'sudo killall -9 worker-run.py server.out %s' % (args.app)
+    print "Removing temporaries"
+    cmd = 'rm -rf /dev/shm/*-$USER; \
+           rm -rf /tmp/paxos_queue_file_lock; \
+           rm -rf $HOME/paxos_queue_file_lock'
     rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -55,7 +56,7 @@ def run_servers(args):
     print output
 
     # We only test one node for now
-    # Don't forget to change nodes.local.cfg on bug03!!!!!
+    # Don't forget to change nodes.local.cfg group_size on bug03!!!!!
     #return
 
     if args.proxy == 0:
@@ -83,12 +84,28 @@ def restart_head(args):
     output, err = p.communicate()
     print output
 
+    time.sleep(2)
+
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
+            args.app, args.xtern, args.proxy, args.checkpoint,
+            args.msmr_root_server, args.sp, args.sd, args.scmd)
+    print "replaying server master node command: "
+
+    rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
+    print rcmd
+    # Start the head node first
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+    
+
 def run_clients(args):
     cur_env = os.environ.copy()
-    # Agly hack on the applications that requires client and server on the same side
+    # When client and server are required to be on the same side(mediatomb), 
+    # you may wan to comment the following LD_PRELOAD line to prevent some errors.
     if args.proxy == 1 and args.app != "clamd":
         print "Preload client library"
-        cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
+        #cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     print "client cmd reply : " + args.ccmd
 
     p = subprocess.Popen(args.ccmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
@@ -97,21 +114,46 @@ def run_clients(args):
     
 # note: must use sudo
 # we run criu on node 2(bug02), so parallel-ssh should -h worker2
+#def run_criu(args):
+    #shcmd = "sudo ~/criu-cr.py -s %s -t %d &> ~/criu-cr.log" % (args.app, args.checkpoint_period)
+    #psshcmd = "parallel-ssh -v -p 1 -i -t 5 -h worker2 \"%s\""%(shcmd)
+    #print "Master: replaying master node command: "
+    #print psshcmd
+    #p = subprocess.Popen(psshcmd, shell=True, stdout=subprocess.PIPE)
+    #'''
+    ## below is for debugging
+    #output, err = p.communicate()
+    #print output
+    #if "FAILURE" in output:
+        #print "killall directly"
+        #kill_previous_process(args) 
+        #sys.exit(0)
+    #'''
+
 def run_criu(args):
-    shcmd = "sudo ~/criu-cr.py -s %s -t %d &> ~/criu-cr.log" % (args.app, args.checkpoint_period)
-    psshcmd = "parallel-ssh -v -p 1 -i -t 5 -h worker2 \"%s\""%(shcmd)
-    print "Master: replaying master node command: "
-    print psshcmd
-    p = subprocess.Popen(psshcmd, shell=True, stdout=subprocess.PIPE)
-    '''
-    # below is for debugging
+    # 1. Checkpoint the server process
+    cmd = "sudo ~/su-checkpoint.sh %s" % (args.app)
+    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h head {command}'.format(
+            command=cmd)
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
-    if "FAILURE" in output:
-        print "killall directly"
-        kill_previous_process(args) 
-        sys.exit(0)
-    '''
+    # 2. Kill both proxy and server on bug03
+    cmd = 'sudo killall -9 server.out %s' % (args.app)
+    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h head {command}'.format(
+            command=cmd)
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+    # 3. Restore server process
+    cmd = "sudo ~/su-restore.sh ~/%s-*" % (args.app)
+    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h head {command}'.format(
+            command=cmd)
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+    # 4. Restore proxy
+
 
 def main(args):
     """
@@ -122,25 +164,30 @@ def main(args):
     kill_previous_process(args) 
 
     run_servers(args)
-    print "Deployment Done! Wait awhile for the servers to become stable!!!"
+    print "Deployment Done! Wait 10s for the servers to become stable!!!"
     time.sleep(10)
     
     # Sending requests before the expriments
     print "Client starts : !!! Before checkpoint !!!"
     run_clients(args)
-    time.sleep(5)
+    time.sleep(10)
 
     if args.checkpoint == 1:
-        # run CRIU on bug02(Node 2)
+        # Start Qiushan's script
+        # run CRIU only on bug02(Node 2)
+        #run_criu(args)
+        # Wait for at least 20s before running client
+        # Checkpoint a process will be finished in a flash, about 20~60ms
+        #time.sleep(20)
+
+        # Start Heming's script
+        print "Start Heming's checkpoint"
         run_criu(args)
-        # make sure wait for at least 20s before running client
-        # to let CRIU run in the appropriate environment
-        # rest assured. real server and libevent_paxos still run normally without influence
-        # even if when the CRIU does dump work, beacuse CRIU does dump and then let the
-        # checkpointed process run again will be finished in a flash, about 20~60ms
-        time.sleep(20)
+
 
     # Sending requests after the expriments
+    #print "Let's wait 5s for the checkpointed process to become stable"
+    #time.sleep(5)
     #print "Client starts : !!! After checkpoint !!!"
     #run_clients(args)
     #time.sleep(5)
@@ -149,8 +196,7 @@ def main(args):
     if args.leader_ele == 1 and args.proxy == 1:
         restart_head(args)
         time.sleep(20)
-
-        run_clients(args)
+        #run_clients(args)
 
     kill_previous_process(args) 
 
@@ -189,12 +235,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print "Replaying parameters:"
     print "app : " + args.app
+    print "proxy : " + str(args.proxy)
     print "xtern : " + str(args.xtern)
+    print "joint : " + str(args.sp) + " " + str(args.sd)
     print "leader election : " + str(args.leader_ele)
     print "checkpoint : " + str(args.checkpoint)
     print "checkpoint_period : " + str(args.checkpoint_period)
     print "MSMR_ROOT : " + args.msmr_root_client
-    print "proxy : " + str(args.proxy)
 
     main_start_time = time.time()
 

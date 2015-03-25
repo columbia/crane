@@ -14,20 +14,23 @@ logger = logging.getLogger("Benchmark.Worker")
 MSMR_ROOT = ''
 XTERN_ROOT = ''
 
-def execute_proxy(args):
+def set_local_config(args):
 
     cur_env = os.environ.copy()
-    # Preparing the environment
     cur_env['MSMR_ROOT'] = MSMR_ROOT
     cur_env['XTERN_ROOT'] = XTERN_ROOT
-    cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + '/libevent_paxos/.local/lib'
+        
+    if args.sd == 1 or args.sp == 1:
+        assert args.proxy == 1 and args.xtern == 1, \
+            "Joint scheduling need to be enabled with XTERN and libevent_paxos together!"
+
+    # Copy the libevent_paxos configuration file to the current folder 
     if not os.path.isfile('nodes.local.cfg'):
         print "Copy nodes.local.cfg to current folder"
         tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
         proc =subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
         time.sleep(1)
     os.system("sed -i -e 's/sched_with_dmt = [0-9]\+/sched_with_dmt = " + str(args.sd) + "/g' nodes.local.cfg")
-
     # Copy the xtern configuration file to the current folder 
     if not os.path.isfile('local.options'):
         print "Copy default.options to current folder"
@@ -36,7 +39,14 @@ def execute_proxy(args):
         time.sleep(1)
     os.system("sed -i -e 's/sched_with_paxos = [0-9]\+/sched_with_paxos = " + str(args.sp) + "/g' local.options")
 
-        
+def execute_proxy(args):
+
+    cur_env = os.environ.copy()
+    # Preparing the environment
+    cur_env['MSMR_ROOT'] = MSMR_ROOT
+    cur_env['XTERN_ROOT'] = XTERN_ROOT
+    cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + '/libevent_paxos/.local/lib'
+
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'
     
@@ -84,6 +94,7 @@ def main(args):
     """
     Main module of worker-run.py
     """
+    set_local_config(args)
     execute_servers(args)
     # Wait a while fot the real server to set up
     time.sleep(8)

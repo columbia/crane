@@ -1,12 +1,13 @@
 # Setups for mysqld
 # Notice :
-# You need to manually change ip & port number in prepare-sysbench
+# 1. rm /tmp/mysql.sock manually if you encounter any problems
+# 2. If the subprocess call failed out of no reason, just wait awhile. 
 
 app="mysqld"                                          # app name appears in process list
 xtern=1                                               # 1 use xtern, 0 otherwise.
 proxy=1                                               # 1 use proxy, 0 otherwise
-sch_paxos=0                                           # 1 xtern will schedule with paxos, 0 otherwise
-sch_dmt=0                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
+sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
+sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=10                                  # period of CRIU checkpoint, e.g. 10 seconds

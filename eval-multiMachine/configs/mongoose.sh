@@ -13,10 +13,15 @@ input_url="127.0.0.1"                                 # url for client to query
 
 if [ $proxy -eq 1 ]
 then
-    client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.172:9000/test.php"
+    if [ $leader_elect -eq 1 ]
+    then
+        client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.174:9000/test.php"
+    else
+        client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.174:9000/test.php"
+    fi
 else
     client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.174:7000/test.php"
 fi
                                                       # command to start the clients
-server_cmd="'${msmr_root_server}/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t 8 '"
+server_cmd="'ulimit -c unlimited && ${msmr_root_server}/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t 8 &'"
                                                       # command to start the real server

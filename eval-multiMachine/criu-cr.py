@@ -202,7 +202,8 @@ if __name__ == "__main__":
 
 	print "============ CRIU 1.4 Welcome ============"
         print "< enter listenning loop >"
-	while True:
+	#while True:
+	for x in range(0, 4):
 		print "< start to use CRIU >"
 		criu_cr(args)
 		print "< sleeping %d seconds... >" % (args.period)

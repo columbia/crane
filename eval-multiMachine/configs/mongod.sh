@@ -1,7 +1,7 @@
 # Setups for Mongod
 app="mongod"                                          # app name appears in process list
 xtern=0                                               # 1 use xtern, 0 otherwise.
-proxy=1                                               # 1 use proxy, 0 otherwise
+proxy=0                                               # 1 use proxy, 0 otherwise
 sch_paxos=0                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=0                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
@@ -13,9 +13,9 @@ input_url="127.0.0.1"                                 # url for client to query
 
 if [ $proxy -eq 1 ]
 then
-    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=128.59.17.172:9000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 50"
+    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=128.59.17.174:9000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 2"
 else
-    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=128.59.17.172:7000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 50"
+    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=128.59.17.174:7000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 2"
 fi
                                                       # command to start the clients
 server_cmd="'${msmr_root_server}/apps/mongodb/install/bin/mongod --port=7000 --dbpath=${msmr_root_server}/apps/mongodb/install/data --pidfilepath=${msmr_root_server}/apps/mongodb/install/mongod.pid --quiet '"

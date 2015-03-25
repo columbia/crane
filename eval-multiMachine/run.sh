@@ -9,7 +9,8 @@
 #source configs/mongod.sh
 #source configs/proftpd.sh
 #source configs/mysqld.sh
-source configs/clamav.sh
+#source configs/clamav.sh
+source configs/mediatomb.sh
 
 # Update worker-run.py to the server
 scp worker-run.py bug03.cs.columbia.edu:~/
@@ -25,4 +26,3 @@ scp criu-cr.py bug02.cs.columbia.edu:~/
         --sp ${sch_paxos} --sd ${sch_dmt} \
         --scmd "${server_cmd}" --ccmd "${client_cmd}"
 
-sleep 2

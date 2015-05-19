@@ -4,8 +4,9 @@ cd $MSMR_ROOT/apps/ssdb
 
 killall -9 ssdb-server ssdb-bench server.out
 rm -rf .db ./ssdb-master/var/ssdb.pid
+echo "" > ssdb-master/log.txt
 
 LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
-./ssdb-master/ssdb-server -d ./ssdb-master/ssdb.conf
+./ssdb-master/ssdb-server ./ssdb-master/ssdb.conf &> out.txt &
 
 sleep 1

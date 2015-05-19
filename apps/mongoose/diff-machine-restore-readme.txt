@@ -24,7 +24,8 @@ Open another terminal on bug02:
 > cp checkpoint.tar.gz to /home/eval/m-smr/tools
 > tar zxvf checkpoint.tar.gz, copy the three shared memory files to the same path on bug02.
 > ./su-restore.sh $PWD/mg-server-XXXX-checkpoint
-> Then you will see the same mg-server process running on bug03!
+> Then you will see the same mg-server process running on bug03! Type this to verify:
+> ps -e | grep mg-server
 
 Run joint scheduling workloads to verify this workload:
 > cd /home/eval/m-smr/apps/mongoose/

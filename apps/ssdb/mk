@@ -31,7 +31,7 @@ cd $APP_DIR
 rm -rf ssdb-master
 
 # download and extract
-if [ ! -f master.zip ]; then
+if [ ! -f master.tar.gz ]; then
     wget https://github.com/ideawu/ssdb/archive/master.tar.gz
 fi
 tar zxvf master.tar.gz

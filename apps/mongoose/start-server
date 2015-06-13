@@ -16,7 +16,7 @@ then
 fi
 
 
-LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+L2D_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
 $MSMR_ROOT/apps/mongoose/mg-server -I /usr/bin/php-cgi -p $1 -t $NUM_THREADS &
 
 sleep 1

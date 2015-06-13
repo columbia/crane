@@ -34,3 +34,4 @@ mv mongoose ../mg-server
 cd $MSMR_ROOT/apps/mongoose
 ln -s $MSMR_ROOT/apps/apache/install/bin/ab .
 cp $MSMR_ROOT/apps/apache/test.php ~/
+cp $MSMR_ROOT/apps/apache/test.php ./

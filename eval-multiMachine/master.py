@@ -42,6 +42,28 @@ def kill_previous_process(args):
     output, err = p.communicate()
     print output
 
+def build_project(args):
+    cmd = "~/worker-build.py -v %s" % (args.git_version)
+    print "Building project on node: "
+
+    rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
+    print rcmd
+    # Start the head node first
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+
+    for node_id in xrange(1, 3):
+        wcmd = "~/worker-build.py -v %s" % (args.git_version)
+        rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
+                node_id, wcmd)
+        print "Building project: "
+        print rcmd_workers
+        # Start the secondary nodes one by one
+        p = subprocess.Popen(rcmd_workers, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+
 def run_servers(args):
     cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
@@ -159,6 +181,9 @@ def main(args):
     """
     Main module of master.py
     """
+
+    # Build the project to make sure all replicas are consistent.
+    build_project(args)
 
     # Killall the previous experiment
     kill_previous_process(args) 

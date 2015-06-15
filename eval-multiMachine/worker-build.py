@@ -13,12 +13,14 @@ logger = logging.getLogger("Benchmark.Worker")
 #Remote directory enviroment variable
 MSMR_ROOT = ''
 XTERN_ROOT = ''
+GIT_VERSION = ''
 
 
 def main(args):
     """
     Main module of worker-runbuild.py
     """
+    print("Rebuilding the whole project at git version: %s " % (GIT_VERSION))
 
     # Get the latest git version.
     dirstring = "%s" % (XTERN_ROOT)
@@ -43,8 +45,6 @@ def main(args):
     os.chdir(dirstring)
     os.system("make clean; make")
 
-    # os.system("touch HAHA")
-
 
 ###############################################################################
 # Main - Parse command line options and invoke main()
@@ -61,6 +61,7 @@ if __name__ == "__main__":
     
     main_start_time = time.time()
 
+    GIT_VERSION = args.git_version
     MSMR_ROOT = args.msmr_root_server
     XTERN_ROOT = MSMR_ROOT + '/xtern'
     main(args)

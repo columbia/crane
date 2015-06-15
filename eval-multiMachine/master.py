@@ -183,7 +183,10 @@ def main(args):
     """
 
     # Build the project to make sure all replicas are consistent.
-    build_project(args)
+    if args.checkpoint == "true":
+        build_project(args)
+
+    return
 
     # Killall the previous experiment
     kill_previous_process(args) 
@@ -256,6 +259,8 @@ if __name__ == "__main__":
             help="The command to execute the real server.")
     parser.add_argument('--ccmd', type=str, dest="ccmd", action="store",
             help="The command to execute the client.")
+    parser.add_argument('-b', type=str, dest="build_project", action="store", default="false",
+            help="The command to rebuild the whole project.")
 
     args = parser.parse_args()
     print "Replaying parameters:"
@@ -267,6 +272,7 @@ if __name__ == "__main__":
     print "checkpoint : " + str(args.checkpoint)
     print "checkpoint_period : " + str(args.checkpoint_period)
     print "MSMR_ROOT : " + args.msmr_root_client
+    print "build project : " + args.build_project
 
     main_start_time = time.time()
 

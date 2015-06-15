@@ -19,8 +19,31 @@ def main(args):
     """
     Main module of worker-runbuild.py
     """
-    # os.system("cd " + XTERN_ROOT)
-    os.system("touch xixi")
+
+    # Get the latest git version.
+    dirstring = "%s" % (XTERN_ROOT)
+    os.chdir(dirstring)
+    os.system("git stash")
+
+    dirstring = "%s/libevent_paxos" % (MSMR_ROOT)
+    os.chdir(dirstring)
+    os.system("git stash")
+
+    dirstring = "%s" % (MSMR_ROOT)
+    os.chdir(dirstring)
+    os.system("git stash")
+    os.system("git submodule update")
+
+    # Build.
+    dirstring = "%s/obj" % (XTERN_ROOT)
+    os.chdir(dirstring)
+    os.system("make clean; make; make install")
+
+    dirstring = "%s/libevent_paxos" % (MSMR_ROOT)
+    os.chdir(dirstring)
+    os.system("make clean; make")
+
+    # os.system("touch HAHA")
 
 
 ###############################################################################

@@ -2,6 +2,7 @@
 
 # This is the starter file of the whole experiment.
 
+source configs/new-mongoose.sh
 #source configs/mongoose.sh
 #source configs/apache.sh
 #source configs/ssdb.sh
@@ -10,7 +11,7 @@
 #source configs/proftpd.sh
 #source configs/mysqld.sh
 #source configs/clamav.sh
-source configs/mediatomb.sh
+#source configs/mediatomb.sh
 
 # Update worker-run.py to the server
 scp worker-run.py bug03.cs.columbia.edu:~/

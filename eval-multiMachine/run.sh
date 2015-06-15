@@ -13,6 +13,11 @@ source configs/new-mongoose.sh
 #source configs/clamav.sh
 #source configs/mediatomb.sh
 
+# Update worker-build.py to the server
+scp worker-build.py bug03.cs.columbia.edu:~/
+scp worker-build.py bug01.cs.columbia.edu:~/
+scp worker-build.py bug02.cs.columbia.edu:~/
+
 # Update worker-run.py to the server
 scp worker-run.py bug03.cs.columbia.edu:~/
 scp worker-run.py bug01.cs.columbia.edu:~/

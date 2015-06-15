@@ -43,7 +43,7 @@ def kill_previous_process(args):
     print output
 
 def build_project(args):
-    cmd = "~/worker-build.py -v %s" % (args.git_version)
+    cmd = "~/worker-build.py -s %s" % (args.msmr_root_server)
     print "Building project on node: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
@@ -54,7 +54,7 @@ def build_project(args):
     print output
 
     for node_id in xrange(1, 3):
-        wcmd = "~/worker-build.py -v %s" % (args.git_version)
+        wcmd = "~/worker-build.py -s %s" % (args.msmr_root_server)
         rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
                 node_id, wcmd)
         print "Building project: "

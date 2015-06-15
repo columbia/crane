@@ -34,6 +34,7 @@ def main(args):
     dirstring = "%s" % (MSMR_ROOT)
     os.chdir(dirstring)
     os.system("git stash")
+    os.system("git pull")
     os.system("git submodule update")
 
     # Build.

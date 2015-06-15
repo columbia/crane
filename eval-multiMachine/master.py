@@ -183,7 +183,7 @@ def main(args):
     """
 
     # Build the project to make sure all replicas are consistent.
-    if args.checkpoint == "true":
+    if args.build_project == "true":
         build_project(args)
 
     return

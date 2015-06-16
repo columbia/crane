@@ -15,6 +15,15 @@ MSMR_ROOT = ''
 XTERN_ROOT = ''
 GIT_VERSION = ''
 
+def exec_cmd_with_env(strcmd):
+    cur_env = os.environ.copy()
+    cur_env['MSMR_ROOT'] = MSMR_ROOT
+    cur_env['XTERN_ROOT'] = XTERN_ROOT    
+    # Read current machine's env variable: this require current machine's project path setting is the same as those server machines.
+    cur_env['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + ":" + MSMR_ROOT + "/libevent_paxos/.local/lib"
+    proc = subprocess.Popen(strcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    time.sleep(1)
+
 def main(args):
     """
     Main module of worker-runbuild.py
@@ -39,11 +48,11 @@ def main(args):
     # Build.
     dirstring = "%s/obj" % (XTERN_ROOT)
     os.chdir(dirstring)
-    os.system("source ~/.bashrc; make clean; make; make install")
+    exec_cmd_with_env("make clean; make; make install")
 
     dirstring = "%s/libevent_paxos" % (MSMR_ROOT)
     os.chdir(dirstring)
-    os.system("source ~/.bashrc; make clean; make")
+    exec_cmd_with_env("make clean; make")
 
 
 ###############################################################################

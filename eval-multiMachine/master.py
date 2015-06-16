@@ -186,7 +186,7 @@ def main(args):
     if args.build_project == "true":
         build_project(args)
 
-    return
+    # return
 
     # Killall the previous experiment
     kill_previous_process(args) 

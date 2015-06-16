@@ -4,8 +4,9 @@ m-smr
 Multi-threaded State Machine Replication
 
 0. Set env vars in ~/.bashrc.
-export $MSMR_ROOT=<...>
-export $XTERN_ROOT=<...>
+export MSMR_ROOT=<...>
+export XTERN_ROOT=<...>
+export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib:$LD_LIBRARY_PATH
 
 
 1. Commands to checkout a brand-new project:

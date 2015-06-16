@@ -12,6 +12,7 @@ import subprocess
 logger = logging.getLogger("Benchmark.Master")
 
 MSMR_ROOT = ''
+XTERN_ROOT = ''
 
 def kill_previous_process(args):
     
@@ -277,6 +278,7 @@ if __name__ == "__main__":
     main_start_time = time.time()
 
     MSMR_ROOT = args.msmr_root_client
+    XTERN_ROOT = MSMR_ROOT + "/xtern"
     main(args)
 
     main_end_time = time.time()

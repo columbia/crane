@@ -25,6 +25,8 @@ def exec_cmd_with_env(strcmd):
     else:
         cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + "/libevent_paxos/.local/lib"
     proc = subprocess.Popen(strcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    output, err = proc.communicate()
+    print output
     time.sleep(1)
 
 def main(args):
@@ -51,11 +53,11 @@ def main(args):
     # Build.
     dirstring = "%s/obj" % (XTERN_ROOT)
     os.chdir(dirstring)
-    exec_cmd_with_env("make clean; make; make install")
+    exec_cmd_with_env("make clean; make; make install &> /dev/null")
 
     dirstring = "%s/libevent_paxos" % (MSMR_ROOT)
     os.chdir(dirstring)
-    exec_cmd_with_env("make clean; make")
+    exec_cmd_with_env("make clean; make &> /dev/null")
 
 
 ###############################################################################

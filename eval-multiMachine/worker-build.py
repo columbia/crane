@@ -20,7 +20,7 @@ def exec_cmd_with_env(strcmd):
     cur_env['MSMR_ROOT'] = MSMR_ROOT
     cur_env['XTERN_ROOT'] = XTERN_ROOT    
     # Read current machine's env variable: this require current machine's project path setting is the same as those server machines.
-    if os.environ.has_key("LD_LIBRARY_PATH"):
+    if os.environ.has_key('LD_LIBRARY_PATH'):
         cur_env['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + ":" + MSMR_ROOT + "/libevent_paxos/.local/lib"
     else:
         cur_env['LD_LIBRARY_PATH'] = MSMR_ROOT + "/libevent_paxos/.local/lib"

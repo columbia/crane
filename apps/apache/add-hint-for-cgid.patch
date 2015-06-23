@@ -1,0 +1,14 @@
+diff -ruN httpd-2.2.11/modules/generators/mod_cgid.c httpd-2.2.11-modified/modules/generators/mod_cgid.c
+--- httpd-2.2.11/modules/generators/mod_cgid.c	2015-06-23 19:11:58.484786127 +0800
++++ httpd-2.2.11-modified/modules/generators/mod_cgid.c	2015-06-23 19:12:56.676785084 +0800
+@@ -564,8 +564,10 @@
+     ap_log_error(APLOG_MARK, APLOG_ERR, err, r->server, "%s", description);
+ }
+ 
++#include <tern/user.h>
+ static int cgid_server(void *data)
+ {
++    tern_disable_sched_paxos();  
+     struct sockaddr_un unix_addr;
+     int sd, sd2, rc;
+     mode_t omask;

@@ -45,6 +45,7 @@ tar zxvf httpd-$HTTPD_VER.tar.gz
 cd $APP_DIR/httpd-$HTTPD_VER
 patch -p1 < ../add-detach-for-pod-check-thread.patch
 patch -p1 < ../add-soba-httpd.patch
+patch -p1 < ../add-hint-for-cgid.patch
 
 # build
 #./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all \

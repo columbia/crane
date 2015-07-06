@@ -1,0 +1,11 @@
+diff -ruN mongoose/mongoose.c mongoose-modified/mongoose.c
+--- mongoose/mongoose.c	2015-07-06 13:42:59.192757533 -0400
++++ mongoose-modified/mongoose.c	2015-07-06 13:43:40.200756113 -0400
+@@ -4913,6 +4913,7 @@
+ }
+ 
+ static void *worker_thread(void *thread_func_param) {
++  tern_init_affinity();
+   struct mg_context *ctx = thread_func_param;
+   struct mg_connection *conn;
+ 

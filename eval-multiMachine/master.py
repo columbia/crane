@@ -85,9 +85,14 @@ def run_servers(args):
         return
 
     for node_id in xrange(1, 3):
-        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s" % (
+        worker_tool = "none"
+        if node_id == 1 and args.worker1 != "none":
+          worker_tool = args.worker1
+        if node_id == 2 and args.worker2 != "none":
+          worker_tool = args.worker2
+        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
-                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd)
+                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool)
         rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
                 node_id, wcmd)
         print "Master: replaying master node command: "
@@ -259,6 +264,10 @@ if __name__ == "__main__":
             help="The command to execute the client.")
     parser.add_argument('-b', type=str, dest="build_project", action="store", default="false",
             help="The command to rebuild the whole project.")
+    parser.add_argument('--worker1' type=str, dest="worker1", action="store", 
+            default="none", help="The analysis tool to run on the worker1 machine.")
+    parser.add_argument('--worker2', type=str, dest="worker2", action="store", 
+            default="none", help="The analysis tool to run on the worker2 machine.")
 
     args = parser.parse_args()
     print "Replaying parameters:"

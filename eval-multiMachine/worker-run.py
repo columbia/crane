@@ -65,13 +65,20 @@ def execute_servers(args):
     cmd = args.scmd
     print "Replay real server command:"
     print cmd
+    tool_cmd = ""
+
+    if args.analysis_tool != "none":
+        # currently we only support valgrind tools.
+        tool_cmd = "valgrind --tool=" + args.analysis_tool + " --trace-children=yes "
 
     if args.xtern == 1:
         print "XTERN is enabled. Preload library."
         # PreLoad xtern library here
-        cur_env['LD_PRELOAD'] = XTERN_ROOT + '/dync_hook/interpose.so'
+        cmd = cmd + " " + XTERN_ROOT + '/scripts/wrap-xtern.sh'
         # Sleep a while to load the lib
         time.sleep(2)
+
+    cmd = tool_cmd + cmd
 
     # Don't add print
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
@@ -127,6 +134,8 @@ if __name__ == "__main__":
             help="Schedule with DMT.")
     parser.add_argument('--scmd', type=str, dest="scmd", action="store",
             help="The command to execute the real server.")
+    parser.add_argument('--tool', type=str, dest="analysis_tool", 
+            action="store", default="none", help="The tool to run with xtern on the server.")
 
     args = parser.parse_args()
     # Checking missing arguments

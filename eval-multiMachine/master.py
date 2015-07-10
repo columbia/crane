@@ -264,10 +264,10 @@ if __name__ == "__main__":
             help="The command to execute the client.")
     parser.add_argument('-b', type=str, dest="build_project", action="store", default="false",
             help="The command to rebuild the whole project.")
-    parser.add_argument('--worker1' type=str, dest="worker1", action="store", 
-            default="none", help="The analysis tool to run on the worker1 machine.")
-    parser.add_argument('--worker2', type=str, dest="worker2", action="store", 
-            default="none", help="The analysis tool to run on the worker2 machine.")
+    parser.add_argument('--worker1', type=str, dest="worker1", action="store", default="none",
+            help="The analysis tool to run on the worker1 machine.")
+    parser.add_argument('--worker2', type=str, dest="worker2", action="store", default="none",
+            help="The analysis tool to run on the worker2 machine.")
 
     args = parser.parse_args()
     print "Replaying parameters:"

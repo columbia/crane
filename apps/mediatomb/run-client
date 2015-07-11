@@ -22,5 +22,5 @@ cd $MSMR_ROOT/apps/mediatomb
 
 #Heming: must not add the ld preload here because the eval-multimachine has already done this.
 #LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so \
-$MSMR_ROOT/apps/apache/install/bin/ab -n $NT -c $NT \
+../../apps/apache/install/bin/ab -n $NT -c $NT \
 http://$1:$2/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1

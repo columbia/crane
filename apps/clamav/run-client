@@ -20,7 +20,7 @@ sed '/TCPSocket/d' clamd.conf > client.conf
 echo "TCPSocket $1" >> client.conf
 
 # We only need one client because the clamd server will spawn 10 threads to scan files parallelly.
-CUR_DIR=`PWD`
+CUR_DIR=`pwd`
 $CUR_DIR/install/bin/clamdscan --config-file=./client.conf \
         -m $CUR_DIR/install/*
 

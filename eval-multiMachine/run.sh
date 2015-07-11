@@ -11,7 +11,7 @@ source configs/new-mongoose-helgrind-worker1.sh
 #source configs/mongod.sh
 #source configs/proftpd.sh
 #source configs/mysqld.sh
-#source configs/clamav.sh
+source configs/heming-clamav.sh
 #source configs/mediatomb.sh
 
 # Update worker-build.py to the server

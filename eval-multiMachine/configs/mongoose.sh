@@ -23,5 +23,5 @@ else
     client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.174:7000/test.php"
 fi
                                                       # command to start the clients
-server_cmd="'ulimit -c unlimited && ${msmr_root_server}/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t 8 &'"
+server_cmd="'${msmr_root_server}/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t 8 &'"
                                                       # command to start the real server

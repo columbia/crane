@@ -72,7 +72,7 @@ def execute_servers(args):
     if args.xtern == 1:
         print "XTERN is enabled. Preload library."
         # PreLoad xtern library here
-        cmd = cmd + " " + XTERN_ROOT + '/scripts/wrap-xtern.sh'
+        cmd = XTERN_ROOT + '/scripts/wrap-xtern.sh' + " " + cmd
         # Sleep a while to load the lib
         time.sleep(2)
 

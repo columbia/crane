@@ -11,8 +11,8 @@
 #source configs/mongod.sh
 #source configs/proftpd.sh
 #source configs/mysqld.sh
-source configs/heming-clamav.sh
-#source configs/mediatomb.sh
+#source configs/heming-clamav.sh
+source configs/heming-mediatomb.sh
 
 # Update worker-build.py to the server
 scp worker-build.py bug03.cs.columbia.edu:~/

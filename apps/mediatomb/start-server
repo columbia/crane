@@ -23,6 +23,8 @@ rm -rf .db
 
 # Note: the -m $PWD option is for setting up the server with the
 # config database MSMR_ROOT/apps/mediatomb/.mediatomb
-LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
+
+# Heming: must not add ldpreload here, because the run.sh has already done this with the wrap-xtern.sh
+#LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so \
 ./install/bin/mediatomb -i $1 -p $2 -m $PWD &> out.txt &
 sleep 5

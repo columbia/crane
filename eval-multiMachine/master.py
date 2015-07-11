@@ -16,7 +16,9 @@ MSMR_ROOT = ''
 def kill_previous_process(args):
     
     print "Killing residual processes"
-    cmd = 'sudo killall -9 worker-run.py server.out %s' % (args.app)
+    # Heming: added %s-amd64-, this is for killing valgrind sub processes such as helgrind-amd64-.
+    cmd = 'sudo killall -9 worker-run.py server.out %s %s-amd64- %s-amd64-' % (
+            args.app, args.worker1, args.worker2)
     rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)

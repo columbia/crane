@@ -13,6 +13,7 @@ checkpoint_period=10                                  # period of CRIU checkpoin
 msmr_root_client="/home/ruigu/Workspace/m-smr"        # root dir for m-smr
 msmr_root_server="/home/ruigu/SSD/m-smr"
 input_url="127.0.0.1"                                 # url for client to query
+analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
 client_cmd="cd ${msmr_root_client}/apps/pgsql/7000/install && \
             bin/pgbench -i -U root dbtest -h 128.59.17.172 -p 9000 -j 10 -c 20 && \

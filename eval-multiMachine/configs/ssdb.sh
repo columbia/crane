@@ -14,6 +14,7 @@ checkpoint_period=10                                  # period of CRIU checkpoin
 msmr_root_client="/home/ruigu/Workspace/m-smr"        # root dir for m-smr
 msmr_root_server="/home/ruigu/SSD/m-smr"
 input_url="127.0.0.1"                                 # url for client to query
+analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
 client_cmd="${msmr_root_client}/apps/ssdb/ssdb-master/tools/ssdb-bench 128.59.17.174 9000 1000 10"
                                                       # command to start the clients

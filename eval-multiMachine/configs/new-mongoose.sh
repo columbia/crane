@@ -10,6 +10,7 @@ checkpoint_period=5                                   # period of CRIU checkpoin
 msmr_root_client="/home/heming/hku/m-smr"        # root dir for m-smr
 msmr_root_server="/home/heming/hku/m-smr"
 input_url="127.0.0.1"                                 # url for client to query
+analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
 if [ $proxy -eq 1 ]
 then

@@ -67,7 +67,7 @@ def execute_servers(args):
 
     if args.analysis_tool != "none":
         # currently we only support valgrind tools.
-        tool_cmd = "valgrind --tool=" + args.analysis_tool + " --trace-children=yes "
+        tool_cmd = "valgrind -v --log-file=~/valgrind.result --tool=" + args.analysis_tool + " --trace-children=yes "
 
     if args.xtern == 1:
         print "XTERN is enabled. Preload library."

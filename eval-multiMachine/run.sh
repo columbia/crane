@@ -2,7 +2,8 @@
 
 # This is the starter file of the whole experiment.
 
-source configs/new-mongoose.sh
+source configs/new-mongoose-helgrind-worker1.sh
+#source configs/new-mongoose.sh
 #source configs/mongoose.sh
 #source configs/apache.sh
 #source configs/ssdb.sh
@@ -30,5 +31,5 @@ scp criu-cr.py bug02.cs.columbia.edu:~/
         -k ${checkpoint} -t ${checkpoint_period} \
         -c ${msmr_root_client} -s ${msmr_root_server} \
         --sp ${sch_paxos} --sd ${sch_dmt} \
-        --scmd "${server_cmd}" --ccmd "${client_cmd}" -b "true"
+        --scmd "${server_cmd}" --ccmd "${client_cmd}" -b "true" ${analysis_tools}
 

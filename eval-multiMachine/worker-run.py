@@ -63,8 +63,6 @@ def execute_servers(args):
 
     cur_env = os.environ.copy()
     cmd = args.scmd
-    print "Replay real server command:"
-    print cmd
     tool_cmd = ""
 
     if args.analysis_tool != "none":
@@ -79,6 +77,8 @@ def execute_servers(args):
         time.sleep(2)
 
     cmd = tool_cmd + cmd
+    print "Replay real server command:"
+    print cmd
 
     # Don't add print
     p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)

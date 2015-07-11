@@ -20,8 +20,8 @@ sed '/TCPSocket/d' clamd.conf > client.conf
 echo "TCPSocket $1" >> client.conf
 
 # We only need one client because the clamd server will spawn 10 threads to scan files parallelly.
-./install/bin/clamdscan --config-file=./client.conf \
-	-m $MSMR_ROOT/apps/clamav/install/*
-
+CUR_DIR=`PWD`
+$CUR_DIR/install/bin/clamdscan --config-file=./client.conf \
+        -m $CUR_DIR/install/*
 
 #./pyclamdscan-0.1_alpha/clamdscan.py -t $1 -p $2 $3 $3 $3

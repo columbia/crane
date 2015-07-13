@@ -16,7 +16,7 @@ checkpoint_period=10                                  # period of CRIU checkpoin
 msmr_root_client=`echo $MSMR_ROOT`                    # root dir for m-smr. this command assumes that curent machine's m-smr path is the same as the servers'.
 msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
-analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
+analysis_tools=""     #"--worker1=helgrind"                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
 if [ $proxy -eq 1 ]
 then

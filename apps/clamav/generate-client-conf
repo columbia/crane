@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ ! $1 ];
+then
+        echo "Usage: $0 <mongdb server port>"
+	echo "$0 7000"
+        exit 1;
+fi
+
+cd $MSMR_ROOT/apps/clamav/
+IP=`ifconfig eth0 | perl -nle'/inet addr:(\S+)/ && print $1'`
+sed '/TCPSocket/d' clamd.conf > bak.conf
+sed '/TCPAddr/d' bak.conf > client-$1.conf
+#echo "client IP: $IP, PORT: $1"
+echo "TCPAddr $IP" >> client-$1.conf
+echo "TCPSocket $1" >> client-$1.conf
+rm bak.conf

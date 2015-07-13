@@ -35,5 +35,5 @@ echo "Initiliazing clamav database..."
 ./install/bin/freshclam --config-file=./freshclam.conf
 
 echo "Generating client conf with ports 7000 and 9000..."
-./generate-client-conf 7000
-./generate-client-conf 9000
+./generate-client-conf lo 7000
+./generate-client-conf eth0 9000

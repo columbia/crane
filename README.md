@@ -42,3 +42,25 @@ please run:
 > cd $MSMR_ROOT/libevent_paxos
 > ./mk
 > make clean; make  <PLEASE RUN MAKE CLEAN EVERYTIME>
+
+
+4. Install analysis tools.
+(1) Install valgrind.
+> sudo apt-get install valgrind
+
+(2) Install dynamorio.
+> sudo apt-get install cmake doxygen transfig imagemagick ghostscript subversion
+> sudo su root
+> cd /usr/share/
+> git clone https://github.com/DynamoRIO/dynamorio.git
+> cd dynamorio && mkdir build && cd build
+> cmake .. && make -j && make drcov
+> cd tools && ln -s $PWD/../drcov.drrun64 .
+> mkdir lib64 && cd lib64 && mkdir release && cd release
+> ln -s $PWD/../../../clients/lib64/release/libdrcov.so .
+> exit (exit from sudoer)
+
+> test dynamorio:
+/usr/share/dynamorio/build/bin64/drrun -t drcov -- ls -l
+/usr/share/dynamorio/build/bin64/drrun -t drcov -- /bin/bash $XTERN_ROOT/scripts/wrap-xtern.sh ls -l
+

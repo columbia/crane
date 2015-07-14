@@ -67,7 +67,7 @@ def execute_servers(args):
 
     if args.analysis_tool != "none":
         if args.analysis_tool[:2] == "dr":  # if this is a dynamorio tool.
-            tool_cmd = "/usr/share/dynamorio/build/bin64/drrun -t " + args.analysis_tool + " -- "
+            tool_cmd = "/usr/share/dynamorio/build/bin64/drrun -t " + args.analysis_tool + " -logdir ./log -- "
             if args.xtern == 1: # WARN: if you start a server with script, you need to add this for dynamorio.
                 tool_cmd = tool_cmd + " /bin/bash "
         else: # else, only support valgrind tool.

@@ -66,8 +66,12 @@ def execute_servers(args):
     tool_cmd = ""
 
     if args.analysis_tool != "none":
-        # currently we only support valgrind tools.
-        tool_cmd = "valgrind -v --log-file=valgrind.result --tool=" + args.analysis_tool + " --trace-children=yes "
+        if args.analysis_tool[:2] == "dr":  # if this is a dynamorio tool.
+            tool_cmd = "/usr/share/dynamorio/build/bin64/drrun -t " + args.analysis_tool + " -- "
+            if args.xtern == 1: # WARN: if you start a server with script, you need to add this for dynamorio.
+                tool_cmd = tool_cmd + " /bin/bash "
+        else: # else, only support valgrind tool.
+            tool_cmd = "valgrind -v --log-file=valgrind.result --tool=" + args.analysis_tool + " --trace-children=yes "
 
     if args.xtern == 1:
         print "XTERN is enabled. Preload library."

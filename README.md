@@ -60,7 +60,7 @@ please run:
 > ln -s $PWD/../../../clients/lib64/release/libdrcov.so .
 > exit (exit from sudoer)
 
-> test dynamorio:
-/usr/share/dynamorio/build/bin64/drrun -t drcov -- ls -l
-/usr/share/dynamorio/build/bin64/drrun -t drcov -- /bin/bash $XTERN_ROOT/scripts/wrap-xtern.sh ls -l
+Test dynamorio with the "drcov" code coverage tool. If these commands succeed, run "ls -l *.log" in current directory.
+> /usr/share/dynamorio/build/bin64/drrun -t drcov -- ls -l
+> /usr/share/dynamorio/build/bin64/drrun -t drcov -- /bin/bash $XTERN_ROOT/scripts/wrap-xtern.sh ls -l
 

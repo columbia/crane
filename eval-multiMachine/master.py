@@ -17,8 +17,8 @@ def kill_previous_process(args):
     
     print "Killing residual processes"
     # Heming: added %s-amd64-, this is for killing valgrind sub processes such as helgrind-amd64-.
-    cmd = 'sudo killall -9 worker-run.py server.out %s %s-amd64- %s-amd64-' % (
-            args.app, args.worker1, args.worker2)
+    cmd = 'sudo killall -9 worker-run.py server.out %s %s-amd64- %s-amd64- %s-amd64-' % (
+            args.app, args.head, args.worker1, args.worker2)
     rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -67,9 +67,9 @@ def build_project(args):
         print output
 
 def run_servers(args):
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
-            args.msmr_root_server, args.sp, args.sd, args.scmd)
+            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head)
     print "replaying server master node command: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
@@ -266,6 +266,8 @@ if __name__ == "__main__":
             help="The command to execute the client.")
     parser.add_argument('-b', type=str, dest="build_project", action="store", default="false",
             help="The command to rebuild the whole project.")
+    parser.add_argument('--head', type=str, dest="head", action="store", default="none",
+            help="The analysis tool to run on the head machine.")
     parser.add_argument('--worker1', type=str, dest="worker1", action="store", default="none",
             help="The analysis tool to run on the worker1 machine.")
     parser.add_argument('--worker2', type=str, dest="worker2", action="store", default="none",

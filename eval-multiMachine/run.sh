@@ -4,8 +4,9 @@
 
 if [ ! $1 ];
 then
-        echo "Usage: $0 <application cfg file>"
-        echo "$0 $MSMR_ROOT/eval-multiMachine/configs/mongoose.sh"
+        echo "Usage: $0 <application cfg file> <optional flags>"
+        echo "Example (build project and run): $0 configs/mongoose.sh"
+	echo "Example (run only): $0 configs/mongoose.sh no_build"
         exit 1;
 fi
 

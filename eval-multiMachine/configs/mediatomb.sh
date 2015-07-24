@@ -11,26 +11,27 @@ sch_dmt=1                                             # 1 libevent_paxos will sc
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=10                                  # period of CRIU checkpoint, e.g. 10 seconds
-msmr_root_client="/home/ruigu/Workspace/m-smr"        # root dir for m-smr
-msmr_root_server="/home/ruigu/SSD/m-smr"
+msmr_root_client=`echo $MSMR_ROOT`        # root dir for m-smr
+msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
+analysis_tools=""
+proxy_ld_preload="LD_PRELOAD=${msmr_root_server}/libevent_paxos/client-ld-preload/libclilib.so"
+client_bin="${msmr_root_client}/apps/apache/install/bin/ab"
+client_opt_7000="-n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+client_opt_9000="-n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
 
 if [ $proxy -eq 1 ]
 then
     if [ $leader_elect -eq 1 ]
     then
-        client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mediatomb/ && ./run-client 127.0.0.1 9000 '"
-        #client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+        client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head '${proxy_ld_preload} ${client_bin} ${client_opt_9000}'"
     else
-        client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mediatomb/ && ./run-client 127.0.0.1 9000 '"
-        #client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+	client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head '${proxy_ld_preload} ${client_bin} ${client_opt_9000}'"
     fi
 else
-    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mediatomb/ && ./run-client 127.0.0.1 7000 '"
-    #client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+	client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head '${client_bin} ${client_opt_7000}'"
 fi
                                                       # command to start the clients
-#server_cmd="'${msmr_root_server}/apps/mediatomb/install/bin/mediatomb -i 128.59.17.174 -p 7000 -m ${msmr_root_server}/apps/mediatomb &'"
-server_cmd="'cd ${msmr_root_server}/apps/mediatomb && ./start-server 127.0.0.1 7000 '"
-#server_cmd="'cd ${msmr_root_server}/apps/mediatomb && ./start-server 128.59.17.174 7000 '"
+server_cmd="'${msmr_root_server}/apps/mediatomb/install/bin/mediatomb \
+	-i 127.0.0.1 -p 7000 -m ${msmr_root_server}/apps/mediatomb &> mediatomb.out &'"
                                                       # command to start the real server

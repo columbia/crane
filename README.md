@@ -68,8 +68,8 @@ Test dynamorio with the "drcov" code coverage tool. If these commands succeed, r
 > cd $MSMR_ROOT/tools/criu/ 
 > wget http://download.openvz.org/criu/criu-1.6.tar.bz2
 > tar jxvf criu-1.6.tar.bz2
-> sudo apt-get install libprotobuf-dev libprotoc-dev protobuf-c-compiler libprotobuf-c0 libprotobuf-c0-dev
-> sudo apt-get isntall asciidoc
+> sudo apt-get install libprotobuf-dev libprotoc-dev protobuf-c-compiler \
+	libprotobuf-c0 libprotobuf-c0-dev asciidoc
 > cd criu-1.6
 > make -j
 > sudo make install (the PREFIX directory for criu by default is /usr/local/)

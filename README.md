@@ -64,3 +64,14 @@ Test dynamorio with the "drcov" code coverage tool. If these commands succeed, r
 > /usr/share/dynamorio/build/bin64/drrun -t drcov -- ls -l
 > /usr/share/dynamorio/build/bin64/drrun -t drcov -- /bin/bash $XTERN_ROOT/scripts/wrap-xtern.sh ls -l
 
+5. Install CRIU (just one way installation work).
+> cd $MSMR_ROOT/tools/criu/ 
+> wget http://download.openvz.org/criu/criu-1.6.tar.bz2
+> tar jxvf criu-1.6.tar.bz2
+> sudo apt-get install libprotobuf-dev libprotoc-dev protobuf-c-compiler libprotobuf-c0 libprotobuf-c0-dev
+> sudo apt-get isntall asciidoc
+> cd criu-1.6
+> make -j
+> sudo make install (the PREFIX directory for criu by default is /usr/local/)
+> which criu
+  /usr/local/sbin/criu

@@ -1,10 +1,10 @@
 # Setups for mongoose
 app="mg-server"                                       # app name appears in process list
-xtern=1                                               # 1 use xtern, 0 otherwise
+xtern=0                                               # 1 use xtern, 0 otherwise
 proxy=1                                               # 1 use proxy, 0 otherwise
-sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
-sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
-leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
+sch_paxos=0                                           # 1 xtern will schedule with paxos, 0 otherwise
+sch_dmt=0                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
+leader_elect=1                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=5                                   # period of CRIU checkpoint, e.g. 10 seconds
 msmr_root_client="/home/ruigu/Workspace/m-smr"        # root dir for m-smr

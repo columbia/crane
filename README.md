@@ -3,6 +3,15 @@ m-smr
 
 Multi-threaded State Machine Replication
 
+Install depdendent libraries/tools. Use ubuntu 14.04 hardy, with amd64.
+> sudo apt-get install build-essential
+> sudo apt-get install libboost-dev git subversion nano libconfig-dev libevent-dev \
+	libsqlite3-dev libdb-dev libboost-system-dev autoconf m4 dejagnu flex bison axel zlib1g-dev \
+	libbz2-dev libxml-libxml-perl python-pip python-setuptools python-dev libxslt1-dev libxml2-dev \
+	wget curl
+> sudo pip install numpy
+> sudo pip install OutputCheck          (this utility is only required by the testing framework)
+
 0. Set env vars in ~/.bashrc.
 export MSMR_ROOT=<...>
 export XTERN_ROOT=<...>
@@ -69,9 +78,17 @@ Test dynamorio with the "drcov" code coverage tool. If these commands succeed, r
 > wget http://download.openvz.org/criu/criu-1.6.tar.bz2
 > tar jxvf criu-1.6.tar.bz2
 > sudo apt-get install libprotobuf-dev libprotoc-dev protobuf-c-compiler \
-	libprotobuf-c0 libprotobuf-c0-dev asciidoc
+	libprotobuf-c0 libprotobuf-c0-dev asciidoc bsdmainutils protobuf-compiler
 > cd criu-1.6
 > make -j
 > sudo make install (the PREFIX directory for criu by default is /usr/local/)
 > which criu
   /usr/local/sbin/criu
+
+
+6. Install lxc 1.1
+> sudo add-apt-repository ppa:ubuntu-lxc/daily
+> sudo apt-get update
+> sudo apt-get install lxc
+> lxc-create --version
+  1.1.0

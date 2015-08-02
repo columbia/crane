@@ -20,8 +20,6 @@ echo "Running command: $0 $OP $PROG_NAME $DIR"
 if [ "$OP" == "checkpoint" ]; then
 
 # First, checkpoint the server application within the container.
-	#sshpass -p chm01158 ssh $USER@$(sudo lxc-info -i -H -n $CONTAINTER) 
-	#ifconfig
 	# TBD: what if multiple processes?
 	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
    echo "$PID"
@@ -47,7 +45,6 @@ if [ "$OP" == "checkpoint" ]; then
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINTER
-	sshpass -p chm01158 ssh $USER@$(sudo lxc-info -i -H -n $CONTAINTER) 
 	sudo criu restore -D $DIR -t $PID $CRIU_ARGS
 fi
 

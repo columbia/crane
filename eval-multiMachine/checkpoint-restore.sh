@@ -11,22 +11,26 @@ fi
 OP=$1
 PROG_NAME=$2
 DIR=$3
-CONTAINTER="u1"
+CONTAINER="u1"
 CRIU_ARGS="--shell-job --tcp-established --file-locks"
+#CMD_PREFIX="sudo lxc-attach -n $CONTAINER -- "
 
 echo "Running command: $0 $OP $PROG_NAME $DIR"
 
-if [ "$OP" != "checkpoint" ]; then
+if [ "$OP" == "checkpoint" ]; then
 
 # First, checkpoint the server application within the container.
-	ssh $USER@$(sudo lxc-info -i -H -n $CONTAINTER) 
+	#sshpass -p chm01158 ssh $USER@$(sudo lxc-info -i -H -n $CONTAINTER) 
+	#ifconfig
 	# TBD: what if multiple processes?
-	PID=`ps -e | grep $PROG_NAME | awk '{print $1}'`
+	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+   echo "$PID"
+	#exit 0
 	echo "Checkpointing process with pid $PID into directory $DIR ..."
-	rm -rf $DIR
-	mkdir $DIR
-	sudo criu dump -D $DIR -t $PID $CRIU_ARGS
-	exit
+	sudo lxc-attach -n $CONTAINER --  rm -rf $HOME/$DIR
+	sudo lxc-attach -n $CONTAINER --  mkdir $HOME/$DIR
+    exit 0
+	$CMD_PREFIX criu dump -D $DIR -t $PID $CRIU_ARGS
 
 # Second, checkpoint the file system of the container, and bdb storage of the proxy process.
       sudo lxc-stop -n $CONTAINTER
@@ -43,7 +47,7 @@ if [ "$OP" != "checkpoint" ]; then
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINTER
-	ssh $USER@$(sudo lxc-info -i -H -n $CONTAINTER) 
+	sshpass -p chm01158 ssh $USER@$(sudo lxc-info -i -H -n $CONTAINTER) 
 	sudo criu restore -D $DIR -t $PID $CRIU_ARGS
 fi
 
@@ -51,7 +55,7 @@ if [ "$OP" != "restore" ]; then
 # First, checkpoint the file system of the container.
 
 # Second, restore the server application within the container, and bdb storage of the proxy process.
-sudo criu restore -d -D $DIR                         $CRIU_ARGS
+#sudo criu restore -d -D $DIR                         $CRIU_ARGS
 
 fi
 

@@ -106,7 +106,7 @@ def run_servers(args):
 
 def restart_head(args):
     #cmd = '"~/head-restart.py"'
-    cmd = 'sudo killall -9 server.out'
+    cmd = 'sudo killall -9 server.out ' + args.app
     rcmd_head = 'parallel-ssh -v -p 1 -i -t 15 -h head {command}'.format(
         command=cmd)
     p = subprocess.Popen(rcmd_head, shell=True, stdout=subprocess.PIPE)
@@ -115,6 +115,7 @@ def restart_head(args):
 
     time.sleep(2)
 
+    return
     cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
             args.msmr_root_server, args.sp, args.sd, args.scmd)
@@ -128,13 +129,16 @@ def restart_head(args):
     print output
     
 
-def run_clients(args):
+def run_clients(args, newIP=False):
     cur_env = os.environ.copy()
     # When client and server are required to be on the same side(mediatomb), 
     # you may wan to comment the following LD_PRELOAD line to prevent some errors.
     if args.proxy == 1 and args.app != "clamd" and args.app != "mediatomb":
         print "Preload client library"
         cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
+    # Just a temporary hack on the new server ip 
+    if(newIP):
+      args.ccmd = '/home/ruigu/Workspace/m-smr/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.172:9000/test.php'
     print "client cmd reply : " + args.ccmd
 
     p = subprocess.Popen(args.ccmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
@@ -201,7 +205,7 @@ def main(args):
     time.sleep(10)
     
     # Sending requests before the expriments
-    print "Client starts : !!! Before checkpoint !!!"
+    print "Client starts : !!! Before checkpoint & leader election!!!"
     run_clients(args)
     time.sleep(10)
 
@@ -228,8 +232,9 @@ def main(args):
     # Starts the leader election demo
     if args.leader_ele == 1 and args.proxy == 1:
         restart_head(args)
-        time.sleep(20)
-        #run_clients(args)
+        time.sleep(30)
+        print "Client starts : !!! After leader election!!!"
+        run_clients(args, True)
 
     kill_previous_process(args) 
 

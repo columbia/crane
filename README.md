@@ -92,3 +92,31 @@ Test dynamorio with the "drcov" code coverage tool. If these commands succeed, r
 > sudo apt-get install lxc
 > lxc-create --version
   1.1.0
+Create a new container named "u1" (if this container does not exist in /var/lib/lxc/u1)
+> sudo lxc-create -t ubuntu -n u1 -- -r trusty -a amd64
+> sudo lxc-create -t download -n u1 -- --dist ubuntu --release trusty --arch amd64
+Config u1 fstab to share memory between the proxy (in host OS) and the server process (in container).
+>sudo echo "/dev/shm dev/shm none bind,create=dir" > /var/lib/lxc/u1/fstab
+>sudo echo "lxc.mount = /var/lib/lxc/u1/fstab" > /var/lib/lxc/u1/config
+> sudo lxc-start -n u1
+> ssh ubuntu@$(sudo lxc-info -i -H -n u1) 
+   Enter password: "ubuntu"
+This "ubuntu" user is already a sudoer. 
+Config static IP for the container. Change this file in the container: /etc/network/interfaces
+#auto eth0
+#iface eth0 inet dhcp
+auto eth0
+iface eth0 inet static
+        address 10.0.3.111
+        netmask 255.255.255.0
+        gateway 10.0.3.1
+        dns-nameserver 8.8.8.8
+And restart the container.
+> lxc-stop -n u1
+> lxc-start -n u1
+Check the IP again.
+> sudo lxc-ls --fancy
+NAME  STATE    IPV4        IPV6  GROUPS  AUTOSTART  
+--------------------------------------------------
+u1    RUNNING  10.0.3.111  -     -       NO
+> ssh ubuntu@$(sudo lxc-info -i -H -n u1)

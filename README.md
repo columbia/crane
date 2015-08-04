@@ -73,7 +73,45 @@ Test dynamorio with the "drcov" code coverage tool. If these commands succeed, r
 > /usr/share/dynamorio/build/bin64/drrun -t drcov -- ls -l
 > /usr/share/dynamorio/build/bin64/drrun -t drcov -- /bin/bash $XTERN_ROOT/scripts/wrap-xtern.sh ls -l
 
-5. Install CRIU (just one way installation work).
+
+5. Install lxc 1.1 (in the host OS)
+> sudo add-apt-repository ppa:ubuntu-lxc/daily
+> sudo apt-get update
+> sudo apt-get install lxc
+> lxc-create --version
+  1.1.0
+Create a new container named "u1" (if this container does not exist in /var/lib/lxc/u1)
+> sudo lxc-create -t ubuntu -n u1 -- -r trusty -a amd64
+This command will take a few minutes to download all trusty (14.04) initial packages.
+
+Start the server for the first time, so that we have "/var/lib/lxc/u1/config and /var/lib/lxc/u1/fstab".
+> sudo lxc-start -n u1
+> sudo lxc-stop -n u1
+
+Config u1 fstab to share memory between the proxy (in host OS) and the server process (in container).
+>sudo echo "/dev/shm dev/shm none bind,create=dir" > /var/lib/lxc/u1/fstab
+
+Append these lines to /var/lib/lxc/u1/config
+# for crane project.
+lxc.network.ipv4 = 10.0.3.111/16
+lxc.console = none
+lxc.tty = 0
+lxc.cgroup.devices.deny = c 5:1 rwm
+lxc.rootfs = /var/lib/lxc/u1/rootfs
+lxc.mount = /var/lib/lxc/u1/fstab
+lxc.mount.auto = proc:rw sys:rw cgroup-full:rw
+lxc.aa_profile = unconfined
+
+And restart the container.
+> sudo lxc-start -n u1
+Check the IP.
+> ssh ubuntu@10.0.3.111 
+   Enter password: "ubuntu"
+This "ubuntu" user is already a sudoer. 
+Then, you are free to install crane, gcc, criu, and other packages in this container.
+
+
+6. Install CRIU (just one way installation work, in the u1 container).
 > cd $MSMR_ROOT/tools/criu/ 
 > wget http://download.openvz.org/criu/criu-1.6.tar.bz2
 > tar jxvf criu-1.6.tar.bz2
@@ -84,39 +122,3 @@ Test dynamorio with the "drcov" code coverage tool. If these commands succeed, r
 > sudo make install (the PREFIX directory for criu by default is /usr/local/)
 > which criu
   /usr/local/sbin/criu
-
-
-6. Install lxc 1.1
-> sudo add-apt-repository ppa:ubuntu-lxc/daily
-> sudo apt-get update
-> sudo apt-get install lxc
-> lxc-create --version
-  1.1.0
-Create a new container named "u1" (if this container does not exist in /var/lib/lxc/u1)
-> sudo lxc-create -t ubuntu -n u1 -- -r trusty -a amd64
-> sudo lxc-create -t download -n u1 -- --dist ubuntu --release trusty --arch amd64
-Config u1 fstab to share memory between the proxy (in host OS) and the server process (in container).
->sudo echo "/dev/shm dev/shm none bind,create=dir" > /var/lib/lxc/u1/fstab
->sudo echo "lxc.mount = /var/lib/lxc/u1/fstab" > /var/lib/lxc/u1/config
-> sudo lxc-start -n u1
-> ssh ubuntu@$(sudo lxc-info -i -H -n u1) 
-   Enter password: "ubuntu"
-This "ubuntu" user is already a sudoer. 
-Config static IP for the container. Change this file in the container: /etc/network/interfaces
-#auto eth0
-#iface eth0 inet dhcp
-auto eth0
-iface eth0 inet static
-        address 10.0.3.111
-        netmask 255.255.255.0
-        gateway 10.0.3.1
-        dns-nameserver 8.8.8.8
-And restart the container.
-> lxc-stop -n u1
-> lxc-start -n u1
-Check the IP again.
-> sudo lxc-ls --fancy
-NAME  STATE    IPV4        IPV6  GROUPS  AUTOSTART  
---------------------------------------------------
-u1    RUNNING  10.0.3.111  -     -       NO
-> ssh ubuntu@$(sudo lxc-info -i -H -n u1)

@@ -65,16 +65,16 @@ def execute_servers(args):
     cur_env = os.environ.copy()
 
     # First, restart the container.
-    print "Restarting the lxc container %s" %(CONTAINER)
-    cmd = "sudo lxc-stop -n %s" % (CONTAINER)
-    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    output, err = p.communicate()
-    print output
-    cmd = "sudo lxc-start -n %s" % (CONTAINER)
-    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    output, err = p.communicate()
-    print output
-    time.sleep(1)
+    # print "Restarting the lxc container %s" %(CONTAINER)
+    # cmd = "sudo lxc-stop -n %s" % (CONTAINER)
+    # p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    # output, err = p.communicate()
+    # print output
+    # cmd = "sudo lxc-start -n %s" % (CONTAINER)
+    # p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    # output, err = p.communicate()
+    # print output
+    # time.sleep(1)
 
     cmd = args.scmd
     tool_cmd = ""
@@ -95,9 +95,12 @@ def execute_servers(args):
         time.sleep(2)
 
     cmd = tool_cmd + cmd
+    print "Replay real server command:"
+    print cmd
 
     # Don't add print
-    psshmd = "parallel-ssh -v -p 1 -i -t 10 -h %s/eval-container/%s \"%s\"" % (MSMR_ROOT, CONTAINER, cmd)
+    psshcmd = cmd
+    # psshmd = "parallel-ssh -v -p 1 -i -t 10 -h %s/eval-container/%s \"%s\"" % (MSMR_ROOT, CONTAINER, cmd)
     print "Replay real server command in the container:"
     print psshcmd
     p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)

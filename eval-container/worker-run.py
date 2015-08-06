@@ -14,6 +14,7 @@ logger = logging.getLogger("Benchmark.Worker")
 MSMR_ROOT = ''
 XTERN_ROOT = ''
 CONTAINER = "u1"
+CONTAINER_IP = "10.0.3.111"
 
 def set_local_config(args):
 
@@ -26,12 +27,14 @@ def set_local_config(args):
             "Joint scheduling need to be enabled with XTERN and libevent_paxos together!"
 
     # Copy the libevent_paxos configuration file to the current folder 
-    if not os.path.isfile('nodes.local.cfg'):
-        print "Copy nodes.local.cfg to current folder"
-        tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
-        proc =subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-        time.sleep(1)
+    #if not os.path.isfile('nodes.local.cfg'):
+    print "Copy nodes.local.cfg to current folder"
+    tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
+    proc =subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    time.sleep(1)
     os.system("sed -i -e 's/sched_with_dmt = [0-9]\+/sched_with_dmt = " + str(args.sd) + "/g' nodes.local.cfg")
+    if args.enable_lxc == "yes":
+        os.system("sed -i -e 's/127.0.0.1/" + CONTAINER_IP + "/g' nodes.local.cfg");
     # Copy the xtern configuration file to the current folder 
     if not os.path.isfile('local.options'):
         print "Copy default.options to current folder"
@@ -65,16 +68,16 @@ def execute_servers(args):
     cur_env = os.environ.copy()
 
     # First, restart the container.
-    # print "Restarting the lxc container %s" %(CONTAINER)
-    # cmd = "sudo lxc-stop -n %s" % (CONTAINER)
-    # p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    # output, err = p.communicate()
-    # print output
-    # cmd = "sudo lxc-start -n %s" % (CONTAINER)
-    # p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    # output, err = p.communicate()
-    # print output
-    # time.sleep(1)
+    print "Restarting the lxc container %s" %(CONTAINER)
+    cmd = "sudo lxc-stop -n %s" % (CONTAINER)
+    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+    cmd = "sudo lxc-start -n %s" % (CONTAINER)
+    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
+    time.sleep(1)
 
     cmd = args.scmd
     tool_cmd = ""
@@ -99,8 +102,8 @@ def execute_servers(args):
     print cmd
 
     # Don't add print
-    psshcmd = cmd
-    # psshmd = "parallel-ssh -v -p 1 -i -t 10 -h %s/eval-container/%s \"%s\"" % (MSMR_ROOT, CONTAINER, cmd)
+    # psshcmd = cmd
+    psshcmd = "parallel-ssh -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s \"%s\"" % (MSMR_ROOT, CONTAINER, cmd)
     print "Replay real server command in the container:"
     print psshcmd
     p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
@@ -161,6 +164,8 @@ if __name__ == "__main__":
             help="The command to execute the real server.")
     parser.add_argument('--tool', type=str, dest="analysis_tool", 
             action="store", default="none", help="The tool to run with xtern on the server.")
+parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
+            action="store", default="yes", help="The tool to run the server in a lxc container.")
 
     args = parser.parse_args()
     # Checking missing arguments

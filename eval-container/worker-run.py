@@ -98,17 +98,20 @@ def execute_servers(args):
         time.sleep(2)
 
     cmd = tool_cmd + cmd
-    print "Replay real server command:"
-    print cmd
-
     # Don't add print
     # psshcmd = cmd
-    psshcmd = "parallel-ssh -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s \"%s\"" % (MSMR_ROOT, CONTAINER, cmd)
-    print "Replay real server command in the container:"
-    print psshcmd
-    p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    output, err = p.communicate()
-    print output
+    if args.enable_lxc == "yes":
+        psshcmd = "parallel-ssh -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s " % (MSMR_ROOT, CONTAINER)
+        psshcmd = psshcmd + "\"" + cmd + "\"";
+        print "Replay real server command in lxc container:"
+        print psshcmd
+        p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+    else:
+        print "Replay real server command in host OS:"
+        print cmd
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
 
 
 def restart_proxy(args):

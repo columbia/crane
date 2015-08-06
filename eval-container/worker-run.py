@@ -54,7 +54,7 @@ def execute_proxy(args):
     cur_env['CONFIG_FILE'] = 'nodes.local.cfg'
     cur_env['SERVER_PROGRAM'] = MSMR_ROOT + '/libevent_paxos/target/server.out'
     
-    cmd = 'rm -rf ./.db ./log && mkdir ./log && ulimit -c unlimited && \
+    cmd = 'rm -rf ./.db ./log && mkdir ./log && \
            $SERVER_PROGRAM -n %d -r -m %s -c $CONFIG_FILE -l ./log 1> ./log/node_%d_stdout 2>./log/node_%d_stderr &' % (
            args.node_id, args.mode, args.node_id, args.node_id)
     print "Replaying Proxy cmd : " + cmd

@@ -7,6 +7,7 @@ import logging
 import subprocess
 import argparse
 import os
+from os.path import expanduser
 
 logger = logging.getLogger("Benchmark.Worker")
 
@@ -15,6 +16,7 @@ MSMR_ROOT = ''
 XTERN_ROOT = ''
 CONTAINER = "u1"
 CONTAINER_IP = "10.0.3.111"
+HOME = expanduser("~") # Assume the MSMR_ROOT path is the same in host OS as in lxc container.
 
 def set_local_config(args):
 
@@ -67,18 +69,30 @@ def execute_servers(args):
 
     cur_env = os.environ.copy()
 
-    # First, restart the container.
-    print "Restarting the lxc container %s" %(CONTAINER)
-    cmd = "sudo lxc-stop -n %s" % (CONTAINER)
-    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    output, err = p.communicate()
-    print output
-    cmd = "sudo lxc-start -n %s" % (CONTAINER)
-    p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-    output, err = p.communicate()
-    print output
-    time.sleep(1)
+    if args.enable_lxc == "yes":
+        # First, restart the container.
+        print "Restarting the lxc container %s" %(CONTAINER)
+        cmd = "sudo lxc-stop -n %s" % (CONTAINER)
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+        cmd = "sudo lxc-start -n %s" % (CONTAINER)
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+        time.sleep(1)
+    
+        # Copy the local.options into lxc via /dev/shm (already setup the map).
+        cmd = "cp local.options /dev/shm"
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+        cmd = "sudo lxc-attach -n %s -- mv /dev/shm/local.options %s" % (CONTAINER, HOME) 
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
 
+    # Setup command and run.
     cmd = args.scmd
     tool_cmd = ""
 

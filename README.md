@@ -110,6 +110,17 @@ Check the IP.
 This "ubuntu" user is already a sudoer. 
 Then, you are free to install crane, gcc, criu, and other packages in this container.
 
+Add your own username into the lxc without asking password anymore.
+For example, in bug03 machine:
+Generate a private/public key pair, put it into your ~/.ssh/.
+Rename the private key to be ~/.ssh/lxc_priv_key
+Append the public key to the u1 container's ~/.ssh/auth..._keys
+Then
+> ssh your_user_name@10.0.3.111
+Make sure you can login without entering password.
+When you run sudo in the u1 container, avoid asking sudo password, append this line to /etc/sudoers
+> ruigu ALL = NOPASSWD : ALL
+
 
 6. Install CRIU (just one way installation work, in the u1 container).
 > cd $MSMR_ROOT/tools/criu/ 

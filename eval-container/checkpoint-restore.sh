@@ -4,7 +4,7 @@ if [ "$#" != "3" ]; then
 	echo "Illegal number of parameters."
        echo "Usage: $0 checkpoint|restore program_name <checkpoint or restore directory>"
        echo "$0 checkpoint mg-server ./checkpoint"
-       echo "$0 restore mg-server ./checkpoint"
+       echo "$0 restore mg-server checkpoint.tar.gz"
        exit 1;
 fi
 
@@ -47,11 +47,27 @@ if [ "$OP" == "checkpoint" ]; then
 	echo "Process pid $PID has been successfully checkpointed with its file system at checkpoint-$PID.tar.gz in current directory."
 fi
 
-#if [ "$OP" != "restore" ]; then
-# First, checkpoint the file system of the container.
+if [ "$OP" == "restore" ]; then
+      tar zxvf $DIR
+      echo "Restoring .db directory to $HOME/.db in the host OS..."
+      rm $HOME/.db -rf
+      mv db $HOME/.db
+      echo "Restoring $HOME directory file system in the lxc container..."
+      cp filesystem-checkpoint.patch /dev/shm/
 
-# Second, restore the server application within the container, and bdb storage of the proxy process.
-#sudo criu restore -d -D $DIR                         $CRIU_ARGS
+# Second, restore the file system of the container.
+      sudo lxc-stop -n $CONTAINER
+      sudo lxc-snapshot -n $CONTAINER -r base
+      sudo cd $SNAPS_DIR/../rootfs/$HOME
+      sudo patch -p1 /dev/shm/filesystem-checkpoint.patch
 
-#fi
+# Resume process and the container.
+	sudo lxc-start -n $CONTAINER
+	sleep 1
+	ssh -t $USER@$(sudo lxc-info -i -H -n $CONTAINER) "tmux start-server; tmux new-session -d -s tmux_session"
+	ssh -t $USER@$(sudo lxc-info -i -H -n $CONTAINER) "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS\" C-m"
+	sudo lxc-attach -n $CONTAINER -- sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS
+	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+	echo "Process pid $PID has been successfully checkpointed with its file system at checkpoint-$PID.tar.gz in current directory."
+fi
 

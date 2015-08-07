@@ -116,7 +116,7 @@ Generate a private/public key pair, put it into your ~/.ssh/.
 Rename the private key to be ~/.ssh/lxc_priv_key
 Append the public key to the u1 container's ~/.ssh/auth..._keys
 Then
-> ssh your_user_name@10.0.3.111
+> ssh your_user_name@10.0.3.111 -i ~/.ssh/lxc_priv_key
 Make sure you can login without entering password.
 When you run sudo in the u1 container, avoid asking sudo password, append this line to /etc/sudoers
 > ruigu ALL = NOPASSWD : ALL

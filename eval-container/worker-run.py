@@ -183,6 +183,7 @@ if __name__ == "__main__":
             action="store", default="none", help="The tool to run with xtern on the server.")
     parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
             action="store", default="yes", help="The tool to run the server in a lxc container.")
+                                    # debug.
 
     args = parser.parse_args()
     # Checking missing arguments

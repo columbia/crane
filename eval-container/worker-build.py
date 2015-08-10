@@ -89,7 +89,7 @@ def main(args):
         psshcmd = psshcmd + "\"" + cmd + "\"";
         print "Replay real server command in lxc container:"
         print psshcmd
-        p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        p = subprocess.Popen(psshcmd, shell=True, stdout=subprocess.PIPE)
         output, err = p.communicate()
         print output
 

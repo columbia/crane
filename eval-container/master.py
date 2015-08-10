@@ -47,7 +47,7 @@ def build_project(args):
     cmd = "~/worker-build.py -s %s --enable-lxc %s" % (args.msmr_root_server, args.enable_lxc)
     print "Building project on node: "
 
-    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 15 -h head \"%s\"" % (USER, cmd)
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 25 -h head \"%s\"" % (USER, cmd)
     print rcmd
     # Start the head node first
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -56,7 +56,7 @@ def build_project(args):
 
     for node_id in xrange(1, 3):
         wcmd = "~/worker-build.py -s %s --enable-lxc %s" % (args.msmr_root_server, args.enable_lxc)
-        rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
+        rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 25 -h worker%d \"%s\"" % (
                 USER, node_id, wcmd)
         print "Building project: "
         print rcmd_workers

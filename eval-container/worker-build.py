@@ -94,12 +94,9 @@ def main(args):
 
         # Run worker-build.py, but this time without lxc-enabled (because we are not nested lxc).
         cmd = "~/worker-build.py -s %s" % (MSMR_ROOT)
-        psshcmd = "parallel-ssh -l %s -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s " % (
-            USER, MSMR_ROOT, CONTAINER)
-        psshcmd = psshcmd + "\"" + cmd + "\"";
-        print "Replay real server command in lxc container:"
-        print psshcmd
-        p = subprocess.Popen(psshcmd, shell=True, stdout=subprocess.PIPE)
+        psshcmd = "sudo lxc-attach -n %s -- " % (CONTAINER)
+        psshcmd = psshcmd + cmd;
+        p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
         output, err = p.communicate()
         print output
 

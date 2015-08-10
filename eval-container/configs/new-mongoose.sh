@@ -11,8 +11,9 @@ msmr_root_client=`echo $MSMR_ROOT`        # root dir for m-smr
 msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
-num_req=512
+num_req=128
 #num_req=256
+#num_req=512 # added lxc, robust on these workloads.
 num_thd=8
 
 if [ $proxy -eq 1 ]

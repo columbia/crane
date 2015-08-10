@@ -104,7 +104,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Explauncher(worker)')
 
-    parser.add_argument('-v', type=str, dest="git_version", action="store", default="master",
+    parser.add_argument('-v', type=str, dest="git_version", action="store", default="",
             help="Git version of the project.")
     parser.add_argument('-s', type=str, dest="msmr_root_server", action="store",
             help="The directory of m-smr.")

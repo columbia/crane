@@ -20,18 +20,6 @@ then
 	fi
 fi
 
-#source configs/new-mongoose-helgrind-worker1.sh
-#source configs/new-mongoose.sh
-#source configs/mongoose.sh
-#source configs/apache.sh
-#source configs/ssdb.sh
-#source configs/pgsql.sh
-#source configs/mongod.sh
-#source configs/proftpd.sh
-#source configs/mysqld.sh
-#source configs/clamav.sh
-#source configs/heming-mediatomb.sh
-
 if [ $build_project == "true" ];
 then
 	# Update worker-build.py to the server

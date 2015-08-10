@@ -51,7 +51,7 @@ if [ "$OP" == "checkpoint" ]; then
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINER
-	sleep 5
+	sleep 10
 	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS\" C-m"
 	#sudo lxc-attach -n $CONTAINER -- sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS
@@ -80,7 +80,7 @@ if [ "$OP" == "restore" ]; then
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINER
-	sleep 5
+	sleep 10
 	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS\" C-m"
 	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`

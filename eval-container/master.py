@@ -12,6 +12,7 @@ import subprocess
 logger = logging.getLogger("Benchmark.Master")
 
 MSMR_ROOT = ''
+USER = os.environ["USER"]
 
 def kill_previous_process(args):
     
@@ -19,16 +20,16 @@ def kill_previous_process(args):
     # Heming: added %s-amd64-, this is for killing valgrind sub processes such as helgrind-amd64-.
     cmd = 'sudo killall -9 worker-run.py server.out %s %s-amd64- %s-amd64- %s-amd64-' % (
             args.app, args.head, args.worker1, args.worker2)
-    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
-            command=cmd)
+    rcmd = 'parallel-ssh -l {username} -v -p 3 -i -t 15 -h hostfile {command}'.format(
+            username=USER, command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
 
     print "Removing temporaries"
     cmd = 'sudo rm -rf /dev/shm/*'
-    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
-            command=cmd)
+    rcmd = 'parallel-ssh -l {username} -v -p 3 -i -t 15 -h hostfile {command}'.format(
+            username=USER, command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
@@ -36,8 +37,8 @@ def kill_previous_process(args):
     # killall criu-cr.py via sudo
     # bug02 worker2
     cmd = 'sudo killall -9 criu-cr.py &> /dev/null' 
-    rcmd = 'parallel-ssh -v -p 1 -i -t 15 -h worker2 {command}'.format(
-            command=cmd)
+    rcmd = 'parallel-ssh -l {username} -v -p 1 -i -t 15 -h worker2 {command}'.format(
+            username=USER, command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
@@ -46,7 +47,7 @@ def build_project(args):
     cmd = "~/worker-build.py -s %s --enable-lxc %s" % (args.msmr_root_server, args.enable_lxc)
     print "Building project on node: "
 
-    rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 15 -h head \"%s\"" % (USER, cmd)
     print rcmd
     # Start the head node first
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -55,8 +56,8 @@ def build_project(args):
 
     for node_id in xrange(1, 3):
         wcmd = "~/worker-build.py -s %s --enable-lxc %s" % (args.msmr_root_server, args.enable_lxc)
-        rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
-                node_id, wcmd)
+        rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
+                USER, node_id, wcmd)
         print "Building project: "
         print rcmd_workers
         # Start the secondary nodes one by one
@@ -70,7 +71,7 @@ def run_servers(args):
             args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc)
     print "replaying server master node command: "
 
-    rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 15 -h head \"%s\"" % (USER, cmd)
     print rcmd
     # Start the head node first
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -93,8 +94,8 @@ def run_servers(args):
         wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
                 args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc)
-        rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
-                node_id, wcmd)
+        rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
+                USER, node_id, wcmd)
         print "Master: replaying master node command: "
         print rcmd_workers
         # Start the secondary nodes one by one
@@ -105,8 +106,8 @@ def run_servers(args):
 def restart_head(args):
     #cmd = '"~/head-restart.py"'
     cmd = 'sudo killall -9 server.out ' + args.app
-    rcmd_head = 'parallel-ssh -v -p 1 -i -t 15 -h head {command}'.format(
-        command=cmd)
+    rcmd_head = 'parallel-ssh -l {username} -v -p 1 -i -t 15 -h head {command}'.format(
+        username=USER, command=cmd)
     p = subprocess.Popen(rcmd_head, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
@@ -119,7 +120,7 @@ def restart_head(args):
             args.msmr_root_server, args.sp, args.sd, args.scmd, args.enable_lxc)
     print "replaying server master node command: "
 
-    rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 15 -h head \"%s\"" % (USER, cmd)
     print rcmd
     # Start the head node first
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -164,22 +165,22 @@ def run_clients(args, newIP=False):
 def run_criu(args):
     # 1. Checkpoint the server process
     cmd = "sudo ~/su-checkpoint.sh %s" % (args.app)
-    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h head {command}'.format(
-            command=cmd)
+    rcmd = 'parallel-ssh -l {username} -v -p 3 -i -t 15 -h head {command}'.format(
+            username=USER, command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
     # 2. Kill both proxy and server on bug03
     cmd = 'sudo killall -9 server.out %s' % (args.app)
-    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h head {command}'.format(
-            command=cmd)
+    rcmd = 'parallel-ssh -l {username} -v -p 3 -i -t 15 -h head {command}'.format(
+            username=USER, command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
     # 3. Restore server process
     cmd = "sudo ~/su-restore.sh ~/%s-*" % (args.app)
-    rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h head {command}'.format(
-            command=cmd)
+    rcmd = 'parallel-ssh -l {username} -v -p 3 -i -t 15 -h head {command}'.format(
+            username=USER, command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output

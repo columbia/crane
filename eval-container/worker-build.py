@@ -17,6 +17,7 @@ XTERN_ROOT = ''
 GIT_VERSION = ''
 CONTAINER = "u1"
 HOME = expanduser("~") # Assume the MSMR_ROOT path is the same in host OS as in lxc container.
+USER = os.environ["USER"]
 
 def exec_cmd_with_env(strcmd):
     cur_env = os.environ.copy()
@@ -89,7 +90,8 @@ def main(args):
 
         # Run worker-build.py, but this time without lxc-enabled (because we are not nested lxc).
         cmd = "~/worker-build.py -s %s" % (MSMR_ROOT)
-        psshcmd = "parallel-ssh -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s " % (MSMR_ROOT, CONTAINER)
+        psshcmd = "parallel-ssh -l %s -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s " % (
+            USER, MSMR_ROOT, CONTAINER)
         psshcmd = psshcmd + "\"" + cmd + "\"";
         print "Replay real server command in lxc container:"
         print psshcmd

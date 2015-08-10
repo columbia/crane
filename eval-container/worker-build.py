@@ -14,6 +14,7 @@ logger = logging.getLogger("Benchmark.Worker")
 MSMR_ROOT = ''
 XTERN_ROOT = ''
 GIT_VERSION = ''
+CONTAINER = "u1"
 
 def exec_cmd_with_env(strcmd):
     cur_env = os.environ.copy()
@@ -59,6 +60,38 @@ def main(args):
     os.chdir(dirstring)
     exec_cmd_with_env("make clean; make &> /dev/null")
 
+    if args.enable_lxc == "yes":
+        # First, restart the container.
+        print "Restarting the lxc container %s" %(CONTAINER)
+        cmd = "sudo lxc-stop -n %s" % (CONTAINER)
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+        cmd = "sudo lxc-start -n %s" % (CONTAINER)
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+        time.sleep(1)
+    
+        # Copy the worker-build.py into lxc via /dev/shm (already setup the map).
+        cmd = "cp worker-build.py /dev/shm"
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+        cmd = "sudo lxc-attach -n %s -- mv /dev/shm/worker-build.py %s" % (CONTAINER, HOME) 
+        p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
+
+        # Run worker-build.py, but this time without lxc-enabled (because we are not nested lxc).
+        cmd = "~/worker-build.py -s %s" % (MSMR_ROOT)
+        psshcmd = "parallel-ssh -v -p 1 -x \"-oStrictHostKeyChecking=no  -i ./.ssh/lxc_priv_key\" -i -t 10 -h %s/eval-container/%s " % (MSMR_ROOT, CONTAINER)
+        psshcmd = psshcmd + "\"" + cmd + "\"";
+        print "Replay real server command in lxc container:"
+        print psshcmd
+        p = subprocess.Popen(psshcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        output, err = p.communicate()
+        print output
 
 ###############################################################################
 # Main - Parse command line options and invoke main()

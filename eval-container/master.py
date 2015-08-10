@@ -26,9 +26,7 @@ def kill_previous_process(args):
     print output
 
     print "Removing temporaries"
-    cmd = 'rm -rf /dev/shm/*-$USER; \
-           rm -rf /tmp/paxos_queue_file_lock; \
-           rm -rf $HOME/paxos_queue_file_lock'
+    cmd = 'sudo rm -rf /dev/shm/*'
     rcmd = 'parallel-ssh -v -p 3 -i -t 15 -h hostfile {command}'.format(
             command=cmd)
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)

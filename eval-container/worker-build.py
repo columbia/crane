@@ -15,6 +15,7 @@ MSMR_ROOT = ''
 XTERN_ROOT = ''
 GIT_VERSION = ''
 CONTAINER = "u1"
+HOME = expanduser("~") # Assume the MSMR_ROOT path is the same in host OS as in lxc container.
 
 def exec_cmd_with_env(strcmd):
     cur_env = os.environ.copy()

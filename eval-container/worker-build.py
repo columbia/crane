@@ -7,6 +7,7 @@ import logging
 import subprocess
 import argparse
 import os
+from os.path import expanduser
 
 logger = logging.getLogger("Benchmark.Worker")
 

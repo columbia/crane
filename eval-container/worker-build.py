@@ -62,6 +62,7 @@ def main(args):
 
     if args.enable_lxc == "yes":
         # First, restart the container.
+        cur_env = os.environ.copy()
         print "Restarting the lxc container %s" %(CONTAINER)
         cmd = "sudo lxc-stop -n %s" % (CONTAINER)
         p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)

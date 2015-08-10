@@ -38,6 +38,10 @@ def main(args):
     Main module of worker-runbuild.py
     """
     print("Rebuilding the whole project at git version: %s " % (GIT_VERSION))
+    cmd = "git config --global user.email \"%s@cs.columbia.edu\"" % (USER)
+    os.system(cmd)
+    cmd = "git config --global user.name \"%s\"" % (USER);
+    os.system(cmd)
 
     # Get the latest git version.
     dirstring = "%s" % (XTERN_ROOT)

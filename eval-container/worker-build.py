@@ -65,10 +65,12 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Explauncher(worker)')
 
-    parser.add_argument('-v', type=str, dest="git_version", action="store", default="",
+    parser.add_argument('-v', type=str, dest="git_version", action="store", default="master",
             help="Git version of the project.")
     parser.add_argument('-s', type=str, dest="msmr_root_server", action="store",
             help="The directory of m-smr.")
+    parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
+            action="store", default="no", help="The tool to run the server in a lxc container.")
 
     args = parser.parse_args()
     # Checking missing arguments

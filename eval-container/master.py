@@ -45,7 +45,7 @@ def kill_previous_process(args):
     print output
 
 def build_project(args):
-    cmd = "~/worker-build.py -s %s" % (args.msmr_root_server)
+    cmd = "~/worker-build.py -s %s --enable-lxc %s" % (args.msmr_root_server, args.enable_lxc)
     print "Building project on node: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
@@ -56,7 +56,7 @@ def build_project(args):
     print output
 
     for node_id in xrange(1, 3):
-        wcmd = "~/worker-build.py -s %s" % (args.msmr_root_server)
+        wcmd = "~/worker-build.py -s %s --enable-lxc %s" % (args.msmr_root_server, args.enable_lxc)
         rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
                 node_id, wcmd)
         print "Building project: "
@@ -67,9 +67,9 @@ def build_project(args):
         print output
 
 def run_servers(args):
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s" % (
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
-            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head)
+            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc)
     print "replaying server master node command: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
@@ -92,9 +92,9 @@ def run_servers(args):
           worker_tool = args.worker1
         if node_id == 2 and args.worker2 != "none":
           worker_tool = args.worker2
-        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s" % (
+        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
-                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool)
+                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc)
         rcmd_workers = "parallel-ssh -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
                 node_id, wcmd)
         print "Master: replaying master node command: "
@@ -116,9 +116,9 @@ def restart_head(args):
     time.sleep(2)
 
     return
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s" % (
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s  --enable-lxc %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
-            args.msmr_root_server, args.sp, args.sd, args.scmd)
+            args.msmr_root_server, args.sp, args.sd, args.scmd, args.enable_lxc)
     print "replaying server master node command: "
 
     rcmd = "parallel-ssh -v -p 1 -i -t 15 -h head \"%s\"" % (cmd)
@@ -277,6 +277,8 @@ if __name__ == "__main__":
             help="The analysis tool to run on the worker1 machine.")
     parser.add_argument('--worker2', type=str, dest="worker2", action="store", default="none",
             help="The analysis tool to run on the worker2 machine.")
+    parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
+            action="store", default="no", help="The tool to run the server in a lxc container.")
 
     args = parser.parse_args()
     print "Replaying parameters:"

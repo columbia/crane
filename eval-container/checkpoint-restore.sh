@@ -47,7 +47,7 @@ if [ "$OP" == "checkpoint" ]; then
       sudo diff -ruN --text --exclude=$EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
-      sudo tar zcvf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db
+      sudo tar zcvf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*
       sudo rm -rf db start end
 
 # Resume process and the container.
@@ -55,7 +55,7 @@ if [ "$OP" == "checkpoint" ]; then
 	sleep 10
 	i=1
 	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-	while [ $i -le 5 ]
+	while [ $i -le 10 ]
 	do
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
@@ -91,6 +91,9 @@ if [ "$OP" == "restore" ]; then
 	echo "Restoring .db directory to $HOME/.db in the host OS..."
 	rm $HOME/.db -rf
 	mv db $HOME/.db
+	sudo rm -rf /dev/shm/*
+	sudo mv dev/shm/* /dev/shm/
+	sudo rm -rf dev
 	echo "Restoring $HOME directory file system in the lxc container..."
 	cp filesystem-checkpoint.patch $HOME
 	sudo chmod 666 $HOME/filesystem-checkpoint.patch
@@ -108,7 +111,7 @@ if [ "$OP" == "restore" ]; then
 	sleep 10
 	i=1
 	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-	while [ $i -le 5 ]
+	while [ $i -le 10 ]
 	do
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))

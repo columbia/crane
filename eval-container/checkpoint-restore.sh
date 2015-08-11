@@ -62,6 +62,7 @@ if [ "$OP" == "checkpoint" ]; then
 		ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS &> /tmp/restore.txt\" C-m"
 		sleep 1
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
+		echo "Number of Errors: $RES"
 		if [ "$RES"X == "0X" ]; then
 			echo "Succeeded in restoring process."
 			break
@@ -114,6 +115,7 @@ if [ "$OP" == "restore" ]; then
 		ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
 		sleep 1
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
+		echo "Number of Errors: $RES"
 		if [ "$RES"X == "0X" ]; then
 			echo "Succeeded in restoring process."
 			break

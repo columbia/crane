@@ -60,8 +60,9 @@ if [ "$OP" == "checkpoint" ]; then
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
 		ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS &> /tmp/restore.txt\" C-m"
-		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error`
-		if [ "$RES"X == "X" ]; then
+		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
+		if [ "$RES"X == "0X" ]; then
+			echo "Succeeded in restoring process."
 			break
 		fi
 	done
@@ -107,8 +108,9 @@ if [ "$OP" == "restore" ]; then
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
 		ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
-		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error`
-		if [ "$RES"X == "X" ]; then
+		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
+		if [ "$RES"X == "0X" ]; then
+			echo "Succeeded in restoring process."
 			break
 		fi
 	done

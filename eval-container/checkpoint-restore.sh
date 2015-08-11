@@ -16,13 +16,16 @@ CRIU_ARGS=" --shell-job --tcp-established --file-locks"
 SNAPS_DIR="/var/lib/lxc/$CONTAINER/snaps"
 FS_BASE_DIR="$SNAPS_DIR/base"
 KEY="$HOME/.ssh/lxc_priv_key"
-EXCLUDES=".bash_history"
-#	$MSMR_ROOT/xtern 
-#	$MSMR_ROOT/libevent_paxos 
-#	$MSMR_ROOT/tools 
-#	$MSMR_ROOT/eval 
-#	$MSMR_ROOT/eval-container 
-#	$MSMR_ROOT/eval-multiMachine
+EXCLUDES="--exclude=.bash_history \
+	--exclude=dump.options \
+	--exclude=local.options \
+	--exclude=xtern \
+	--exclude=libevent_paxos \
+	--exclude=eval \
+        --exclude=tools \
+	--exclude=eval-container \
+	--exclude=eval-multiMachine"
+
 CONTAINER_IP="10.0.3.111"
 
 echo "Running command: $0 $OP $PROG_NAME $DIR"
@@ -45,7 +48,7 @@ if [ "$OP" == "checkpoint" ]; then
       sudo rm -rf start end
       sudo ln -s $FS_BASE_DIR/rootfs/$HOME start
       sudo ln -s $SNAPS_DIR/../rootfs/$HOME end
-      sudo diff -ruN --text --exclude=$EXCLUDES start end &> filesystem-checkpoint.patch
+      sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
       sudo tar zcf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock &> /dev/null
@@ -108,6 +111,7 @@ if [ "$OP" == "restore" ]; then
 	sudo patch -d $SNAPS_DIR/../rootfs/$HOME -p1 < $HOME/filesystem-checkpoint.patch
 
 # Resume process and the container.
+	sync
 	sudo lxc-start -n $CONTAINER
 	sleep 10
 	i=1

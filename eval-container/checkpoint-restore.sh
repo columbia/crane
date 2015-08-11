@@ -78,6 +78,9 @@ if [ "$OP" == "checkpoint" ]; then
 		echo ""
 		echo "To double check the process $PID is still running in lxc, run this command below."
 		echo "> sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME"
+		echo ""
+		echo "To restore the process $PID in lxc $CONTAINER, run this command below."
+		echo "> ./checkpoint-restore.sh restore $PROG_NAME checkpoint-$PID.tar.gz"
 	fi
 fi
 

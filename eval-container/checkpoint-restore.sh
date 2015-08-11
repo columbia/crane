@@ -51,12 +51,13 @@ if [ "$OP" == "checkpoint" ]; then
       sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
-      sudo tar zcf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock &> /dev/null
-      sudo rm -rf db start end
+      cp $XTERN_ROOT/dync_hook/interpose.so .
+      sudo tar zcf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock interpose.so &> /dev/null
+      sudo rm -rf db start end interpose.so
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINER
-	sleep 5
+	sleep 10
 	i=1
 	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
@@ -95,6 +96,7 @@ if [ "$OP" == "restore" ]; then
 	echo "Restoring .db directory to $HOME/.db in the host OS..."
 	rm $HOME/.db -rf
 	mv db $HOME/.db
+	mv interpose.so $XTERN_ROOT/dync_hook/
 	#sudo rm -rf /dev/shm/*
 	sudo mv dev/shm/* /dev/shm/
 	sudo rm -rf dev
@@ -135,7 +137,7 @@ if [ "$OP" == "restore" ]; then
                 echo "Please check you host OS. Existing..."
 		exit 1
 	fi
-	sleep 5
+	sleep 10
 	i=1
 	# debug
 	CUR_IP=`sudo lxc-info -n $CONTAINER -Hi | grep $CONTAINER_IP`

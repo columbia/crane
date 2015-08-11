@@ -56,7 +56,7 @@ if [ "$OP" == "checkpoint" ]; then
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINER
-	sleep 10
+	sleep 5
 	i=1
 	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
@@ -107,14 +107,39 @@ if [ "$OP" == "restore" ]; then
 	sleep 1
 	echo "Restoring base file system in $FS_BASE_DIR, may take a few minutes..."
 	sudo lxc-snapshot -n $CONTAINER -r base
+	#sync
 	echo "Restoring current file system to the checkpoint moment, may take a few seconds..."
 	sudo patch -d $SNAPS_DIR/../rootfs/$HOME -p1 < $HOME/filesystem-checkpoint.patch
 
 # Resume process and the container.
-	sync
+	#sync
 	sudo lxc-start -n $CONTAINER
-	sleep 10
+	ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
+	RET=$?
 	i=1
+	echo "ssh return value: $RET"
+	while [ $i -le 5 ]
+	do
+		if [ "$RET" != "0" ]; then
+			echo "Please check you host OS: lxc $CONTAINER's static IP is not $CONTAINER_IP. Restarting lxc..."
+			sudo lxc-stop -n $CONTAINER -r -t 30
+			ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
+			RET=$?
+			echo "RET $RET"
+		else
+			break
+		fi
+		(( i++ ))
+	done
+	if [ "$RET" != "0" ]; then
+                echo "Please check you host OS. Existing..."
+		exit 1
+	fi
+	sleep 5
+	i=1
+	# debug
+	CUR_IP=`sudo lxc-info -n $CONTAINER -Hi | grep $CONTAINER_IP`
+	echo "Start to restore, CUR_IP $CUR_IP:"
 	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
 	do

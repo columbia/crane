@@ -15,6 +15,7 @@ CONTAINER="u1"
 CRIU_ARGS=" --shell-job --tcp-established --file-locks"
 SNAPS_DIR="/var/lib/lxc/$CONTAINER/snaps"
 FS_BASE_DIR="$SNAPS_DIR/base"
+KEY="~/.ssh/lxc_priv_key"
 EXCLUDES=".bash_history"
 #	$MSMR_ROOT/xtern 
 #	$MSMR_ROOT/libevent_paxos 
@@ -34,8 +35,8 @@ if [ "$OP" == "checkpoint" ]; then
 	echo "Checkpointing process with pid $PID into directory $DIR ..."
 	sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
 	sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
-	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-	ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/$DIR $CRIU_ARGS &> /tmp/dump.txt\" C-m"
+	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
+	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/$DIR $CRIU_ARGS &> /tmp/dump.txt\" C-m"
 	#exit 0
 
 # Second, checkpoint the file system of the container, and bdb storage of the proxy process.
@@ -47,19 +48,19 @@ if [ "$OP" == "checkpoint" ]; then
       sudo diff -ruN --text --exclude=$EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
-      sudo tar zcvf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*
+      sudo tar zcvf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock
       sudo rm -rf db start end
 
 # Resume process and the container.
 	sudo lxc-start -n $CONTAINER
 	sleep 10
 	i=1
-	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
+	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
 	do
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
-		ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS &> /tmp/restore.txt\" C-m"
+		ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS &> /tmp/restore.txt\" C-m"
 		sleep 1
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
 		echo "Number of Errors: $RES"
@@ -91,7 +92,7 @@ if [ "$OP" == "restore" ]; then
 	echo "Restoring .db directory to $HOME/.db in the host OS..."
 	rm $HOME/.db -rf
 	mv db $HOME/.db
-	sudo rm -rf /dev/shm/*
+	#sudo rm -rf /dev/shm/*
 	sudo mv dev/shm/* /dev/shm/
 	sudo rm -rf dev
 	echo "Restoring $HOME directory file system in the lxc container..."
@@ -110,12 +111,12 @@ if [ "$OP" == "restore" ]; then
 	sudo lxc-start -n $CONTAINER
 	sleep 10
 	i=1
-	ssh -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
+	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
 	do
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
-		ssh -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
+		ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
 		sleep 1
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
 		echo "Number of Errors: $RES"

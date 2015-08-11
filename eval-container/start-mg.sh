@@ -3,7 +3,7 @@
 
 CONTAINER="u1"
 CONTAINER_IP="10.0.3.111"
-KEY="~/.ssh/lxc_priv_key"
+KEY="$HOME/.ssh/lxc_priv_key"
 EX_PROG_NAME="mg-server"
 EX_CMD="/home/heming/hku/m-smr/apps/mongoose/mg-server -I /usr/bin/php-cgi -p 7000 -t 1 &"
 if [ "$#" != "2" ]; then

@@ -15,7 +15,7 @@ CONTAINER="u1"
 CRIU_ARGS=" --shell-job --tcp-established --file-locks"
 SNAPS_DIR="/var/lib/lxc/$CONTAINER/snaps"
 FS_BASE_DIR="$SNAPS_DIR/base"
-KEY="~/.ssh/lxc_priv_key"
+KEY="$HOME/.ssh/lxc_priv_key"
 EXCLUDES=".bash_history"
 #	$MSMR_ROOT/xtern 
 #	$MSMR_ROOT/libevent_paxos 
@@ -48,7 +48,7 @@ if [ "$OP" == "checkpoint" ]; then
       sudo diff -ruN --text --exclude=$EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
-      sudo tar zcvf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock
+      sudo tar zcf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock &> /dev/null
       sudo rm -rf db start end
 
 # Resume process and the container.
@@ -88,7 +88,7 @@ if [ "$OP" == "checkpoint" ]; then
 fi
 
 if [ "$OP" == "restore" ]; then
-	tar zxvf $DIR
+	tar zxf $DIR
 	echo "Restoring .db directory to $HOME/.db in the host OS..."
 	rm $HOME/.db -rf
 	mv db $HOME/.db

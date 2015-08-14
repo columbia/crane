@@ -149,11 +149,13 @@ def main(args):
     Main module of worker-run.py
     """
     set_local_config(args)
+    # Heming: start proxy first, and then server. Because servers need proxy to get consensus on timebubble at startup phase.
+    if args.proxy == 1:
+        execute_proxy(args)
+    time.sleep(2)
     execute_servers(args)
     # Wait a while fot the real server to set up
     time.sleep(8)
-    if args.proxy == 1:
-        execute_proxy(args)
 
 
 ###############################################################################

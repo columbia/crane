@@ -81,7 +81,7 @@ def execute_servers(args):
         p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
         output, err = p.communicate()
         print output
-        time.sleep(1)
+        time.sleep(5)
     
         # Copy the local.options into lxc via /dev/shm (already setup the map).
         cmd = "cp local.options /dev/shm"

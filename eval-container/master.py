@@ -71,7 +71,7 @@ def run_servers(args):
             args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc)
     print "replaying server master node command: "
 
-    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 15 -h head \"%s\"" % (USER, cmd)
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 25 -h head \"%s\"" % (USER, cmd)
     print rcmd
     # Start the head node first
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
@@ -94,7 +94,7 @@ def run_servers(args):
         wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
                 args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc)
-        rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 15 -h worker%d \"%s\"" % (
+        rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 25 -h worker%d \"%s\"" % (
                 USER, node_id, wcmd)
         print "Master: replaying master node command: "
         print rcmd_workers

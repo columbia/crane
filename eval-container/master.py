@@ -65,10 +65,12 @@ def build_project(args):
         output, err = p.communicate()
         print output
 
-def run_servers(args):
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s" % (
+def run_servers(args, start_proxy_only, start_server_only):
+    print "Starting proxy only or starting server only: " + start_proxy_only + " " + start_server_only
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s --start_proxy_only %s --start_server_only %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
-            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc)
+            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc,
+            start_proxy_only, start_proxy_only)
     print "replaying server master node command: "
 
     rcmd = "parallel-ssh -l %s -v -p 1 -i -t 25 -h head \"%s\"" % (USER, cmd)
@@ -91,9 +93,10 @@ def run_servers(args):
           worker_tool = args.worker1
         if node_id == 2 and args.worker2 != "none":
           worker_tool = args.worker2
-        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s" % (
+        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s --start_proxy_only %s --start_server_only %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
-                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc)
+                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc,
+                start_proxy_only, start_proxy_only)
         rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 25 -h worker%d \"%s\"" % (
                 USER, node_id, wcmd)
         print "Master: replaying master node command: "
@@ -199,7 +202,8 @@ def main(args):
     # Killall the previous experiment
     kill_previous_process(args) 
 
-    run_servers(args)
+    run_servers(args, "yes", "no") # Start all proxies first, because we need proxy to connect with each other when the first server starts.
+    run_servers(args, "no", "yes") # Then start the servers.
     print "Deployment Done! Wait 10s for the servers to become stable!!!"
     time.sleep(10)
     

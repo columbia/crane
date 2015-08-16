@@ -151,9 +151,11 @@ def main(args):
     set_local_config(args)
     # Heming: start proxy first, and then server. Because servers need proxy to get consensus on timebubble at startup phase.
     if args.proxy == 1:
-        execute_proxy(args)
+        if args.start_server_only == "no": 
+            execute_proxy(args)
     time.sleep(2)
-    execute_servers(args)
+    if args.start_proxy_only == "no": 
+        execute_servers(args)
     # Wait a while fot the real server to set up
     time.sleep(8)
 
@@ -185,6 +187,10 @@ if __name__ == "__main__":
             help="The command to execute the real server.")
     parser.add_argument('--tool', type=str, dest="analysis_tool", 
             action="store", default="none", help="The tool to run with xtern on the server.")
+    parser.add_argument('--start_proxy_only', type=str, dest="start_proxy_only",
+            action="store", default="no", help="Start proxy only.")
+    parser.add_argument('--start_server_only', type=str, dest="start_server_only",
+            action="store", default="no", help="Start server only.")
     parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
             action="store", default="no", help="The tool to run the server in a lxc container.")
                                     # debug.

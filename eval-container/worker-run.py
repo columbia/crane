@@ -39,11 +39,11 @@ def set_local_config(args):
     if args.enable_lxc == "yes":
         os.system("sed -i -e 's/127.0.0.1/" + CONTAINER_IP + "/g' nodes.local.cfg");
     # Copy the xtern configuration file to the current folder 
-    if not os.path.isfile('local.options'):
-        print "Copy default.options to current folder"
-        tcmd = 'cp $XTERN_ROOT/default.options ~/local.options'
-        proc = subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
-        time.sleep(1)
+    # Every time, copy the default.options.
+    print "Copy default.options to current folder"
+    tcmd = 'cp $XTERN_ROOT/default.options ~/local.options'
+    proc = subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+    time.sleep(1)
     os.system("sed -i -e 's/sched_with_paxos = [0-9]\+/sched_with_paxos = " + str(args.sp) + "/g' local.options")
 
 def execute_proxy(args):

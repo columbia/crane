@@ -210,7 +210,7 @@ def main(args):
     # Sending requests before the expriments
     print "Client starts : !!! Before checkpoint & leader election!!!"
     run_clients(args)
-    time.sleep(10)
+    time.sleep(100)
 
     if args.checkpoint == 1:
         # Start Qiushan's script

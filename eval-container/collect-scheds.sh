@@ -1,7 +1,55 @@
 #!/bin/bash
 
+process_host() {
+ssh $USER@$HOST.cs.columbia.edu <<'ENDSSH'
+#commands to run on remote host
+cd /dev/shm/dmt_out/
+HOST=`hostname`
+sudo rm ./$HOST-*.log
+for f in *.log
+do
+  NUM=`grep -c accept $f`
+  if [ "$NUM"X != "0X" ]; then
+        echo "$f is a server schedule file on $HOST machine."
+        sudo cp ./$f ./$HOST-$f
+  fi
+done
+ENDSSH
+
+scp $HOST.cs.columbia.edu:/dev/shm/dmt_out/$HOST* scheds/
+}
+
+# Main.
 rm -rf scheds
 mkdir scheds
-scp bug03.cs.columbia.edu:/dev/shm/dmt_out/serializer-light-pid-*.log scheds/bug03.log
-scp bug01.cs.columbia.edu:/dev/shm/dmt_out/serializer-light-pid-*.log scheds/bug01.log
-scp bug02.cs.columbia.edu:/dev/shm/dmt_out/serializer-light-pid-*.log scheds/bug02.log
+
+HOST="bug03"
+process_host
+LINE=0
+cd scheds
+for f in $HOST-*.log
+do
+	LINE=`grep -n close $HOST-* | tail -1 | awk -F ":" '{print $1}'`
+	echo "Last close() in $HOST schedule file is $LINE"
+done
+cd ..
+
+HOST="bug01"
+process_host
+
+HOST="bug02"
+process_host
+
+#cd scheds
+#for f in *.log
+#do
+#	echo "Truncating $f after line $LINE (the last close() operation)..."
+#	sed -i '$LINE,$ d' $f
+#done
+#cd ..
+
+echo ""
+echo ""
+echo "Please truncate all files in the scheds directory with this line number: $LINE"
+echo "Command to do so: cd scheds; ls . | xargs sed -i '$LINE,$ d'"
+

@@ -40,16 +40,13 @@ process_host
 HOST="bug02"
 process_host
 
-#cd scheds
-#for f in *.log
-#do
-#	echo "Truncating $f after line $LINE (the last close() operation)..."
-#	sed -i '$LINE,$ d' $f
-#done
-#cd ..
+cd scheds
+for f in *.log
+do
+	echo "Truncating $f after line $LINE (the last close() operation)..."
+	sed -i "$LINE,$ d" $f
+	echo "number of lines: $(wc -l < $f)"
+done
 
-echo ""
-echo ""
-echo "Please truncate all files in the scheds directory with this line number: $LINE"
-echo "Command to do so: cd scheds; ls . | xargs sed -i '$LINE,$ d'"
+cd ..
 

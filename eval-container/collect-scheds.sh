@@ -72,9 +72,11 @@ cd ..
 
 if [ $RESULT != 0 ]; then
   echo "Some schedules are not the same, please see ./scheds/results/"
+  exit 1
 else
   echo ""
   echo "All schedules are the same. Great!"
+  exit 0
 fi
 
 #echo ""

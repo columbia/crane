@@ -33,5 +33,5 @@ else
 fi
                                                       # command to start the clients
 server_cmd="'${msmr_root_server}/apps/mediatomb/install/bin/mediatomb \
-	-i 127.0.0.1 -p 7000 -m ${msmr_root_server}/apps/mediatomb &> mediatomb.out &'"
+	-i 127.0.0.1 -p 7000 -m ${msmr_root_server}/apps/mediatomb &> server-out.txt &'"
                                                       # command to start the real server

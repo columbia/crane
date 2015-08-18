@@ -7,8 +7,8 @@ sch_dmt=1                                             # 1 libevent_paxos will sc
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=10                                  # period of CRIU checkpoint, e.g. 10 seconds
-msmr_root_client="/home/ruigu/Workspace/m-smr"        # root dir for m-smr
-msmr_root_server="/home/ruigu/SSD/m-smr"
+msmr_root_client=`echo $MSMR_ROOT`        # root dir for m-smr
+msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 

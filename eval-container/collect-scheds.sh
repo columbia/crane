@@ -57,6 +57,9 @@ for f in *.log
 do
   if [ $f != $STD_FILE ]; then
     DIFF="diff-$STD_FILE-$f"
+    #cat $STD_FILE | grep -v "RRScheduler::wait" | awk '{print $1" "$3" "$4" "$5}' > start.txt
+    #cat $f | grep -v "RRScheduler::wait" | awk '{print $1" "$3" "$4" "$5}' > end.txt
+    #diff -ruN start.txt end.txt > results/$DIFF
     diff -ruN $STD_FILE $f > results/$DIFF
     CNT=`wc -c results/$DIFF | awk '{print $1}'`
     echo "Diff $STD_FILE and $f, lines of difference is $CNT."

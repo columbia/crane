@@ -41,5 +41,5 @@ scp criu-cr.py bug02.cs.columbia.edu:~/
         -c ${msmr_root_client} -s ${msmr_root_server} \
         --sp ${sch_paxos} --sd ${sch_dmt} \
         --scmd "${server_cmd}" --ccmd "${client_cmd}" -b ${build_project} ${analysis_tools} \
-	--enable-lxc yes
+	--enable-lxc ${enable_lxc} --dmt-log-output ${dmt_log_output}
 

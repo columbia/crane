@@ -210,8 +210,11 @@ def main(args):
     # Sending requests before the expriments
     print "Client starts : !!! Before checkpoint & leader election!!!"
     run_clients(args)
-    print "Client workload done. Please grab performance result. Wait 120s for all replicas to finish serving requests." 
-    time.sleep(120)
+    client_sleep = 10
+    if args.sd == 1 and args.sp == 1:
+        client_sleep = 120
+        print "Client workload done. Please grab performance result. Joint scheduling, wait 120s for all replicas to finish serving requests."
+    time.sleep(client_sleep)
 
     if args.checkpoint == 1:
         # Start Qiushan's script

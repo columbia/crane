@@ -213,7 +213,8 @@ def main(args):
     client_sleep = 20
     if args.sd == 1 and args.sp == 1:
         client_sleep = 120
-    print "Client workload done. Please grab performance result. Seconds to wait before exist: " + client_sleep
+    exit_print = "Client workload done. Please grab performance result. Wait %d seconds before exit. " % (client_sleep)
+    print exit_print
     time.sleep(client_sleep)
 
     if args.checkpoint == 1:

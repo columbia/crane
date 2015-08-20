@@ -3,11 +3,13 @@
 # 1. For each mode, change start-sever, run-client and local.options accordingly.
 # 2. Better comment out the LD_PRELOAD for client in master.py
 
+source configs/default-options.sh
 app="mediatomb"                                       # app name appears in process list
 xtern=1                                               # 1 use xtern, 0 otherwise.
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
+dmt_log_output=1
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=10                                  # period of CRIU checkpoint, e.g. 10 seconds

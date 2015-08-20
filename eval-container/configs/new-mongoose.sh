@@ -1,4 +1,5 @@
 # Setups for mongoose
+source configs/default-options.sh
 app="mg-server"                                       # app name appears in process list
 xtern=1                                               # 1 use xtern, 0 otherwise
 proxy=1                                               # 1 use proxy, 0 otherwise

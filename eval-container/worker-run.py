@@ -45,6 +45,7 @@ def set_local_config(args):
     proc = subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     time.sleep(1)
     os.system("sed -i -e 's/sched_with_paxos = [0-9]\+/sched_with_paxos = " + str(args.sp) + "/g' local.options")
+    os.system("sed -i -e 's/light_log_sync = [0-9]\+/light_log_sync = " + str(args.dmt_log_output) + "/g' local.options")
 
 def execute_proxy(args):
 
@@ -193,7 +194,8 @@ if __name__ == "__main__":
             action="store", default="no", help="Start server only.")
     parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
             action="store", default="no", help="The tool to run the server in a lxc container.")
-                                    # debug.
+    parser.add_argument('--dmt-log-output', type=int, dest="dmt_log_output",
+            action="store", default=0, help="Run the DMT and log outputs (send(), write()) of servers.")
 
     args = parser.parse_args()
     # Checking missing arguments

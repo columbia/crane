@@ -67,9 +67,9 @@ def build_project(args):
 
 def run_servers(args, start_proxy_only, start_server_only):
     print "Starting proxy only or starting server only: " + start_proxy_only + " " + start_server_only
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s --start_proxy_only %s --start_server_only %s" % (
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s --dmt-log-output %d --start_proxy_only %s --start_server_only %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
-            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc,
+            args.msmr_root_server, args.sp, args.sd, args.scmd, args.head, args.enable_lxc, args.dmt_log_output,
             start_proxy_only, start_server_only)
     print "replaying server master node command: "
 
@@ -93,9 +93,9 @@ def run_servers(args, start_proxy_only, start_server_only):
           worker_tool = args.worker1
         if node_id == 2 and args.worker2 != "none":
           worker_tool = args.worker2
-        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s --start_proxy_only %s --start_server_only %s" % (
+        wcmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m r -i %d --sp %d --sd %d --scmd %s --tool %s --enable-lxc %s --dmt-log-output %d --start_proxy_only %s --start_server_only %s" % (
                 args.app, args.xtern, args.proxy, args.checkpoint,
-                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc,
+                args.msmr_root_server, node_id, args.sp, args.sd, args.scmd, worker_tool, args.enable_lxc, args.dmt_log_output,
                 start_proxy_only, start_server_only)
         rcmd_workers = "parallel-ssh -l %s -v -p 1 -i -t 25 -h worker%d \"%s\"" % (
                 USER, node_id, wcmd)
@@ -210,8 +210,11 @@ def main(args):
     # Sending requests before the expriments
     print "Client starts : !!! Before checkpoint & leader election!!!"
     run_clients(args)
-    print "Client workload done. Please grab performance result. Wait 120s for all replicas to finish serving requests." 
-    time.sleep(120)
+    client_sleep = 10
+    if args.sd == 1 and args.sp == 1:
+        client_sleep = 120
+        print "Client workload done. Please grab performance result. Joint scheduling, wait 120s for all replicas to finish serving requests."
+    time.sleep(client_sleep)
 
     if args.checkpoint == 1:
         # Start Qiushan's script
@@ -283,6 +286,8 @@ if __name__ == "__main__":
             help="The analysis tool to run on the worker2 machine.")
     parser.add_argument('--enable-lxc', type=str, dest="enable_lxc",
             action="store", default="no", help="The tool to run the server in a lxc container.")
+    parser.add_argument('--dmt-log-output', type=int, dest="dmt_log_output",
+            action="store", default=0, help="Run the DMT and log outputs (send(), write()) of servers.")
 
     args = parser.parse_args()
     print "Replaying parameters:"

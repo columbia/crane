@@ -33,4 +33,4 @@ fi
 # We didn't use start-server script because we have to LD_PRELOAD for the whole scripts.
 # Thus, server.conf will be corrupted by the xtern stderr(Init share memory stuff.)
 server_cmd="'${msmr_root_server}/apps/clamav/install/sbin/clamd \
-	--config-file=${msmr_root_server}/apps/clamav/client-lo-7000.conf &> out.txt & '"
+	--config-file=${msmr_root_server}/apps/clamav/client-lo-7000.conf &> server-out.txt & '"

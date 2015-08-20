@@ -212,8 +212,8 @@ def main(args):
     run_clients(args)
     client_sleep = 10
     if args.sd == 1 and args.sp == 1:
-        client_sleep = 120
-        print "Client workload done. Please grab performance result. Joint scheduling, wait 120s for all replicas to finish serving requests."
+        client_sleep = 180
+        print "Client workload done. Please grab performance result. Joint scheduling, wait 180s for all replicas to finish serving requests."
     time.sleep(client_sleep)
 
     if args.checkpoint == 1:

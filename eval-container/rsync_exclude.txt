@@ -1,0 +1,9 @@
+*/.bash_history
+*/dump.options
+*/local.options
+*/xtern
+*/libevent_paxos
+*/eval
+*/tools
+*/eval-container
+*/eval-multiMachine

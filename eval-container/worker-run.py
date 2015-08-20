@@ -152,7 +152,7 @@ def main(args):
     set_local_config(args)
     # Heming: start proxy first, and then server. Because servers need proxy to get consensus on timebubble at startup phase.
     if args.proxy == 1:
-        if args.start_server_only == "no": 
+        if args.start_server_only == "no":
             execute_proxy(args)
     time.sleep(2)
     if args.start_proxy_only == "no": 

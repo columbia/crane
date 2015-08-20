@@ -13,10 +13,16 @@ do
         echo "$f is a server schedule file on $HOST machine."
         sudo cp ./$f ./$HOST-$f
   fi
+  NUM=`grep -c Function $f`
+  if [ "$NUM"X != "0X" ]; then
+        echo "$f is a server network output file on $HOST machine."
+        sudo cp ./$f ./$HOST-$f
+  fi
 done
 ENDSSH
 
 scp $HOST.cs.columbia.edu:/dev/shm/dmt_out/$HOST* scheds/
+sync
 }
 
 # Main.
@@ -25,15 +31,26 @@ mkdir scheds
 
 RESULT=0
 STD_FILE=""
+STD_OUTPUT_FILE=""
 HOST="bug03"
 echo "Collecting schedules from /dev/shm/dmt_out/ directory on bug0* machines..."
 process_host &> /dev/null
 LINE=0
 cd scheds
-for f in $HOST-*.log
+# find leader output.
+for f in $HOST-network*.log
 do
-	LINE=`grep -n close $HOST-* | tail -1 | awk -F ":" '{print $1}'`
-	echo "Last close() in the schedule file $f from $HOST machine is $LINE"
+	LINE=`grep -n Function $f`
+	if [ "$LINE"X != "X" ]; then 
+		echo "File $f contains network output on host $HOST. Use it as standard output file."
+		STD_OUTPUT_FILE=$f
+	fi
+done
+#find leader schedule.
+for f in $HOST-serializer*.log
+do
+	LINE=`grep -n close $f | tail -1 | awk -F ":" '{print $1}'`
+	echo "Last close() in the schedule file $f from $HOST machine is $LINE. Use it as standard schedule file."
 	STD_FILE=$f
 done
 cd ..
@@ -46,14 +63,15 @@ process_host &> /dev/null
 
 (( LINE++ ))
 cd scheds
-for f in *.log
+for f in *serializer*.log
 do
 	echo "Truncating $f after line $LINE (the last close() operation)..."
 	sed -i "$LINE,$ d" $f
 done
 
 mkdir results
-for f in *.log
+# diff schedules.
+for f in *serializer*.log
 do
   if [ $f != $STD_FILE ]; then
     DIFF="diff-$STD_FILE-$f"
@@ -64,26 +82,47 @@ do
     CNT=`wc -c results/$DIFF | awk '{print $1}'`
     echo "Diff $STD_FILE and $f, lines of difference is $CNT."
     echo ""
-    if [ $CNT != 0 ]; then
-      echo "$STD_FILE and $f are not the same, see diff result in scheds/results/$DIFF"
+    if [ $CNT"X" != "0X" ]; then
+      #echo "$STD_FILE and $f are not the same, see diff result in scheds/results/$DIFF"
       RESULT=1
     fi
   fi
 done
 
-cd ..
-
 if [ $RESULT != 0 ]; then
-  echo "Some schedules are not the same, please see ./scheds/results/"
-  exit 1
+  echo ""
+  #echo "Some schedules are not the same, please see ./scheds/results/"
 else
   echo ""
-  echo "All schedules are the same. Great!"
-  exit 0
+  #echo "All schedules are the same. Great!"
 fi
 
-#echo ""
-#echo ""
-#echo "Please truncate all files in the scheds directory with this line number: $LINE"
-#echo "Command to do so: cd scheds; ls . | xargs sed -i '$LINE,$ d'"
+# diff outputs.
+RESULT=0
+for f in *output*.log
+do
+  if [ $f != $STD_OUTPUT_FILE ]; then
+    DIFF="diff-$STD_OUTPUT_FILE-$f"
+    diff -ruN $STD_OUTPUT_FILE $f > results/$DIFF
+    CNT=`wc -c results/$DIFF | awk '{print $1}'`
+    echo "Diff $STD_OUTPUT_FILE and $f, lines of difference is $CNT."
+    echo ""
+    if [ $CNT"X" != "0X" ]; then
+      echo "$STD_OUTPUT_FILE and $f are not the same, see diff result in scheds/results/$DIFF"
+      RESULT=1
+    fi
+  fi
+done
+
+
+if [ $RESULT"X" != "0X" ]; then
+  echo ""
+  echo "Some network outputs are not the same, please see ./scheds/results/"
+else
+  echo ""
+  echo "All network outputs are the same. Great!"
+fi
+
+cd ..
+
 

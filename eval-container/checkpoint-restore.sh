@@ -98,7 +98,7 @@ if [ "$OP" == "restore" ]; then
 	mv db $HOME/.db
 	mv interpose.so $XTERN_ROOT/dync_hook/
 	#sudo rm -rf /dev/shm/*
-	sudo mv dev/shm/* /dev/shm/
+	sudo mv /dev/shm/* /dev/shm/
 	sudo rm -rf dev
 	echo "Restoring $HOME directory file system in the lxc container..."
 	cp filesystem-checkpoint.patch $HOME
@@ -108,10 +108,15 @@ if [ "$OP" == "restore" ]; then
 	sudo lxc-stop -n $CONTAINER
 	sleep 1
 	echo "Restoring base file system in $FS_BASE_DIR, may take a few minutes..."
-	sudo lxc-snapshot -n $CONTAINER -r base
+	# sudo lxc-snapshot -n $CONTAINER -r base
+	# some modifications here to improve speed...
+	echo "Rsync config file:"
+	cat rsync_exclude.txt
+	sudo rsync -avzh --delete --exclude-from=rsync_exclude.txt /var/lib/lxc/u1/snaps/base/rootfs$HOME /var/lib/lxc/u1/rootfs/home
 	#sync
 	echo "Restoring current file system to the checkpoint moment, may take a few seconds..."
 	sudo patch -d $SNAPS_DIR/../rootfs/$HOME -p1 < $HOME/filesystem-checkpoint.patch
+	echo 'Patching complete. '
 
 # Resume process and the container.
 	#sync
@@ -166,4 +171,3 @@ if [ "$OP" == "restore" ]; then
 		echo "> sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME"
 	fi
 fi
-

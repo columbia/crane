@@ -13,6 +13,7 @@ logger = logging.getLogger("Benchmark.Master")
 
 MSMR_ROOT = ''
 USER = os.environ["USER"]
+MSMR_ROOT = os.environ["MSMR_ROOT"]
 
 def kill_previous_process(args):
     
@@ -117,18 +118,29 @@ def restart_head(args):
 
     time.sleep(2)
 
-    return
-    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --sp %d --sd %d --scmd %s  --enable-lxc %s" % (
+    cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --start_proxy_only yes --enable-lxc yes --sp %d --sd %d --scmd %s  --enable-lxc %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
             args.msmr_root_server, args.sp, args.sd, args.scmd, args.enable_lxc)
     print "replaying server master node command: "
-
-    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 15 -h head \"%s\"" % (USER, cmd)
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 25 -h head \"%s\"" % (USER, cmd)
     print rcmd
     # Start the head node first
     p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
     output, err = p.communicate()
     print output
+
+    time.sleep(10)
+
+    # Restore the checkpoint
+    cmd = "cd %s/eval-container && ./checkpoint-restore.sh restore %s checkpoint-1668.tar.gz >| restore_output &" % (
+            MSMR_ROOT, args.app)
+    print "replaying server master node command: "
+    rcmd = "parallel-ssh -l %s -v -p 1 -i -t 600 -h head \"%s\"" % (USER, cmd)
+    print rcmd
+    # Start the head node first
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output 
     
 
 def run_clients(args, newIP=False):
@@ -240,11 +252,13 @@ def main(args):
     # Starts the leader election demo
     if args.leader_ele == 1 and args.proxy == 1:
         restart_head(args)
-        time.sleep(30)
-        print "Client starts : !!! After leader election!!!"
-        run_clients(args, True)
+        #time.sleep(30)
+        #print "Client starts : !!! After leader election!!!"
+        #run_clients(args, True)
 
-    kill_previous_process(args) 
+    print "Wait for 20s to kill all the processes"
+    time.sleep(20)
+    kill_previous_process(args)
 
 
 ###############################################################################

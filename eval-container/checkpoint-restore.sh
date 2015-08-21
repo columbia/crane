@@ -121,16 +121,18 @@ if [ "$OP" == "restore" ]; then
 # Resume process and the container.
 	#sync
 	sudo lxc-start -n $CONTAINER
-	ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
+	#ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
+  parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "ls -l"
 	RET=$?
 	i=1
-	echo "ssh return value: $RET"
+	echo "pssh return value: $RET"
 	while [ $i -le 5 ]
 	do
 		if [ "$RET" != "0" ]; then
 			echo "Please check you host OS: lxc $CONTAINER's static IP is not $CONTAINER_IP. Restarting lxc..."
 			sudo lxc-stop -n $CONTAINER -r -t 30
-			ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
+			#ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
+      parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "ls -l"
 			RET=$?
 			echo "RET $RET"
 		else
@@ -147,12 +149,14 @@ if [ "$OP" == "restore" ]; then
 	# debug
 	CUR_IP=`sudo lxc-info -n $CONTAINER -Hi | grep $CONTAINER_IP`
 	echo "Start to restore, CUR_IP $CUR_IP:"
-	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
+	#ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
+  parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
 	do
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
-		ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
+		#ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
+    parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
 		sleep 1
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
 		echo "Number of Errors: $RES"

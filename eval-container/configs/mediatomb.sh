@@ -19,8 +19,14 @@ input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""
 proxy_ld_preload="LD_PRELOAD=${msmr_root_server}/libevent_paxos/client-ld-preload/libclilib.so"
 client_bin="${msmr_root_client}/apps/apache/install/bin/ab"
+
+# CPU bound workloads.
 client_opt_7000="-n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
 client_opt_9000="-n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+
+# IO bound workloads.
+#client_opt_7000="-n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/0"
+#client_opt_9000="-n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/0"
 
 if [ $proxy -eq 1 ]
 then

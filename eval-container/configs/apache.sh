@@ -15,18 +15,28 @@ msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
+num_req=8
+num_thd=8
+
+# IO bound workloads.
+client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/"
+client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/"
+
+# CPU bound workloads.
+#client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/test.php"
+#client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/test.php"
+
 if [ $proxy -eq 1 ]
 then
     if [ $leader_elect -eq 1 ]
     then
-        client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.172:9000/test.php"
+        client_cmd="${msmr_root_client}/apps/apache/install/bin/ab ${client_opt_9000}"
     else
-        client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.174:9000/test.php"
+        client_cmd="${msmr_root_client}/apps/apache/install/bin/ab ${client_opt_9000}"
     fi
 else
-    client_cmd="${msmr_root_client}/apps/apache/install/bin/ab -n 8 -c 8 http://128.59.17.174:7000/test.php"
+    client_cmd="${msmr_root_client}/apps/apache/install/bin/ab ${client_opt_7000}"
 fi
                                                       # command to start the clients
-server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl -f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"
-#server_cmd="'cd ${msmr_root_server}/apps/apache && ./start-server '"
-                                                      # command to start the real server
+server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl \
+	-f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"

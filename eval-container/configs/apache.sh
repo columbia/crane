@@ -2,10 +2,14 @@
 
 source configs/default-options.sh
 app="httpd"                                           # app name appears in process list
+
+# evaluation options.
 xtern=1                                               # 1 use xtern, 0 otherwise.
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
+enable_lxc="no"
+
 dmt_log_output=0
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
@@ -19,12 +23,12 @@ num_req=8
 num_thd=8
 
 # IO bound workloads.
-client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/"
-client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/"
+#client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/"
+#client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/"
 
 # CPU bound workloads.
-#client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/test.php"
-#client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/test.php"
+client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/test.php"
+client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/test.php"
 
 if [ $proxy -eq 1 ]
 then

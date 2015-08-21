@@ -1,15 +1,12 @@
 # Setups for mongoose
 source configs/default-options.sh
 app="mg-server"                                       # app name appears in process list
-
-# evaluation options.
-xtern=1                                               # 1 use xtern, 0 otherwise
+xtern=0                                               # 1 use xtern, 0 otherwise
 proxy=1                                               # 1 use proxy, 0 otherwise
-sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
-sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
-enable_lxc="yes"
-
-dmt_log_output=0
+sch_paxos=0                                           # 1 xtern will schedule with paxos, 0 otherwise
+sch_dmt=0                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
+#enable_lxc="yes"
+#dmt_log_output=1
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=5                                   # period of CRIU checkpoint, e.g. 10 seconds

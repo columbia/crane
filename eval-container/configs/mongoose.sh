@@ -7,7 +7,7 @@ xtern=1                                               # 1 use xtern, 0 otherwise
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
-enable_lxc="yes"
+enable_lxc="no"
 
 dmt_log_output=0
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise

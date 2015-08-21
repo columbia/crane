@@ -34,18 +34,23 @@ fi
 if [ $3"X" != "X" ];
 then
 	if [ $3"X" == "joint_schedX" ];
+	then
 		use_joint_scheduling_plan;
 	fi
 	if [ $3"X" == "separate_schedX" ];
+	then
 		use_separate_scheduling_plan;
 	fi
 	if [ $3"X" == "xtern_onlyX" ];
+	then
 		use_xtern_only_plan;
 	fi
 	if [ $3"X" == "proxy_onlyX" ];
+	then
 		use_proxy_only_plan;
 	fi
 	if [ $3"X" == "origX" ];
+	then
 		use_orig_plan;
 	fi
 	echo "The plan to run is: $3";

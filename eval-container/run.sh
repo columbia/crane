@@ -19,47 +19,7 @@ fi
 
 source $1;
 build_project="true";
-if [ $2"X" != "X" ];
-then
-	if [ $2 == "no_build" ];
-	then
-	        build_project="false";
-	fi
-	if [ $2 == "build" ];
-	then
-	        build_project="true";
-	fi
-fi
 
-if [ $3"X" != "X" ];
-then
-	if [ $3"X" == "joint_schedX" ];
-	then
-		use_joint_scheduling_plan;
-	fi
-	if [ $3"X" == "separate_schedX" ];
-	then
-		use_separate_scheduling_plan;
-	fi
-	if [ $3"X" == "xtern_onlyX" ];
-	then
-		use_xtern_only_plan;
-	fi
-	if [ $3"X" == "proxy_onlyX" ];
-	then
-		use_proxy_only_plan;
-	fi
-	if [ $3"X" == "origX" ];
-	then
-		use_orig_plan;
-	fi
-	echo "The plan to run is: $3";
-	sleep 1
-else
-	echo "No plan specified. The default plan to run is: proxy_only";
-	use_proxy_only_plan;
-	sleep 1
-fi
 
 if [ $build_project == "true" ];
 then

@@ -3,6 +3,17 @@
 cd $MSMR_ROOT/apps/mediatomb/
 rm -rf .mediatomb
 
+IP=""
+if [ ! $1 ];
+then
+	IP="127.0.0.1"
+else
+	IP=$1
+fi
+
+echo "Generating mediatomb database on IP $IP... If you run it in a lxc container, please give it an arugment."
+echo "./e.g., ./$0 10.0.3.111"
+
 # Start server to prepare
 if [ ! -f mediatomb-sample.avi ];
 then
@@ -12,7 +23,7 @@ fi
 # start the server to generate .mediatomb
 killall -9 mediatomb wget mencoder
 sleep 1
-./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD &
+./install/bin/mediatomb -i $IP -p 7000 -m $PWD &
 sleep 5
 killall -9 mediatomb
 sleep 1
@@ -30,5 +41,5 @@ mv bak2.xml .mediatomb/config.xml
 echo ""
 echo "Adding an avi file to mediatomb to prepare for benchmark. You must wait for about 10 seconds, and then manually \"Ctrl C\" on this script."
 echo ""
-./install/bin/mediatomb -i 127.0.0.1 -p 7000 -m $PWD --add $MSMR_ROOT/apps/mediatomb/mediatomb-sample.avi &> out.txt
+./install/bin/mediatomb -i $IP -p 7000 -m $PWD --add $MSMR_ROOT/apps/mediatomb/mediatomb-sample.avi &> out.txt
 

@@ -44,6 +44,13 @@ else
 	client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head '${client_bin} ${client_opt_7000}'"
 fi
                                                       # command to start the clients
+local_server_ip=""
+if [ $enable_lxc"X" == "yesX" ]
+then
+	local_server_ip="10.0.3.111"
+else
+	local_server_ip="127.0.0.1"
+fi
 server_cmd="'${msmr_root_server}/apps/mediatomb/install/bin/mediatomb \
-	-i 127.0.0.1 -p 7000 -m ${msmr_root_server}/apps/mediatomb &> server-out.txt &'"
+	-i ${local_server_ip} -p 7000 -m ${msmr_root_server}/apps/mediatomb &> server-out.txt &'"
                                                       # command to start the real server

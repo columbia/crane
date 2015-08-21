@@ -223,7 +223,7 @@ def main(args):
     print "Client starts : !!! Before checkpoint & leader election!!!"
     run_clients(args)
     client_sleep = 20
-    if args.sd == 1 and args.sp == 1:
+    if args.sd == 1 and args.sp == 1 and args.dmt_log_output == 1:
         client_sleep = 120
     exit_print = "Client workload done. Please grab performance result. Wait %d seconds before exit. " % (client_sleep)
     print exit_print

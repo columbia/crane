@@ -5,11 +5,15 @@
 
 source configs/default-options.sh
 app="mediatomb"                                       # app name appears in process list
+
+# evaluation options.
 xtern=1                                               # 1 use xtern, 0 otherwise.
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
-dmt_log_output=1
+enable_lxc="no"
+
+dmt_log_output=0
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
 checkpoint=0                                          # 1 use checkpoint on relicas, 0 otherwise
 checkpoint_period=10                                  # period of CRIU checkpoint, e.g. 10 seconds
@@ -40,6 +44,13 @@ else
 	client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head '${client_bin} ${client_opt_7000}'"
 fi
                                                       # command to start the clients
+local_server_ip=""
+if [ $enable_lxc"X" == "yesX" ]
+then
+	local_server_ip="10.0.3.111"
+else
+	local_server_ip="127.0.0.1"
+fi
 server_cmd="'${msmr_root_server}/apps/mediatomb/install/bin/mediatomb \
-	-i 127.0.0.1 -p 7000 -m ${msmr_root_server}/apps/mediatomb &> server-out.txt &'"
+	-i ${local_server_ip} -p 7000 -m ${msmr_root_server}/apps/mediatomb &> server-out.txt &'"
                                                       # command to start the real server

@@ -48,8 +48,14 @@ local_server_ip=""
 if [ $enable_lxc"X" == "yesX" ]
 then
 	local_server_ip="10.0.3.111"
+	echo "Now you run CRANE with lxc on mediatomb, if previously you did not run it with lxc, please log into the u1 container, go to \
+	~/hku/m-smr/apps/mediatomb, and run ./generate-database 10.0.3.111 on all bug0X machines."
+	sleep 2
 else
 	local_server_ip="127.0.0.1"
+	echo "Now you run CRANE without lxc on mediatomb, if previously you ran it with lxc, please log into the u1 container, go to \
+	~/hku/m-smr/apps/mediatomb, and run ./generate-database 127.0.0.1 on all bug0X machines."
+	sleep 2
 fi
 server_cmd="'${msmr_root_server}/apps/mediatomb/install/bin/mediatomb \
 	-i ${local_server_ip} -p 7000 -m ${msmr_root_server}/apps/mediatomb &> server-out.txt &'"

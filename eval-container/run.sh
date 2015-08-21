@@ -20,6 +20,18 @@ fi
 source $1;
 build_project="true";
 
+if [ $2"X" != "X" ];
+then
+	if [ $2 == "no_build" ];
+	then
+	        build_project="false";
+	fi
+	if [ $2 == "build" ];
+	then
+	        build_project="true";
+	fi
+fi
+
 
 if [ $build_project == "true" ];
 then

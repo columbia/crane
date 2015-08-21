@@ -7,6 +7,13 @@ then
         echo "Usage: $0 <application cfg file> <optional flags>"
         echo "Example (build project and run): $0 configs/mongoose.sh"
 	echo "Example (run only): $0 configs/mongoose.sh no_build"
+	echo "Example (run only): $0 configs/mongoose.sh build joint_sched"
+	echo ""
+	echo "Example (run only): $0 configs/mongoose.sh no_build joint_sched"
+	echo "Example (run only): $0 configs/mongoose.sh no_build separate_sched"
+	echo "Example (run only): $0 configs/mongoose.sh no_build xtern_only"
+	echo "Example (run only): $0 configs/mongoose.sh no_build proxy_only"	
+	echo "Example (run only): $0 configs/mongoose.sh no_build orig"
         exit 1;
 fi
 
@@ -18,6 +25,35 @@ then
 	then
 	        build_project="false";
 	fi
+	if [ $2 == "build" ];
+	then
+	        build_project="true";
+	fi
+fi
+
+if [ $3"X" != "X" ];
+then
+	if [ $3"X" == "joint_schedX" ];
+		use_joint_scheduling_plan;
+	fi
+	if [ $3"X" == "separate_schedX" ];
+		use_separate_scheduling_plan;
+	fi
+	if [ $3"X" == "xtern_onlyX" ];
+		use_xtern_only_plan;
+	fi
+	if [ $3"X" == "proxy_onlyX" ];
+		use_proxy_only_plan;
+	fi
+	if [ $3"X" == "origX" ];
+		use_orig_plan;
+	fi
+	echo "The plan to run is: $3";
+	sleep 1
+else
+	echo "No plan specified. The default plan to run is: proxy_only";
+	use_proxy_only_plan;
+	sleep 1
 fi
 
 if [ $build_project == "true" ];

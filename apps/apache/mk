@@ -46,6 +46,7 @@ cd $APP_DIR/httpd-$HTTPD_VER
 patch -p1 < ../add-detach-for-pod-check-thread.patch
 patch -p1 < ../add-soba-httpd.patch
 patch -p1 < ../add-hint-for-cgid.patch
+patch -p1 < ../add-disable-sched-paxos-parent.patch
 
 # build
 #./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all \

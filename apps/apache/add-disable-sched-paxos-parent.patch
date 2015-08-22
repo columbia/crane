@@ -1,0 +1,12 @@
+diff -ruN httpd-2.2.11/server/mpm/worker/worker.c httpd-2.2.11-modified/server/mpm/worker/worker.c
+--- httpd-2.2.11/server/mpm/worker/worker.c	2015-08-22 18:33:56.095220311 +0800
++++ httpd-2.2.11-modified/server/mpm/worker/worker.c	2015-08-22 18:37:01.911220344 +0800
+@@ -1348,6 +1348,8 @@
+ 
+         clean_child_exit(0);
+     }
++    tern_disable_sched_paxos();/*Heming: disable sched paxos option for parent,
++    because it is not the worker process and doe not need this option.*/
+     /* else */
+     if (ap_scoreboard_image->parent[slot].pid != 0) {
+         /* This new child process is squatting on the scoreboard

@@ -222,7 +222,7 @@ def main(args):
     # Sending requests before the expriments
     print "Client starts : !!! Before checkpoint & leader election!!!"
     run_clients(args)
-    client_sleep = 20
+    client_sleep = 10
     if args.sd == 1 and args.sp == 1 and args.dmt_log_output == 1:
         client_sleep = 120
     exit_print = "Client workload done. Please grab performance result. Wait %d seconds before exit. " % (client_sleep)

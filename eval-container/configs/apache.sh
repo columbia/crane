@@ -19,7 +19,7 @@ msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
-num_req=8
+num_req=1000
 num_thd=8
 
 # IO bound workloads.

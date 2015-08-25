@@ -24,6 +24,25 @@ msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""     #"--worker1=helgrind"                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
+if [ $1"X" != "X" ]; then
+  if [ $1"X" == "joint_schedX" ]; then
+    use_joint_scheduling_plan;
+  elif [ $1"X" == "separate_schedX" ]; then
+    use_separate_scheduling_plan;
+  elif [ $1"X" == "xtern_onlyX" ]; then
+    use_xtern_only_plan;
+  elif [ $1"X" == "proxy_onlyX" ]; then
+    use_proxy_only_plan;
+  elif [ $1"X" == "origX" ]; then
+    use_orig_plan;
+  fi
+  echo "The plan to run is: $1";
+else
+  echo "No plan specified. The default plan to run is: proxy_only";
+  use_proxy_only_plan;
+fi
+sleep 1
+
 if [ $proxy -eq 1 ]
 then
     client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/clamav/ && \

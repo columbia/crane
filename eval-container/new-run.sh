@@ -2,14 +2,14 @@
 
 # a new starter file that runs the test several times
 # ./run.sh configs/mongoose.sh no_build joint_sched 10
-
+mkdir -p perf_log
 
 if [ ! $1 ]; then
   echo "invalid usage. "
 fi
 
 # run the server config script
-source $1;
+source $1 $3;
 
 build_project="true"
 if [ $2"X" != "X" ]; then
@@ -19,27 +19,6 @@ if [ $2"X" != "X" ]; then
     build_project="true";
 	fi
 fi
-
-# load default config files
-source ./configs/default-options.sh
-if [ $3"X" != "X" ]; then
-  if [ $3"X" == "joint_schedX" ]; then
-    use_joint_scheduling_plan;
-  elif [ $3"X" == "separate_schedX" ]; then
-    use_separate_scheduling_plan;
-  elif [ $3"X" == "xtern_onlyX" ]; then
-    use_xtern_only_plan;
-  elif [ $3"X" == "proxy_onlyX" ]; then
-    use_proxy_only_plan;
-  elif [ $3"X" == "origX" ]; then
-    use_orig_plan;
-  fi
-  echo "The plan to run is: $3";
-else
-  echo "No plan specified. The default plan to run is: proxy_only";
-  use_proxy_only_plan;
-fi
-sleep 1
 
 if [ $build_project == "true" ]; then
   # Update worker-build.py to the server
@@ -64,6 +43,6 @@ for i in `seq 1 $4`; do
     -c ${msmr_root_client} -s ${msmr_root_server} \
     --sp ${sch_paxos} --sd ${sch_dmt} \
     --scmd "${server_cmd}" --ccmd "${client_cmd}" -b ${build_project} ${analysis_tools} \
-    --enable-lxc ${enable_lxc} --dmt-log-output ${dmt_log_output} | tee $app-$3-`date +"%b-%d"`-$i.log
+    --enable-lxc ${enable_lxc} --dmt-log-output ${dmt_log_output} | tee perf_log/$app-$3-`date +"%s"`.log
 done
 

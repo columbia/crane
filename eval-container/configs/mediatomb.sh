@@ -24,6 +24,25 @@ analysis_tools=""
 proxy_ld_preload="LD_PRELOAD=${msmr_root_server}/libevent_paxos/client-ld-preload/libclilib.so"
 client_bin="${msmr_root_client}/apps/apache/install/bin/ab"
 
+if [ $1"X" != "X" ]; then
+  if [ $1"X" == "joint_schedX" ]; then
+    use_joint_scheduling_plan;
+  elif [ $1"X" == "separate_schedX" ]; then
+    use_separate_scheduling_plan;
+  elif [ $1"X" == "xtern_onlyX" ]; then
+    use_xtern_only_plan;
+  elif [ $1"X" == "proxy_onlyX" ]; then
+    use_proxy_only_plan;
+  elif [ $1"X" == "origX" ]; then
+    use_orig_plan;
+  fi
+  echo "The plan to run is: $1";
+else
+  echo "No plan specified. The default plan to run is: proxy_only";
+  use_proxy_only_plan;
+fi
+sleep 1
+
 # CPU bound workloads.
 client_opt_7000="-n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
 client_opt_9000="-n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"

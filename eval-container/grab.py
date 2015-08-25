@@ -10,15 +10,15 @@ result['httpd'] = {'orig': [], 'xtern_only': [], 'proxy_only': [], 'separate_sch
 result['clamd'] = {'orig': [], 'xtern_only': [], 'proxy_only': [], 'separate_sched': [], 'joint_sched': []}
 result['mediatomb'] = {'orig': [], 'xtern_only': [], 'proxy_only': [], 'separate_sched': [], 'joint_sched': []}
 
-for file in os.listdir("."):
+for file in os.listdir("./perf_log"):
 	if file.endswith(".log"):	
 		# print(file)
-		with open(file, 'r') as f:
+		with open('perf_log/' + file, 'r') as f:
 			content = f.read()
 			# print 'length: ', len(content)
 			a = None
 
-			if file.startswith('httpd') or file.startswith('mg-server'):
+			if file.startswith('apache') or file.startswith('httpd') or file.startswith('mg-server'):
 				a = re.search(r'Time per request:[ \t]+(\d+\.\d+) \[ms\] \(mean, across all concurrent requests\)', content)
 			elif file.startswith('clamd'):
 				a = re.search(r'Time: (\d+\.\d+) sec', content)
@@ -54,4 +54,5 @@ for k1 in result.keys():
 		# print result[k1][k2]
 		if len(result[k1][k2]) > 0:
 			# print result[k1][k2]
-			print 'server: ', k1, 'policy: ', k2, 'median: ', median(result[k1][k2])
+			# print 'server: ', k1, '\t\tpolicy: ', k2, '\t\tmedian: ', median(result[k1][k2])
+			print 'server: %s; \t\t policy: %s; \t\t med: %f ' %(k1, k2, median(result[k1][k2]))

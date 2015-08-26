@@ -45,21 +45,6 @@ else
 fi
 sleep 1
 
-# remove all semaphores left by prev httpd
-sems=$(ipcs -s | awk '/0x0*.*[0-9]* .*/ { print $2 }')
-
-i=0
-for sem in $sems; do
-  i=`expr $i + 1` 
-done
-
-if [ $i -gt 5 ]; then
-  echo "Heming: There are two many useless semaphores in the system, I will delete them."
-  for sem in $sems; do
-    ipcrm sem $sem &> /dev/null
-  done
-fi
-
 # CPU bound workloads.
 client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/test.php"
 client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/test.php"
@@ -76,5 +61,5 @@ else
     client_cmd="${msmr_root_client}/apps/apache/install/bin/ab ${client_opt_7000}"
 fi
                                                       # command to start the clients
-server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl \
+server_cmd="'${msmr_root_server}/eval-container/utility-scripts/clean-sem.sh; ${msmr_root_server}/apps/apache/install/bin/apachectl \
 	-f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"

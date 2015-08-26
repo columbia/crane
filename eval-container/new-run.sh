@@ -9,7 +9,7 @@ xtern_ver=`git log -n 1 --format="%h"`
 cd -
 
 cd $MSMR_ROOT/libevent_paxos
-libevent_ver=`git log -n 1 -- format="%h"`
+libevent_ver=`git log -n 1 --format="%h"`
 cd -
 
 dir_name=$xtern_ver'-'$libevent_ver

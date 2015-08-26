@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # rm *.log
-rounds = 11
+rounds=11
 
 ./new-run.sh configs/mongoose.sh no_build joint_sched $rounds
 ./new-run.sh configs/mongoose.sh no_build separate_sched $rounds
@@ -26,4 +26,4 @@ rounds = 11
 ./new-run.sh configs/mediatomb.sh no_build xtern_only $rounds
 ./new-run.sh configs/mediatomb.sh no_build proxy_only $rounds
 ./new-run.sh configs/mediatomb.sh no_build orig $rounds
-./grab.py
+# ./grab.py

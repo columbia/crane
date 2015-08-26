@@ -51,11 +51,11 @@ def check_perf_logs(base):
     return result
 
 def do_stat(result):
-    from numpy import median
+    from numpy import median, std, mean
     for k1 in result.keys():
         for k2 in result[k1].keys(): 
             if len(result[k1][k2]) > 0: 
-                print 'server: %s; \t\t policy: %s; \t\t med: %f ' %(k1, k2, median(result[k1][k2]))
+                print 'server: %s; policy: %s; med: %f; stddev: %f; mean: %f' %(k1, k2, median(result[k1][k2]), std(result[k1][k2]), mean(result[k1][k2]))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="This script does some stat on the performance result files. ")

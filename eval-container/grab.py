@@ -55,7 +55,7 @@ def do_stat(result):
     for k1 in result.keys():
         for k2 in result[k1].keys(): 
             if len(result[k1][k2]) > 0: 
-                print 'server: %s; policy: %s; med: %f; stddev: %f; mean: %f' %(k1, k2, median(result[k1][k2]), std(result[k1][k2]), mean(result[k1][k2]))
+                print 'server: %s; policy: %s; rounds: %d; med: %f; stddev: %f; mean: %f' %(k1, k2, len(result[k1][k2]), median(result[k1][k2]), std(result[k1][k2]), mean(result[k1][k2]))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="This script does some stat on the performance result files. ")

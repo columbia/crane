@@ -6,13 +6,18 @@
 
 if [ ! $1 ];
 then
-	echo "./$0 7000"
+	echo "./$0 128.59.17.174 7000"
 	exit 1;
 fi
 
+if [ ! $2 ];
+then
+	echo "./$0 128.59.17.174 7000"
+	exit 1;
+fi
 
-PORT=$1
-IP="127.0.0.1"
+IP=$1
+PORT=$2
 
 rm /home/heming/hku/m-smr/apps/apache/install/htdocs/result.php &> /dev/null
 echo "" > result.txt

@@ -61,5 +61,5 @@ else
     client_cmd="${msmr_root_client}/apps/apache/install/bin/ab ${client_opt_7000}"
 fi
                                                       # command to start the clients
-server_cmd="'${msmr_root_server}/eval-container/utility-scripts/clean-sem.sh; ${msmr_root_server}/apps/apache/install/bin/apachectl \
+server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl \
 	-f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"

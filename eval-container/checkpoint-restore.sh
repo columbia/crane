@@ -35,7 +35,7 @@ if [ "$OP" == "checkpoint" ]; then
 # First, checkpoint the server application within the container.
 	# TBD: what if multiple processes?
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
-    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep httpd | awk -F '[/ ]*' '{print $7}'`
+    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	echo "Checkpointing process with pid $PID into directory $DIR ..."
 	sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
 	sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
@@ -77,7 +77,7 @@ if [ "$OP" == "checkpoint" ]; then
 		fi
 	done
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
-    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep httpd | awk -F '[/ ]*' '{print $7}'`
+    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	if [ "$PID"X == "X" ]; then
 		echo "Process has been failed to checkpointed, please contact developers."
 	else
@@ -170,7 +170,7 @@ if [ "$OP" == "restore" ]; then
 		fi
 	done
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
-    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep httpd | awk -F '[/ ]*' '{print $7}'`
+    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	if [ "$PID"X == "X" ]; then
 		echo "Process has been failed to restored from $DIR, please contact developers."
 	else

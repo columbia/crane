@@ -149,6 +149,9 @@ def main(args):
     """
     Main module of worker-run.py
     """
+    if args.app == "httpd":
+        os.system(MSMR_ROOT + '/eval-container/utility-scripts/clean-sem.sh')
+
     set_local_config(args)
     # Heming: start proxy first, and then server. Because servers need proxy to get consensus on timebubble at startup phase.
     if args.proxy == 1:

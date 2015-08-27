@@ -37,16 +37,16 @@ def check_perf_logs(base):
                         elif fname.startswith('mg-server'):
                             tmp = result['mg-server']
 
-                    if 'orig' in fname:
-                        tmp['orig'].append(num)
-                    if 'xtern_only' in fname:
-                        tmp['xtern_only'].append(num)
-                    if 'proxy_only' in fname:
-                        tmp['proxy_only'].append(num)
-                    if 'separate_sched' in fname:
-                        tmp['separate_sched'].append(num)
-                    if 'joint_sched' in fname:
-                        tmp['joint_sched'].append(num)
+                        if 'orig' in fname:
+                            tmp['orig'].append(num)
+                        if 'xtern_only' in fname:
+                            tmp['xtern_only'].append(num)
+                        if 'proxy_only' in fname:
+                            tmp['proxy_only'].append(num)
+                        if 'separate_sched' in fname:
+                            tmp['separate_sched'].append(num)
+                        if 'joint_sched' in fname:
+                            tmp['joint_sched'].append(num)
 
     return result
 

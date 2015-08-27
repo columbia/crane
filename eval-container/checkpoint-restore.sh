@@ -34,12 +34,14 @@ if [ "$OP" == "checkpoint" ]; then
 
 # First, checkpoint the server application within the container.
 	# TBD: what if multiple processes?
-	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep httpd | awk -F '[/ ]*' '{print $7}'`
 	echo "Checkpointing process with pid $PID into directory $DIR ..."
 	sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
 	sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
 	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/$DIR $CRIU_ARGS &> /tmp/dump.txt\" C-m"
+	# time this!
+    time ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/$DIR $CRIU_ARGS &> /tmp/dump.txt\" C-m"
 	#exit 0
 
 # Second, checkpoint the file system of the container, and bdb storage of the proxy process.
@@ -48,7 +50,8 @@ if [ "$OP" == "checkpoint" ]; then
       sudo rm -rf start end
       sudo ln -s $FS_BASE_DIR/rootfs/$HOME start
       sudo ln -s $SNAPS_DIR/../rootfs/$HOME end
-      sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
+      # time this!
+      time sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
       cp $XTERN_ROOT/dync_hook/interpose.so .
@@ -73,7 +76,8 @@ if [ "$OP" == "checkpoint" ]; then
 			break
 		fi
 	done
-	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep httpd | awk -F '[/ ]*' '{print $7}'`
 	if [ "$PID"X == "X" ]; then
 		echo "Process has been failed to checkpointed, please contact developers."
 	else
@@ -165,7 +169,8 @@ if [ "$OP" == "restore" ]; then
 			break
 		fi
 	done
-	PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
+    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep httpd | awk -F '[/ ]*' '{print $7}'`
 	if [ "$PID"X == "X" ]; then
 		echo "Process has been failed to restored from $DIR, please contact developers."
 	else

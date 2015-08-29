@@ -19,7 +19,7 @@ def kill_previous_process(args):
     
     print "Killing residual processes"
     # Heming: added %s-amd64-, this is for killing valgrind sub processes such as helgrind-amd64-.
-    cmd = 'sudo killall -9 worker-run.py server.out %s %s-amd64- %s-amd64- %s-amd64-' % (
+    cmd = 'sudo killall -9 mencoder worker-run.py server.out %s %s-amd64- %s-amd64- %s-amd64-' % (
             args.app, args.head, args.worker1, args.worker2)
     rcmd = 'parallel-ssh -l {username} -v -p 3 -i -t 15 -h hostfile {command}'.format(
             username=USER, command=cmd)

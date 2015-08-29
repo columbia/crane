@@ -47,6 +47,8 @@ patch -p1 < ../add-detach-for-pod-check-thread.patch
 patch -p1 < ../add-soba-httpd.patch
 patch -p1 < ../add-hint-for-cgid.patch
 patch -p1 < ../add-disable-sched-paxos-parent.patch
+patch -p1 < ../add-init-affinity.patch
+#exit 0;
 
 # build
 #./configure --prefix=$APP_DIR/install --with-included-apr --enable-mods-shared=all \

@@ -132,7 +132,7 @@ def restart_head(args):
     time.sleep(10)
 
     # Restore the checkpoint
-    cmd = "cd %s/eval-container && ./checkpoint-restore.sh restore %s checkpoint-1668.tar.gz >| restore_output &" % (
+    cmd = "cd %s/eval-container && ./checkpoint-restore.sh restore %s checkpoint-*.tar.gz >| restore_output &" % (
             MSMR_ROOT, args.app)
     print "replaying server master node command: "
     rcmd = "parallel-ssh -l %s -v -p 1 -i -t 600 -h head \"%s\"" % (USER, cmd)

@@ -117,6 +117,8 @@ def restart_head(args):
     print output
 
     time.sleep(2)
+    # We don't do checkpoint restore for now!
+    return 
 
     cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --start_proxy_only yes --enable-lxc yes --sp %d --sd %d --scmd %s  --enable-lxc %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,

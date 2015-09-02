@@ -13,4 +13,5 @@ for server_name in mongoose clamav mediatomb apache; do
         ./change_sched_with_paxos_usleep.sh $usleep
         sed -n "46,49p" worker-run.py
         ./new-run.sh configs/"$server_name".sh no_build joint_sched $rounds
-
+    done
+done

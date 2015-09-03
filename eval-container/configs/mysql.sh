@@ -45,12 +45,12 @@ sleep 1
 
 if [ $proxy -eq 1 ]
 then
-    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mysql && \
+    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mysql; \
 	LD_PRELOAD=${msmr_root_server}/libevent_paxos/client-ld-preload/libclilib.so \
-	./workload.sh 127.0.0.1 9000 &> workload-out.txt '"
+	./workload.sh 128.59.17.174 9000 &> workload-out.txt; cat workload-out.txt | grep real; ./cal-avg.sh workload-out.txt '"
 else
-    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mysql && \
-        ./workload.sh 127.0.0.1 7000 &> workload-out.txt '"
+    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mysql; \
+        ./workload.sh 127.0.0.1 7000 &> workload-out.txt; cat workload-out.txt | grep real; ./cal-avg.sh workload-out.txt  '"
 fi
 
 # We didn't use start-server script because we have to LD_PRELOAD for the whole scripts.

@@ -149,7 +149,7 @@ def run_clients(args, newIP=False):
     cur_env = os.environ.copy()
     # When client and server are required to be on the same side(mediatomb), 
     # you may wan to comment the following LD_PRELOAD line to prevent some errors.
-    if args.proxy == 1 and args.app != "clamd" and args.app != "mediatomb":
+    if args.proxy == 1 and args.app != "clamd" and args.app != "mediatomb" and args.app != "mysqld":
         print "Preload client library"
         cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     # Just a temporary hack on the new server ip 

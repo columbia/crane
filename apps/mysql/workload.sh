@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cnt=3
+cnt=4
+STR="3*7*1*6*76"
 
 if [ ! $1 ];
 then
@@ -21,11 +22,11 @@ i=1
 while [ $i -le $cnt ]
 do
 	time $MSMR_ROOT/apps/mysql/mysql-install/bin/mysql -u root -h $1 -P $2 -e \
-		'use sysbench_db; select count(*) from sbtest where c REGEXP "3*7*1*6*76*3*0*7*";' &
+		'use sysbench_db; select count(*) from sbtest where c REGEXP "$STR";' &
 	sleep 0.001
 	(( i++ ))
 done
 
-sleep 3;
+sleep 5;
 killall -9 mysql
 exit 0

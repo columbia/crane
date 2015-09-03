@@ -36,6 +36,8 @@ mysql-install/bin/mysql -u root -S $SQL_SOCK -e 'create database sysbench_db;'
         --mysql-db=sysbench_db \
         prepare
 
+sleep 1
+./run-sysbench -p 7000
 
 #LD_LIBRARY_PATH=mysql-install/lib/mysql/ \
 #sysbench-install/bin/sysbench \

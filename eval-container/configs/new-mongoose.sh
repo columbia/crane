@@ -16,6 +16,7 @@ num_req=128
 #num_req=256
 #num_req=512 # added lxc, robust on these workloads.
 num_thd=8
+enable_lxc="yes"
 
 if [ $proxy -eq 1 ]
 then

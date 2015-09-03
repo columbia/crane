@@ -117,6 +117,8 @@ def restart_head(args):
     print output
 
     time.sleep(2)
+    # We don't do checkpoint restore for now!
+    return 
 
     cmd = "~/worker-run.py -a %s -x %d -p %d -k %d -c %s -m s -i 0 --start_proxy_only yes --enable-lxc yes --sp %d --sd %d --scmd %s  --enable-lxc %s" % (
             args.app, args.xtern, args.proxy, args.checkpoint,
@@ -132,7 +134,7 @@ def restart_head(args):
     time.sleep(10)
 
     # Restore the checkpoint
-    cmd = "cd %s/eval-container && ./checkpoint-restore.sh restore %s checkpoint-1668.tar.gz >| restore_output &" % (
+    cmd = "cd %s/eval-container && ./checkpoint-restore.sh restore %s checkpoint-*.tar.gz >| restore_output &" % (
             MSMR_ROOT, args.app)
     print "replaying server master node command: "
     rcmd = "parallel-ssh -l %s -v -p 1 -i -t 600 -h head \"%s\"" % (USER, cmd)

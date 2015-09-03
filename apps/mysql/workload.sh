@@ -21,7 +21,7 @@ fi
 i=1
 while [ $i -le $cnt ]
 do
-	time $MSMR_ROOT/apps/mysql/mysql-install/bin/mysql -u root -h $1 -P $2 -e \
+	time ./mysql-install/bin/mysql -u root -h $1 -P $2 -e \
 		'use sysbench_db; select count(*) from sbtest where c REGEXP "$STR";' &
 	sleep 0.001
 	(( i++ ))

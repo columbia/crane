@@ -22,6 +22,7 @@ while [ $i -le $cnt ]
 do
 	time $MSMR_ROOT/apps/mysql/mysql-install/bin/mysql -u root -h $1 -P $2 -e \
 		'use sysbench_db; select count(*) from sbtest where c REGEXP "3*7*1*6*76*3*0*7*";' &
+	sleep 0.001
 	(( i++ ))
 done
 

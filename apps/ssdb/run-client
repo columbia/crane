@@ -2,4 +2,4 @@
 
 cd $MSMR_ROOT/apps/ssdb
 
-./ssdb-master/tools/ssdb-bench 127.0.0.1 8888 100 1
+./ssdb-master/tools/ssdb-bench 127.0.0.1 8888 10 1

@@ -1,5 +1,5 @@
 #!/bin/bash
-killall -9 server.out sysbench mysqld mysqld_safe &> /dev/null
+#killall -9 server.out sysbench mysqld mysqld_safe &> /dev/null
 sudo rm /tmp/mysql.sock
 
 cd $MSMR_ROOT/apps/mysql

@@ -1,0 +1,39 @@
+diff -ruN parsec-2.0-orig-core/pkgs/apps/x264/src/encoder/analyse.c parsec-2.0-x264/pkgs/apps/x264/src/encoder/analyse.c
+--- parsec-2.0-orig-core/pkgs/apps/x264/src/encoder/analyse.c	2008-12-08 17:11:52.000000000 -0500
++++ parsec-2.0-x264/pkgs/apps/x264/src/encoder/analyse.c	2013-03-08 01:14:06.661707213 -0500
+@@ -22,6 +22,7 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111, USA.
+  *****************************************************************************/
+ 
++#include "tern/user.h"
+ #include <math.h>
+ #include <limits.h>
+ #ifndef _MSC_VER
+@@ -2122,6 +2123,7 @@
+         x264_adaptive_quant( h );
+ 
+     x264_mb_analyse_init( h, &analysis, h->mb.i_qp );
++	soba_wait(0);
+ 
+     /*--------------------------- Do the analysis ---------------------------*/
+     if( h->sh.i_type == SLICE_TYPE_I )
+diff -ruN parsec-2.0-orig-core/pkgs/apps/x264/src/x264.c parsec-2.0-x264/pkgs/apps/x264/src/x264.c
+--- parsec-2.0-orig-core/pkgs/apps/x264/src/x264.c	2008-12-10 15:44:53.000000000 -0500
++++ parsec-2.0-x264/pkgs/apps/x264/src/x264.c	2013-03-08 01:13:52.765707677 -0500
+@@ -21,6 +21,7 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111, USA.
+  *****************************************************************************/
+ 
++#include "tern/user.h"
+ #include <stdlib.h>
+ #include <math.h>
+ 
+@@ -126,7 +127,7 @@
+ 
+     /* Control-C handler */
+     signal( SIGINT, SigIntHandler );
+-
++soba_init(0, param.i_threads, param.i_threads*10);
+     ret = Encode( &param, &opt );
+ 
+ #ifdef PTW32_STATIC_LIB

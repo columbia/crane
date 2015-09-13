@@ -1,0 +1,8 @@
+<config>
+  <arbiter port="14901"/>
+  <explorer strategy="random" dpor="true" port="14902" log_dir="." timeout="600"/>
+  <init command="rm -rf testrun; cp -R testrun-backup testrun"/>
+  <interposition command="/home/heming/rcs/smt+mc/xtern/eval/model-chk-wrapper/wrapper"/>
+  <prefix path="ldap.parrot.strategy"/>
+  <program command="./wrapper"/>
+</config>

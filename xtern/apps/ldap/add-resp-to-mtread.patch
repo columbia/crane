@@ -1,0 +1,103 @@
+diff -ruN openldap-2.4.33/tests/progs/slapd-mtread.c openldap-2.4.33-modified/tests/progs/slapd-mtread.c
+--- openldap-2.4.33/tests/progs/slapd-mtread.c	2012-10-10 08:18:49.000000000 -0400
++++ openldap-2.4.33-modified/tests/progs/slapd-mtread.c	2013-01-05 22:55:49.254158684 -0500
+@@ -26,6 +26,8 @@
+ #include "portable.h"
+ 
+ #include <stdio.h>
++#include <time.h>
++#include <sys/time.h>
+ #include "ldap_pvt_thread.h"
+ 
+ #include "ac/stdlib.h"
+@@ -78,6 +80,7 @@
+ 
+ #define MAX_THREAD	1024
+ /* Use same array for readers and writers, offset writers by MAX_THREAD */
++double resp_pass[MAX_THREAD*2];
+ int	rt_pass[MAX_THREAD*2];
+ int	rt_fail[MAX_THREAD*2];
+ int	*rwt_pass = rt_pass + MAX_THREAD;
+@@ -370,8 +373,8 @@
+ 	free( lds );
+ 
+ 	for ( i = 0; i < threads; i++ ) {
+-		snprintf(outstr, BUFSIZ, "RO thread %d pass=%d fail=%d", i,
+-			rt_pass[i], rt_fail[i]);
++		snprintf(outstr, BUFSIZ, "RO thread %d pass=%d fail=%d resp = %f ms", i,
++			rt_pass[i], rt_fail[i], resp_pass[i]*1000.0);
+ 		tester_error(outstr);
+ 		if (rt_fail[i] != 0 || rt_pass[i] != ptpass) {
+ 			snprintf(outstr, BUFSIZ, "FAIL RO thread %d", i);
+@@ -380,8 +383,8 @@
+ 		}
+ 	}
+ 	for ( i = 0; i < rwthreads; i++ ) {
+-		snprintf(outstr, BUFSIZ, "RW thread %d pass=%d fail=%d", i + MAX_THREAD,
+-			rwt_pass[i], rwt_fail[i]);
++		snprintf(outstr, BUFSIZ, "RW thread %d pass=%d fail=%d resp = %f ms", i + MAX_THREAD,
++			rwt_pass[i], rwt_fail[i], resp_pass[i]*1000.0);
+ 		tester_error(outstr);
+ 		if (rwt_fail[i] != 0 || rwt_pass[i] != ptpass) {
+ 			snprintf(outstr, BUFSIZ, "FAIL RW thread %d", i);
+@@ -537,13 +540,18 @@
+ 		adds = 0;
+ 		dels = 0;
+ 		for (i = 0; i < loops; i++) {
++			struct timeval tstart, tend;
++			gettimeofday(&tstart, NULL);
+ 			ret = ldap_add_ext_s(ld, dn, &attrp[0], NULL, NULL);
++			gettimeofday(&tend, NULL);
+ 			if (ret == LDAP_SUCCESS) {
+ 				adds++;
+ 				ret = ldap_delete_ext_s(ld, dn, NULL, NULL);
+ 				if (ret == LDAP_SUCCESS) {
+ 					dels++;
+ 					rt_pass[idx]++;
++					double resp = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0;
++					resp_pass[idx] = (resp_pass[idx]*(rt_pass[idx] - 1) + resp)/rt_pass[idx];
+ 				} else {
+ 					thread_output(idx, ldap_err2string(ret));
+ 					rt_fail[idx]++;
+@@ -738,14 +746,19 @@
+ 		int	r = ((double)range)*rand()/(RAND_MAX + 1.0);
+ 		sprintf(fbuf, "%.*s%d%s", flen, filter, r, ftail);
+ 
++		struct timeval tstart, tend;
++		gettimeofday(&tstart, NULL);
+ 		rc = ldap_search_ext_s( ld, sbase, LDAP_SCOPE_SUBTREE,
+ 				fbuf, srchattrs, noattrs, NULL, NULL, NULL,
+ 				LDAP_NO_LIMIT, &res );
++		gettimeofday(&tend, NULL);
+ 		if ( res != NULL ) {
+ 			ldap_msgfree( res );
+ 		}
+ 		if ( rc == 0 ) {
+ 			rt_pass[idx]++;
++			double resp = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0;
++			resp_pass[idx] = (resp_pass[idx]*(rt_pass[idx] - 1) + resp)/rt_pass[idx];
+ 		} else {
+ 			int		first = tester_ignore_err( rc );
+ 			char		buf[ BUFSIZ ];
+@@ -798,16 +811,20 @@
+ 
+ 	for ( ; i < maxloop; i++ ) {
+ 		LDAPMessage *res = NULL;
+-
++		struct timeval tstart, tend;
++		gettimeofday(&tstart, NULL);
+ 		rc = ldap_search_ext_s( ld, entry, LDAP_SCOPE_BASE,
+ 				NULL, attrs, noattrs, NULL, NULL, NULL,
+ 				LDAP_NO_LIMIT, &res );
++		gettimeofday(&tend, NULL);
+ 		if ( res != NULL ) {
+ 			ldap_msgfree( res );
+ 		}
+ 
+ 		if ( rc == 0 ) {
+ 			rt_pass[idx]++;
++			double resp = (tend.tv_sec - tstart.tv_sec) + (tend.tv_usec - tstart.tv_usec)/1000000.0;
++			resp_pass[idx] = (resp_pass[idx]*(rt_pass[idx] - 1) + resp)/rt_pass[idx];
+ 		} else {
+ 			int		first = tester_ignore_err( rc );
+ 			char		buf[ BUFSIZ ];

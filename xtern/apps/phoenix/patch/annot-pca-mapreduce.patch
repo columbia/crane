@@ -1,0 +1,26 @@
+--- phoenix-2.0.0-orig/tests/pca/pca.c	2013-02-24 15:27:51.826290728 -0500
++++ phoenix-2.0.0/tests/pca/pca.c	2013-02-25 02:17:34.948940996 -0500
+@@ -37,6 +37,7 @@
+ 
+ #include "stddefines.h"
+ #include "map_reduce.h"
++#include "tern/user.h"
+ 
+ typedef struct {
+     int *matrix;
+@@ -208,6 +209,7 @@
+  */
+ void pca_mean_map(map_args_t *args)
+ {
++    soba_wait(0);
+     int sum;
+     intptr_t mean;
+     int i, j;
+@@ -326,6 +328,7 @@
+  */
+ void pca_cov_map(map_args_t *args)
+ {
++    soba_wait(1);
+     assert(args);
+     assert(args->length == 1);
+     int i, j;

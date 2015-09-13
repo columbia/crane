@@ -1,0 +1,33 @@
+diff -ruN statis-benchmarks/berkeleyDB/bdbHashThreaded.c statis-benchmarks-mod/berkeleyDB/bdbHashThreaded.c
+--- statis-benchmarks/berkeleyDB/bdbHashThreaded.c	2012-10-01 17:47:34.000000000 -0400
++++ statis-benchmarks-mod/berkeleyDB/bdbHashThreaded.c	2012-10-03 13:24:23.066107768 -0400
+@@ -79,7 +79,7 @@
+ 	  insert_per_xact = atoi(argv[2]);
+ 	}
+ 	// @todo the test has been crashing for multi-threaded long transactions.
+-	assert(num_threads == 1 || alwaysCommit == 1);  
++	//assert(num_threads == 1 || alwaysCommit == 1);  
+ 	
+ #ifdef DEBUG_BDB 
+ 	printf("num_xact = %d\n insert_per_xact=%d\n", num_xact, insert_per_xact);
+diff -ruN statis-benchmarks/berkeleyDB/genericBerkeleyDBCode.c statis-benchmarks-mod/berkeleyDB/genericBerkeleyDBCode.c
+--- statis-benchmarks/berkeleyDB/genericBerkeleyDBCode.c	2012-10-01 17:47:34.000000000 -0400
++++ statis-benchmarks-mod/berkeleyDB/genericBerkeleyDBCode.c	2012-10-03 13:24:35.394107329 -0400
+@@ -72,7 +72,7 @@
+ 	 *	read/write owner only
+ 	 */
+ 	if ((ret = dbenv->open(dbenv, ENV_DIRECTORY,
+-			       DB_CREATE |/* DB_INIT_LOCK |*/ DB_INIT_LOG |  DB_PRIVATE | 
++			       DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG |  DB_PRIVATE | 
+ 			       DB_INIT_MPOOL | DB_INIT_TXN | DB_RECOVER | DB_THREAD,
+ 			       S_IRUSR | S_IWUSR)) != 0) {
+ 		dbenv->err(dbenv, ret, "dbenv->open: %s", ENV_DIRECTORY);
+diff -ruN statis-benchmarks/berkeleyDB/Makefile statis-benchmarks-mod/berkeleyDB/Makefile
+--- statis-benchmarks/berkeleyDB/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ statis-benchmarks-mod/berkeleyDB/Makefile	2012-10-03 13:23:42.710109195 -0400
+@@ -0,0 +1,5 @@
++all: bdbHashThreaded
++
++bdbHashThreaded: bdbHashThreaded.c genericBerkeleyDBCode.c genericBerkeleyDBCode.h
++	gcc bdbHashThreaded.c -o bdbHashThreaded \
++	-g -I$(XTERN_ROOT)/apps/bdb_rep/install/include $(XTERN_ROOT)/apps/bdb_rep/install/lib/libdb.a -lpthread

@@ -1,0 +1,21 @@
+--- parsec-2.0-orig-core/pkgs/apps/freqmine/src/fp_tree.cpp	2009-01-21 11:09:15.000000000 -0500
++++ parsec-2.0/pkgs/apps/freqmine/src/fp_tree.cpp	2013-03-13 03:33:09.162860127 -0400
+@@ -1287,8 +1287,10 @@
+ 
+ }
+ 
++#include "tern/user.h"
+ int FP_tree::FP_growth_first(FSout* fout)
+ {
++        soba_init(0, omp_get_max_threads(), omp_get_max_threads()*20);
+ 	int sequence;
+ 	double tstart, tend, temp_time;
+ 	int function_type;
+@@ -1383,6 +1385,7 @@
+ 				release_node_array_after_mining(sequence, thread, workingthread);
+ 				continue;
+ 			}
++			soba_wait(0);
+ 
+ 			FP_tree *fptree;
+ 			fptree = (FP_tree*)local_fp_buf->newbuf(1, sizeof(FP_tree));

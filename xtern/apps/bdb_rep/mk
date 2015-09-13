@@ -1,0 +1,74 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+VER=5.3.15
+APP_DIR=$XTERN_ROOT/apps/bdb_rep/
+DB_SRC_DIR=$APP_DIR/db-$VER
+cd $APP_DIR
+rm -rf db-$VER perf install statis-benchmarks
+
+if [ ! -f db-$VER.tar.gz ]; then
+    wget http://download.oracle.com/berkeley-db/db-$VER.tar.gz
+fi
+tar zxvf db-$VER.tar.gz
+
+# Uncomment below for experiment with dbug.
+# Comment them out for experiment with xtern only.
+#cd db-$VER
+#patch -p1 < ../divergence.patch
+#cd ..
+
+# Build bdb.
+cd db-$VER/build_unix
+# The "--with-mutex=POSIX/pthreads" is a must, otherwise the __db_pthread_mutex_lock() will not be compiled into the library and few mutexes will be invoked.
+../dist/configure CFLAGS="-O3 -g" CXXFLAGS="-O3 -g" --enable-posixmutexes --with-mutex=POSIX/pthreads --prefix=$APP_DIR/install
+make -j64 && make install
+
+# Build bdb rep.
+cp -r $DB_SRC_DIR/src/dbinc/ $APP_DIR/install/include/
+cd $DB_SRC_DIR/examples/c/ex_rep/base
+#patch < $APP_DIR/bugs/00-bdb_rep_connect_race.patch
+cd $DB_SRC_DIR/examples/c/ex_rep
+cp $APP_DIR/rep_makefile_normal Makefile
+make
+cp rep_mgr $APP_DIR
+cp rep_base $APP_DIR
+cd $APP_DIR
+
+# Build statis benchmark.
+cd $APP_DIR
+tar zxvf statis-benchmarks.tar.gz
+cd statis-benchmarks
+patch -p1 < ../fix-statis-benchmarks.patch
+cd berkeleyDB
+make
+cd $APP_DIR
+mv statis-benchmarks/berkeleyDB/bdbHashThreaded .
+
+# Build 3n+1 benchmark, a fine-grained one.
+cd $APP_DIR
+tar zxvf libdb-3n.tar.gz
+cd libdb-3n
+g++ -O3 -g bench3n.cpp -o bench3n -I$APP_DIR/install/include $APP_DIR/install/lib/libdb.a -lpthread
+cd $APP_DIR
+mv libdb-3n/bench3n .
+

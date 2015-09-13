@@ -1,0 +1,29 @@
+diff -ruN parsec-2.0-orig/pkgs/apps/vips/src/libsrc/iofuncs/threadgroup.c parsec-2.0/pkgs/apps/vips/src/libsrc/iofuncs/threadgroup.c
+--- parsec-2.0-orig/pkgs/apps/vips/src/libsrc/iofuncs/threadgroup.c	2013-02-07 14:42:54.816848801 -0500
++++ parsec-2.0/pkgs/apps/vips/src/libsrc/iofuncs/threadgroup.c	2013-02-08 02:47:37.211292987 -0500
+@@ -44,7 +44,7 @@
+ #define DEBUG_HIGHWATER
+ #define DEBUG_IO
+  */
+-
++#include "tern/user.h"
+ #ifdef HAVE_CONFIG_H
+ #include <config.h>
+ #endif /*HAVE_CONFIG_H*/
+@@ -340,6 +340,8 @@
+ 
+ 	/* Prepare this area.
+ 	 */
++	 	 soba_wait(0);
++
+ 	if( thr->tg->inplace ) {
+ 		if( im_prepare_to( thr->reg, thr->oreg, 
+ 			&thr->pos, thr->x, thr->y ) )
+@@ -615,6 +617,7 @@
+ 
+ 	/* Attach threads.
+ 	 */
++	 soba_init(0, tg->nthr, 1000);
+ 	for( i = 0; i < tg->nthr; i++ )
+ 		if( !(tg->thr[i] = threadgroup_thread_new( tg )) )
+ 			return( NULL );

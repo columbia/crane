@@ -1,0 +1,126 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+set -e
+
+ROOT=`pwd`
+
+if [ ! -d $XTERN_ROOT ]; then
+	echo "XTERN_ROOT is not defined"
+	exit 1
+fi
+
+if [ ! -f phoenix-2.0.0.tar.gz ]; then
+    wget http://mapreduce.stanford.edu/2.0.0/phoenix-2.0.0.tar.gz
+fi
+tar zxvf phoenix-2.0.0.tar.gz
+
+pushd $XTERN_ROOT/apps/phoenix/
+#rm linear_regression.tar.gz
+
+# download required files
+check=$(dpkg-query -W -f='${Status} ${Version}\n' axel 2>&1)
+if [[ "$check" != "install ok"* ]]; then
+    echo "please install 'axel'"
+    exit 1
+fi
+AXEL=$(which axel)
+files=( histogram linear_regression string_match reverse_index word_count  )
+for i in "${files[@]}"
+do
+    if [ ! -f $i.tar.gz ]; then
+        $AXEL http://mapreduce.stanford.edu/datafiles/$i.tar.gz
+    fi
+done
+md5sum -c md5check.txt
+#for i in "${files[@]}"
+#do
+#    tar zxf $i.tar.gz
+#done
+
+# clean up
+rm -rf phoenix-2.0.0
+tar zxf phoenix-2.0.0.tar.gz
+
+# patch && make
+pushd phoenix-2.0.0
+patch -p1 < ../patch/fix.patch
+patch -p1 < ../patch/replace_pthread_specific.patch  # maximum # of threads will be 64 (hard coded)
+patch -p1 < ../patch/defines.mk.patch
+patch -p1 < ../patch/fix-histogram-pthread.patch
+# mapreduce patches
+patch -p1 < ../patch/annot-phoenix-all-map-reduce.patch
+patch -p1 < ../patch/annot-histogram-mapreduce.patch
+patch -p1 < ../patch/annot-linear-regression-mapreduce.patch
+patch -p1 < ../patch/annot-pca-mapreduce.patch
+#patch -p1 < ../patch/annot-word_count-mapreduce.patch
+patch -p1 < ../patch/annot-kmeans-mapreduce.patch
+patch -p1 < ../patch/annot-matrix_multiply-mapreduce.patch
+patch -p1 < ../patch/annot-string_match-mapreduce.patch
+
+# pthreads patches
+patch -p1 < ../patch/annot-histogram-pthread.patch
+patch -p1 < ../patch/annot-linear-regression-pthread.patch
+patch -p1 < ../patch/annot-pca-pthread.patch
+patch -p1 < ../patch/annot-word_count-pthread.patch
+patch -p1 < ../patch/annot-kmeans-pthread.patch
+patch -p1 < ../patch/annot-matrix_multiply-pthread.patch
+patch -p1 < ../patch/annot-string_match-pthread.patch
+
+# threads number
+patch -p1 < ../patch/thread_number.patch
+
+# repalce pthread_specific w/o global lock; replace semaphore with cond variable
+patch -p1 < ../patch/semaphore.patch
+make
+popd
+
+find . -maxdepth 1 -type l -exec rm -rf {} \;
+bench=( histogram linear_regression matrix_multiply string_match kmeans pca word_count )
+for i in "${bench[@]}"
+do
+    ln -s phoenix-2.0.0/tests/$i/$i
+    ln -s phoenix-2.0.0/tests/$i/$i-pthread
+done
+
+popd
+
+if [[ -f linear_regression_3g.tar.gz ]]; then
+    echo "DONE !"
+    exit 0
+fi
+
+# Generate a bigger input file for linear_regression, 500MB is too short.
+echo "Generating key_file_3GB.txt for linear_regression..."
+tar zxvf linear_regression.tar.gz
+cd linear_regression_datafiles
+#rm key_file_3GB.txt
+cat key_file_500MB.txt >> key_file_3GB.txt
+cat key_file_500MB.txt >> key_file_3GB.txt
+cat key_file_500MB.txt >> key_file_3GB.txt
+cat key_file_500MB.txt >> key_file_3GB.txt
+cat key_file_500MB.txt >> key_file_3GB.txt
+cat key_file_500MB.txt >> key_file_3GB.txt
+cd ..
+tar zcvf linear_regression_3g.tar.gz linear_regression_datafiles/key_file_3GB.txt
+
+echo "DONE!"

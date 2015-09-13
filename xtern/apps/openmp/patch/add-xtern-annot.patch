@@ -1,0 +1,45 @@
+--- gcc-4.5.4-orig/libgomp/config/posix/bar.c	2012-12-26 01:03:55.935889276 -0500
++++ gcc-4.5.4/libgomp/config/posix/bar.c	2013-01-21 18:55:19.889212249 -0500
+@@ -28,7 +28,7 @@
+    POSIX pthread_barrier_t won't work.  */
+ 
+ #include "libgomp.h"
+-
++#include "tern/user.h"
+ 
+ void
+ gomp_barrier_init (gomp_barrier_t *bar, unsigned count)
+@@ -42,6 +42,7 @@
+   bar->total = count;
+   bar->arrived = 0;
+   bar->generation = 0;
++  soba_init((long)bar, count, 20*omp_get_max_threads());
+ }
+ 
+ void
+@@ -57,6 +58,7 @@
+ #endif
+   gomp_sem_destroy (&bar->sem1);
+   gomp_sem_destroy (&bar->sem2);
++  soba_destroy((long)bar);
+ }
+ 
+ void
+@@ -106,6 +108,8 @@
+ gomp_barrier_wait (gomp_barrier_t *barrier)
+ {
+   gomp_barrier_wait_end (barrier, gomp_barrier_wait_start (barrier));
++  soba_wait((long)barrier);
++  
+ }
+ 
+ void
+@@ -166,6 +170,8 @@
+ gomp_team_barrier_wait (gomp_barrier_t *barrier)
+ {
+   gomp_team_barrier_wait_end (barrier, gomp_barrier_wait_start (barrier));
++  soba_wait((long)barrier);
++  
+ }
+ 
+ void

@@ -1,0 +1,84 @@
+#!/usr/bin/python
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+import os
+import sys
+import argparse
+
+def setup(file):
+    # create file with tern_symbolic()
+    body = '''
+    extern "C" void tern_symbolic(void *addr, int nbytes, char *name)
+    {
+    }
+    '''
+    fd = open(file, 'w')
+    fd.write('%s\n' % body)
+    fd.close()
+
+def teardown(file):
+    os.unlink(file);
+
+parser = argparse.ArgumentParser(description
+                                 ='prepare binaries for use with tern');
+parser.add_argument('program', metavar='program.bc',
+                    help='.bc or .ll program to prepare')
+parser.add_argument('-tooldir', dest='tern_obj_path',
+                    default='/home/huayang/research/xtern/obj/Debug/',
+                    help='directory to xtern tools')
+parser.add_argument('-l', dest='additional_libs', default='',
+                    help='comma separated list of libraries for linking')
+args = parser.parse_known_args();
+program = args[0].program
+tern_obj_path = args[0].tern_obj_path
+additional_libs = ''
+for s in args[0].additional_libs.split(','):
+    if s != '':
+        additional_libs += ' ' + ('-l%s' % s)
+
+program_without_ext = ''
+if program.endswith('.ll') or program.endswith('.bc'):
+    program_without_ext = program.rstrip('lbc.')
+record   = '%s-record'   % program_without_ext
+analysis = '%s-analysis' % program_without_ext 
+replay   = '%s-replay'   % program_without_ext
+
+tern_symbolic = '/tmp/tern_symbolic.c'
+
+commands = [
+    '%s/bin/tern-instr -S %s -o %s' \
+        % (tern_obj_path, program, program_without_ext),
+    'llc -o %s.s %s.ll' % (record, record),
+    'g++ -o %s %s.s %s -L%s/lib -lruntime -lcommon -lpthread -lcrypt %s' \
+        % (record, record, tern_symbolic, tern_obj_path, additional_libs),
+    ('./%s ' % record) + ' '.join(args[1])
+    ];
+
+for th in [0, 1]:
+    cmd = '%s/bin/logprint -r -v -bc %s.ll tern-log-tid-%d > out%d.txt' \
+        % (tern_obj_path, analysis, th, th)
+#    commands.append(cmd)
+
+setup(tern_symbolic)
+for cmd in commands:
+    print 'running <%s>' % cmd
+    os.system(cmd);
+teardown(tern_symbolic)

@@ -1,0 +1,14 @@
+--- phoenix-2.0.0/tests/histogram_orig/histogram-pthread.c	2013-02-22 04:33:07.655785063 -0500
++++ phoenix-2.0.0/tests/histogram/histogram-pthread.c	2013-02-22 04:33:25.699784439 -0500
+@@ -265,11 +265,6 @@
+    CHECK_ERROR(close(fd) < 0);
+    
+    free(pid);
+-   for(i = 0; i < num_procs; i++) {
+-      free(arg[i].red);
+-      free(arg[i].green);
+-      free(arg[i].blue);
+-   }
+    free(arg);
+    pthread_attr_destroy(&attr);
+    

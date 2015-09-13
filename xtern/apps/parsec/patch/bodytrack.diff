@@ -1,0 +1,28 @@
+diff --git a/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilter.h b/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilter.h
+index ab4c078..978e0b2 100644
+--- a/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilter.h
++++ b/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilter.h
+@@ -40,7 +40,9 @@
+ #include "RandomGenerator.h"
+ #include "AnnealingFactor.h"
+ 
+-#define uint unsigned int								
++//#define uint unsigned int								
++// instead:
++#include <sys/types.h>
+ #undef min
+ 
+ //Generic particle filter class templated on model object
+diff --git a/pkgs/apps/bodytrack/src/TrackingBenchmark/TrackingModel.cpp b/pkgs/apps/bodytrack/src/TrackingBenchmark/TrackingModel.cpp
+index 2a38ccb..650055d 100644
+--- a/pkgs/apps/bodytrack/src/TrackingBenchmark/TrackingModel.cpp
++++ b/pkgs/apps/bodytrack/src/TrackingBenchmark/TrackingModel.cpp
+@@ -26,7 +26,7 @@
+ #include "FlexLib.h"
+ #include "system.h"
+ 
+-#define uint unsigned int
++//#define uint unsigned int
+ 
+ using namespace std;
+ 

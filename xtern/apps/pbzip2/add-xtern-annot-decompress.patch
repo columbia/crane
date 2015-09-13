@@ -1,0 +1,13 @@
+diff -Naur pbzip2-1.1.5/pbzip2.cpp pbzip2-1.1.5_modify/pbzip2.cpp
+--- pbzip2-1.1.5/pbzip2.cpp	2013-01-19 14:50:53.493842137 -0500
++++ pbzip2-1.1.5_modify/pbzip2.cpp	2013-01-19 14:52:01.805839021 -0500
+@@ -1504,6 +1504,9 @@
+ 		safe_cond_signal(fifo->notFull);
+ 		safe_mutex_unlock(fifo->mut);
+ 
++		soba_wait(0);
++		
++
+ 		if (lastFileData != NULL)
+ 		{
+ 			delete lastFileData;

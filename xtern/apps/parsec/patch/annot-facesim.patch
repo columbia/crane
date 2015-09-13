@@ -1,0 +1,45 @@
+diff -ruN parsec-2.0-orig/pkgs/apps/facesim/src/TaskQ/lib/Makefile parsec-2.0/pkgs/apps/facesim/src/TaskQ/lib/Makefile
+--- parsec-2.0-orig/pkgs/apps/facesim/src/TaskQ/lib/Makefile	2013-02-07 14:42:54.896848798 -0500
++++ parsec-2.0/pkgs/apps/facesim/src/TaskQ/lib/Makefile	2013-02-07 14:44:02.212846387 -0500
+@@ -1,5 +1,5 @@
+ all: taskQ.o
+ 
+ taskQ.o: 
+-	$(CXX) $(CXXARGS) -DTASKQ_DIST_FIXED -c taskQDistCommon.c
++	$(CXX) -I$(XTERN_ROOT)/include -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot $(CXXARGS) -DTASKQ_DIST_FIXED -c taskQDistCommon.c
+ 	mv taskQDistCommon.o taskQ.o
+diff -ruN parsec-2.0-orig/pkgs/apps/facesim/src/TaskQ/lib/taskQDistCommon.c parsec-2.0/pkgs/apps/facesim/src/TaskQ/lib/taskQDistCommon.c
+--- parsec-2.0-orig/pkgs/apps/facesim/src/TaskQ/lib/taskQDistCommon.c	2013-02-07 14:42:54.896848798 -0500
++++ parsec-2.0/pkgs/apps/facesim/src/TaskQ/lib/taskQDistCommon.c	2013-02-07 14:46:36.780840857 -0500
+@@ -100,12 +100,15 @@
+     return done;
+ }
+ 
++
++#include "tern/user.h"
+ static int doOwnTasks( long myThreadId, long myQ) {
+     void *task[NUM_FIELDS];
+     int executed = 0;
+ 
+     TRACE;
+     while ( getATaskFromHead( &taskQs[myQ], task)) {
++          soba_wait(0);
+         ( ( TaskQTask3)task[0])( myThreadId, task[1], task[2], task[3]);
+         executed = 1;
+     }
+@@ -210,6 +213,7 @@
+     pthread_cond_init(&sync.tasksDone,NULL);;
+     sync.threadCount = 0;
+ 
++    soba_init(0, numThreads, 100);
+     for ( i = 1; i < numThreads; i++)
+         
+     {
+@@ -219,6 +223,7 @@
+         }
+         pthread_create(&_M4_threadsTable[_M4_i],NULL,(void *(*)(void *))taskQIdleLoop,(void *)( long)i);
+     }
++
+ ;
+ 
+     waitForEnd();

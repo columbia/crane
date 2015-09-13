@@ -1,0 +1,140 @@
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tools/F_mk/GMakedefs.mak ExaCT_Proxy_Apps_20120322/BoxLib/Tools/F_mk/GMakedefs.mak
+--- ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tools/F_mk/GMakedefs.mak	2013-07-16 15:25:21.487994972 -0400
++++ ExaCT_Proxy_Apps_20120322/BoxLib/Tools/F_mk/GMakedefs.mak	2013-07-16 16:26:31.291867911 -0400
+@@ -8,9 +8,9 @@
+ 
+ FC       :=
+ F90      :=
+-F90FLAGS :=
+-FFLAGS   :=
+-CFLAGS   :=
++F90FLAGS +=
++FFLAGS   +=
++CFLAGS   +=
+ 
+ VPATH_LOCATIONS :=
+ INCLUDE_LOCATIONS :=
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tutorials/Exp_CNS_NoSpec/GNUmakefile ExaCT_Proxy_Apps_20120322/BoxLib/Tutorials/Exp_CNS_NoSpec/GNUmakefile
+--- ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tutorials/Exp_CNS_NoSpec/GNUmakefile	2013-07-16 15:25:21.483994972 -0400
++++ ExaCT_Proxy_Apps_20120322/BoxLib/Tutorials/Exp_CNS_NoSpec/GNUmakefile	2013-07-16 16:26:43.123867502 -0400
+@@ -4,10 +4,13 @@
+ 
+ NDEBUG    := t
+ MPI       :=
+-OMP       :=
++OMP       := t
+ PROF      :=
+ COMP      := gfortran
+ MKVERBOSE := t
++CFLAGS := -mtune=native -fno-stack-protector -static-libgcc -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot -lrt
++FFLAGS := -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot -lrt
++F90FLAGS := -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot -lrt
+ 
+ include $(BOXLIB_HOME)/Tools/F_mk/GMakedefs.mak
+ 
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tutorials/MultiGrid_C/GNUmakefile ExaCT_Proxy_Apps_20120322/BoxLib/Tutorials/MultiGrid_C/GNUmakefile
+--- ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tutorials/MultiGrid_C/GNUmakefile	2013-07-16 15:25:21.479994972 -0400
++++ ExaCT_Proxy_Apps_20120322/BoxLib/Tutorials/MultiGrid_C/GNUmakefile	2013-07-16 16:26:36.995867714 -0400
+@@ -19,7 +19,7 @@
+ PRECISION = DOUBLE
+ 
+ DEBUG	= FALSE
+-DEBUG	= TRUE
++#DEBUG	= TRUE
+ 
+ DIM	= 3
+ 
+@@ -32,7 +32,11 @@
+ CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA
+ 
+ # USE_MPI must be TRUE if USE_HYPRE
+-USE_MPI=TRUE
++USE_MPI=FALSE
++USE_OMP=TRUE
++CXXFLAGS = -mtune=native -fno-stack-protector -static-libgcc -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot
++FFLAGS = -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot
++F90FLAGS = -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot
+ 
+ EBASE = main
+ 
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tutorials/WaveEquation_C/GNUmakefile ExaCT_Proxy_Apps_20120322/BoxLib/Tutorials/WaveEquation_C/GNUmakefile
+--- ExaCT_Proxy_Apps_20120322_backup/BoxLib/Tutorials/WaveEquation_C/GNUmakefile	2013-07-16 15:25:21.483994972 -0400
++++ ExaCT_Proxy_Apps_20120322/BoxLib/Tutorials/WaveEquation_C/GNUmakefile	2013-07-16 16:26:31.363867909 -0400
+@@ -4,13 +4,18 @@
+ 
+ DEBUG     = FALSE
+ USE_MPI   = FALSE
+-USE_OMP   = FALSE
++USE_OMP   = TRUE
+ PROFILE   = FALSE
+-COMP      = g++
+-FCOMP     = gfortran
++#COMP      = $(XTERN_ROOT)/apps/openmp/install/bin/g++
++COMP=g++
++FCOMP=gfortran
++#FCOMP     = $(XTERN_ROOT)/apps/openmp/install/bin/gfortran
+ DIM       = 2
+ PRECISION = DOUBLE
+ EBASE     = main
++CXXFLAGS = -mtune=native -fno-stack-protector -static-libgcc -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot
++FFLAGS = -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot
++F90FLAGS = -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot
+ 
+ include ./Make.package
+ include $(BOXLIB_HOME)/Tools/C_mk/Make.defs
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/Combustion/Chemistry/bin/vodeDriver/GNUmakefile ExaCT_Proxy_Apps_20120322/Combustion/Chemistry/bin/vodeDriver/GNUmakefile
+--- ExaCT_Proxy_Apps_20120322_backup/Combustion/Chemistry/bin/vodeDriver/GNUmakefile	2013-07-16 15:25:21.443994973 -0400
++++ ExaCT_Proxy_Apps_20120322/Combustion/Chemistry/bin/vodeDriver/GNUmakefile	2013-07-16 16:27:05.547866724 -0400
+@@ -5,11 +5,13 @@
+ COMP            = g++
+ FCOMP           = gfortran
+ USE_MPI         = FALSE
+-USE_OMP         = FALSE
+-
++USE_OMP         = TRUE
++CXXFLAGS = -mtune=native -fno-stack-protector -static-libgcc -static-libstdc++ -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot -lrt
++FFLAGS = -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot -fall-intrinsics -lrt
++F90FLAGS = -mtune=native -static-libgfortran -fopenmp -Wall -I${XTERN_ROOT}/include -L${BOXLIB_HOME} -lm -lgomp -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook -lxtern-annot -fall-intrinsics -lrt
+ # Choose model (from list below), and pmf file
+ CHEMISTRY_MODEL = DRM19
+-CHEMISTRY_MODEL = CHEMH
++#CHEMISTRY_MODEL = CHEMH
+ 
+ # Set paths to BoxLib and Chemistry
+ TOP = ../../../..
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/Combustion/Chemistry/src/ChemDriver_2D.F ExaCT_Proxy_Apps_20120322/Combustion/Chemistry/src/ChemDriver_2D.F
+--- ExaCT_Proxy_Apps_20120322_backup/Combustion/Chemistry/src/ChemDriver_2D.F	2013-07-16 15:25:21.443994973 -0400
++++ ExaCT_Proxy_Apps_20120322/Combustion/Chemistry/src/ChemDriver_2D.F	2013-07-16 16:27:07.099866672 -0400
+@@ -752,8 +752,8 @@
+ 
+ #ifdef BL_USE_OMP
+       include "omp_lib.h"
+-      REAL_T,  allocatable :: egrwrk(:,:)
+-      integer, allocatable :: egiwrk(:,:)
++      REAL_T,  pointer :: egrwrk(:,:)
++      integer, pointer :: egiwrk(:,:)
+ #endif
+       integer egrlen, egilen, tid, nthrds
+ 
+@@ -870,8 +870,8 @@
+ 
+ #ifdef BL_USE_OMP
+       include "omp_lib.h"
+-      REAL_T,  allocatable :: egrwrk(:,:)
+-      integer, allocatable :: egiwrk(:,:)
++      REAL_T,  pointer :: egrwrk(:,:)
++      integer, pointer :: egiwrk(:,:)
+ #endif
+       integer egrlen, egilen, tid, nthrds
+ 
+diff -ruN ExaCT_Proxy_Apps_20120322_backup/Combustion/Chemistry/src/ChemDriver_F.F ExaCT_Proxy_Apps_20120322/Combustion/Chemistry/src/ChemDriver_F.F
+--- ExaCT_Proxy_Apps_20120322_backup/Combustion/Chemistry/src/ChemDriver_F.F	2013-07-16 15:25:21.443994973 -0400
++++ ExaCT_Proxy_Apps_20120322/Combustion/Chemistry/src/ChemDriver_F.F	2013-07-16 16:27:05.407866729 -0400
+@@ -712,7 +712,6 @@
+       implicit none
+ #include "cdwrk.H"
+ #include "conp.H"
+-#include "visc.H"
+       REAL_T TIME, Z(NEQ), ZP(NEQ), RPAR(*)
+       integer N, IPAR(*)
+       

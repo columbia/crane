@@ -1,0 +1,149 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+set -e
+
+ROOT=`pwd`
+
+if [ ! -d $XTERN_ROOT ]; then
+	echo "XTERN_ROOT is not defined"
+	exit 1
+fi
+
+set +e
+package=( axel libtiff4-dev )
+for i in "${package[@]}"
+do
+    check=$(dpkg-query -W -f='${Status} ${Version}\n' $i 2>&1)
+    if [[ "$check" != "install ok"* ]]; then
+        echo "please run 'sudo apt-get install ${package[*]}'"
+        exit 1
+    fi
+done
+set -e
+
+AXEL=$(which axel)
+
+pushd $XTERN_ROOT/apps/splash2
+
+echo "Checking splash2 sim file..."
+if [ ! -f parsec-3.0-input-sim.tar.gz ]; then
+    $AXEL http://parsec.cs.princeton.edu/download/3.0/parsec-3.0-input-sim.tar.gz
+fi
+if [ ! -f parsec-3.0/config/simdev.runconf ]; then
+    tar zxvf parsec-3.0-input-sim.tar.gz
+fi
+
+echo "Checking parsec native file..."
+if [ ! -f parsec-3.0-input-native.tar.gz ]; then
+    $AXEL http://parsec.cs.princeton.edu/download/3.0/parsec-3.0-input-native.tar.gz
+fi
+if [ ! -f parsec-3.0/config/native.runconf ]; then
+    tar zxvf parsec-3.0-input-native.tar.gz
+fi
+
+echo "Checking splash2 core file..."
+if [ ! -f parsec-3.0-core.tar.gz ]; then
+    $AXEL http://parsec.cs.princeton.edu/download/3.0/parsec-3.0-core.tar.gz
+fi
+tar zxf parsec-3.0-core.tar.gz > /dev/null 2>&1
+
+# log file might miss if the execution time is less than 1 second
+sed -i "51 s/%F_%T\"/%F_%T_%N\"/" $XTERN_ROOT/apps/splash2/parsec-3.0/config/linux.sysconf
+# posix time format
+sed -i "268 s/\"time\"/\"time -p\"/g" $XTERN_ROOT/apps/splash2/parsec-3.0/bin/parsecmgmt
+
+echo "Build splash2x"
+# patch building configs
+sed -i  's/${PORTABILITY_FLAGS}/ ${PORTABILITY_FLAGS} -I${XTERN_ROOT}\/include /g' parsec-3.0/config/gcc.bldconf
+sed -i '78 s|\"$| -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook\"''|' parsec-3.0/config/gcc.bldconf
+sed -i '79 s|\"$|-lxtern-annot\"''|' parsec-3.0/config/gcc.bldconf
+sed -i '74 s/\"$/ -march=native\"/g' parsec-3.0/config/gcc.bldconf
+sed -i '75 s/\"$/ -march=native\"/g' parsec-3.0/config/gcc.bldconf
+
+# use 'c.m4.null.POSIX_BARRIER' instead of 'parmacs.pthreads.c.m4'
+rm -rf $XTERN_ROOT/apps/splash2/parsec-3.0/pkgs/libs/parmacs/src/m4/parmacs.POSIX_BARRIER.c.m4
+ln -s c.m4.null.POSIX_BARRIER \
+    $XTERN_ROOT/apps/splash2/parsec-3.0/pkgs/libs/parmacs/src/m4/parmacs.POSIX_BARRIER.c.m4
+sed -i '81 s/pthreads/POSIX_BARRIER/g' parsec-3.0/config/gcc.bldconf
+sed -i '367 s/)/, gm->nprocs)/g' parsec-3.0/ext/splash2x/apps/raytrace/src/main.C #patch raytrace
+
+# patch ad hoc sync
+patch -p0 < patch/cholesky.patch
+patch -p0 < patch/fmm.patch
+patch -p0 < patch/radiosity.patch
+patch -p0 < patch/volrend.patch
+patch -p0 < patch/barnes.patch
+# Uncomment below lu.patch for experiment with dbug.
+# Comment it out for experiment with xtern only.
+#patch -p0 < patch/fmm-dbug.patch
+
+# annotations
+cd parsec-3.0
+patch -p1 < ../patch/annot-radix.patch
+patch -p1 < ../patch/annot-radiosity.patch
+patch -p1 < ../patch/annot-fmm-non-det.patch
+patch -p1 < ../patch/annot-raytrace-non-det.patch
+patch -p1 < ../patch/annot-cholesky-non-det.patch
+cd ..
+
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.barnes
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.fmm
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.ocean_cp
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.ocean_ncp
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.radiosity
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.raytrace
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.volrend
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.water_nsquared
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.water_spatial
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.cholesky
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.fft
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.lu_cb
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.lu_ncb
+./parsec-3.0/bin/parsecmgmt -a build -p splash2x.radix
+./parsec-3.0/bin/parsecmgmt -a status -p splash2x
+
+ARCH=`uname -m`
+if [[ "$ARCH" == "x86_64" ]]; then
+    hosttype="amd64"
+elif [[ "$ARCH" == "amd64" ]]; then
+    hosttype="amd64"
+else
+    hosttype="i386"
+fi
+
+# copy files
+find . -maxdepth 1 -type l -exec rm -rf {} \;
+workloads=( barnes fmm ocean_cp ocean_ncp radiosity raytrace volrend water_nsquared water_spatial )
+for i in "${workloads[@]}"
+do
+    ln -s parsec-3.0/ext/splash2x/apps/$i/inst/$hosttype-linux.gcc/bin/$i
+done
+workloads=( cholesky fft lu_cb lu_ncb radix )
+for i in "${workloads[@]}"
+do
+    ln -s parsec-3.0/ext/splash2x/kernels/$i/inst/$hosttype-linux.gcc/bin/$i
+done
+
+popd
+
+echo "DONE!"

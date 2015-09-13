@@ -1,0 +1,12 @@
+diff -ruN pbzip2-1.1.5/Makefile pbzip2-1.1.5-mod/Makefile
+--- pbzip2-1.1.5/Makefile	2011-07-16 12:52:35.000000000 -0400
++++ pbzip2-1.1.5-mod/Makefile	2012-09-29 23:37:50.489156472 -0400
+@@ -3,7 +3,7 @@
+ 
+ # Compiler to use
+ CC = g++
+-CFLAGS = -O2
++CFLAGS = -O2 -g
+ #CFLAGS += -g -Wall
+ #CFLAGS += -ansi
+ #CFLAGS += -pedantic

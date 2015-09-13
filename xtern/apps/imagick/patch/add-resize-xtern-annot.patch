@@ -1,0 +1,26 @@
+--- ImageMagick-6.8.0-4/magick/resize.c	2012-10-17 21:51:15.000000000 -0400
++++ resize.c	2013-01-21 01:50:19.791412739 -0500
+@@ -75,6 +75,7 @@
+ #include "magick/token.h"
+ #include "magick/utility.h"
+ #include "magick/version.h"
++#include "tern/user.h"
+ #if defined(MAGICKCORE_LQR_DELEGATE)
+ #include <lqr.h>
+ #endif
+@@ -2293,6 +2294,7 @@
+       }
+     indexes=GetCacheViewVirtualIndexQueue(image_view);
+     resize_indexes=GetCacheViewAuthenticIndexQueue(resize_view);
++    soba_wait(0);
+     for (y=0; y < (ssize_t) resize_image->rows; y++)
+     {
+       MagickPixelPacket
+@@ -2534,6 +2536,7 @@
+       }
+     indexes=GetCacheViewVirtualIndexQueue(image_view);
+     resize_indexes=GetCacheViewAuthenticIndexQueue(resize_view);
++    soba_wait(0);
+     for (x=0; x < (ssize_t) resize_image->columns; x++)
+     {
+       MagickPixelPacket

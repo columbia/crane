@@ -1,0 +1,39 @@
+#/bin/sh
+
+sleep 2
+echo "XXX 10"
+sleep 2
+echo "YYY 100"
+sleep 2
+echo "ZZZ 1000"
+sleep 2
+echo # print quotes
+sleep 2
+echo # print quotes
+sleep 2
+echo # print quotes
+sleep 2
+echo "a 1"
+sleep 2
+echo "b 2"
+sleep 2
+echo "c 3"
+sleep 2
+echo # print quotes
+sleep 2
+echo # print quotes
+sleep 2
+echo # print quotes
+sleep 2
+echo "a 5"
+sleep 2
+echo "b 6"
+sleep 2
+echo "c 7"
+sleep 2
+echo # print quotes
+sleep 2
+echo # print quotes
+sleep 2
+echo # print quotes
+echo "quit"

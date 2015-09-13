@@ -1,0 +1,16 @@
+--- parsec-3.0/ext/splash2x/apps/radiosity/src/taskman.C	2012-09-04 22:56:23.000000000 -0400
++++ parsec-3.0/ext/splash2x/apps/radiosity/src_modified/taskman.C	2013-02-23 20:34:51.314726965 -0500
+@@ -114,12 +114,10 @@
+     global->pbar_count++ ;
+     UNLOCK(global->pbar_lock);
+ 
+-    /* barrier spin-wait loop */
+     while( global->pbar_count < n_processors )
+         {
+             /* Wait for a while and then retry dequeue */
+-            if( _process_task_wait_loop() )
+-                break ;
++            sched_yield(); if (global->pbar_count >= n_processors ) break;
+ 
+             /* Waited for a while but other processors are still running.
+                Poll the task queue again */

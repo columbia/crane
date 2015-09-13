@@ -1,0 +1,73 @@
+#! /bin/bash
+#run some test for the program
+#to be added
+
+#start one leader, test whether all the initializations finish
+
+
+check_output(){
+    
+    LOG_NAME=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}
+    RESULT=$(grep "Node 0 Starts Running" ${LOG_NAME} | wc -l)
+    if [ "${RESULT}" -eq "0" ];then
+        exit 1
+    else
+        exit 0
+    fi
+}
+
+TEST_NAME=$(basename $0)
+NO=${1}
+
+#echo "==========Node Start Test =========="
+
+CUR_DIR=$(pwd)
+rm -rf ${CUR_DIR}/.db
+
+LOG_SUFFIX=".log"
+
+SLEEP_TIME=5
+
+#do not re-compile
+:<<'END'
+cd ..
+make clean 
+make
+cd ${CUR_DIR}
+END
+
+if [ ! -e ${CUR_DIR}/${TEST_NAME} ];then
+    FILEPATH=${CUR_DIR}/test
+else
+    FILEPATH=${CUR_DIR}
+fi
+
+if [ ! -e ${FILEPATH}/${TEST_NAME} ];then
+    echo ${CUR_DIR}
+    echo ${FILEPATH}
+    echo "Script Execution Path Error"
+    exit 1
+fi
+
+
+if [ ! -d ${FILEPATH}/log ];then
+    mkdir ${FILEPATH}/log
+fi
+
+exec 2>${FILEPATH}/log/node_start_err_${NO}${LOGSUFFIX}
+
+export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib
+
+#echo "The Log File Will Be Stored In ${FILEPATH}/log/${TEST_NAME}_*_${NO}"
+#echo "Now We Start The Leader"
+${FILEPATH}/../target/server.out -r -n 0 -m s -c ${FILEPATH}/../target/nodes.cfg &>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}  &
+PRIMARY_PID=$!
+
+#echo "Sleep Some Time"
+
+sleep 5
+
+#echo "Kill The Leader"
+kill -15 ${PRIMARY_PID} &>/dev/null
+
+check_output

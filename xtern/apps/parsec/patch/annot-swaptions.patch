@@ -1,0 +1,27 @@
+--- HJM_Securities-orig.cpp	2013-02-05 20:11:40.838325838 -0500
++++ parsec-2.0/pkgs/apps/swaptions/src/HJM_Securities.cpp	2013-02-05 20:14:38.586319478 -0500
+@@ -7,6 +7,7 @@
+ #include <stdlib.h>
+ #include <math.h>
+ #include <iostream>
++#include <tern/user.h>
+ 
+ #include "nr_routines.h"
+ #include "HJM.h"
+@@ -77,6 +78,7 @@
+ 
+ 
+ void * worker(void *arg){
++  soba_wait(0);
+   int tid = *((int *)arg);
+   FTYPE pdSwaptionPrice[2];
+ 
+@@ -261,7 +263,7 @@
+ 	Worker w;
+ 	tbb::parallel_for(tbb::blocked_range<int>(0,nSwaptions,TBB_GRAINSIZE),w);
+ #else
+-	
++    soba_init(0, nThreads, 100);
+ 	int threadIDs[nThreads];
+         for (i = 0; i < nThreads; i++) {
+           threadIDs[i] = i;

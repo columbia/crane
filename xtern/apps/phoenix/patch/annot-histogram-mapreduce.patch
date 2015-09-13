@@ -1,0 +1,26 @@
+--- phoenix-2.0.0-orig/tests/histogram/histogram.c	2013-02-24 15:27:51.822290729 -0500
++++ phoenix-2.0.0/tests/histogram/histogram.c	2013-02-24 16:52:43.586114648 -0500
+@@ -39,6 +39,7 @@
+ 
+ #include "map_reduce.h"
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ #define IMG_DATA_OFFSET_POS 10
+ #define BITS_PER_PIXEL_POS 28
+@@ -109,6 +110,7 @@
+  */
+ void hist_map(map_args_t *args) 
+ {
++    soba_wait(0);
+     int i;
+     short *key;
+     unsigned char *val;
+@@ -160,6 +162,7 @@
+  */
+ void hist_reduce(void *key_in, iterator_t *itr)
+ {
++    //soba_wait(1); lots of timeout (0:52), comment this out.
+     short *key = (short *)key_in;
+     void *val;
+     intptr_t sum = 0;

@@ -1,0 +1,100 @@
+diff -ruN phoenix-2.0.0-orig/Defines.mk phoenix-2.0.0-modified//Defines.mk
+--- phoenix-2.0.0-orig/Defines.mk	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//Defines.mk	2013-02-22 18:37:01.249974847 -0500
+@@ -37,9 +37,9 @@
+ ifeq ($(OSTYPE),Linux)
+ OS = -D_LINUX_
+ CC = gcc
+-#DEBUG = -g
+-CFLAGS = -Wall $(OS) $(DEBUG) -O3
+-LIBS = -lpthread
++DEBUG = -g
++CFLAGS = -Wall $(OS) $(DEBUG) -O3 -I$(XTERN_ROOT)/include
++LIBS = -lpthread  -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ endif
+ 
+ ifeq ($(OSTYPE),SunOS)
+diff -ruN phoenix-2.0.0-orig/tests/histogram/Makefile phoenix-2.0.0-modified//tests/histogram/Makefile
+--- phoenix-2.0.0-orig/tests/histogram/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/histogram/Makefile	2013-02-22 18:37:54.825973020 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ HIST_OBJS = histogram.o
+ HIST_SEQ_OBJS = histogram-seq.o
+diff -ruN phoenix-2.0.0-orig/tests/kmeans/Makefile phoenix-2.0.0-modified//tests/kmeans/Makefile
+--- phoenix-2.0.0-orig/tests/kmeans/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/kmeans/Makefile	2013-02-22 18:38:12.409972391 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -lpthread
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -lpthread -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ KMEANS_OBJS = kmeans.o
+ KMEANS_SEQ_OBJS = kmeans-seq.o
+diff -ruN phoenix-2.0.0-orig/tests/linear_regression/Makefile phoenix-2.0.0-modified//tests/linear_regression/Makefile
+--- phoenix-2.0.0-orig/tests/linear_regression/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/linear_regression/Makefile	2013-02-22 18:38:21.033972081 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ L_REG_OBJS = linear_regression.o
+ L_REG_SEQ_OBJS = linear_regression-seq.o
+diff -ruN phoenix-2.0.0-orig/tests/matrix_multiply/Makefile phoenix-2.0.0-modified//tests/matrix_multiply/Makefile
+--- phoenix-2.0.0-orig/tests/matrix_multiply/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/matrix_multiply/Makefile	2013-02-22 18:38:30.473971747 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ MM_OBJS = matrix_multiply.o
+ MM_SEQ_OBJS = matrix_multiply-seq.o
+diff -ruN phoenix-2.0.0-orig/tests/pca/Makefile phoenix-2.0.0-modified//tests/pca/Makefile
+--- phoenix-2.0.0-orig/tests/pca/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/pca/Makefile	2013-02-22 18:38:41.481971354 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -lpthread
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -lpthread -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ PCA_OBJS = pca.o
+ PCA_SEQ_OBJS = pca-seq.o
+diff -ruN phoenix-2.0.0-orig/tests/string_match/Makefile phoenix-2.0.0-modified//tests/string_match/Makefile
+--- phoenix-2.0.0-orig/tests/string_match/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/string_match/Makefile	2013-02-22 18:38:49.945971062 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ STR_MATCH_OBJS = string_match.o
+ STR_MATCH_SEQ_OBJS = string_match-seq.o
+diff -ruN phoenix-2.0.0-orig/tests/word_count/Makefile phoenix-2.0.0-modified//tests/word_count/Makefile
+--- phoenix-2.0.0-orig/tests/word_count/Makefile	2013-02-22 18:36:39.837975708 -0500
++++ phoenix-2.0.0-modified//tests/word_count/Makefile	2013-02-22 18:38:58.521970758 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ WC_OBJS := word_count.o sort.o
+ WC_OBJS_PTHREAD := word_count-pthread.o sort-pthread.o

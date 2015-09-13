@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+cd $XTERN_ROOT/apps/scf
+rm -rf scf src *.x *.inpt out*
+if [ ! -f Scf.tar.gz ]; then
+	wget https://www.xstackwiki.com/images/1/15/Scf.tar.gz --no-check-certificate
+fi
+tar -xvzf Scf.tar.gz
+
+mkdir -p src/eti
+cp -rf scf/optimized/openmp/* src/
+patch -p0 < add-xtern-annot.patch
+
+ARCH=`uname -m`
+GCCLIB=""
+if [ "$ARCH" == "x86_64" ]; then
+  GCCLIB="$XTERN_ROOT/apps/openmp/install/lib64"
+else
+  GCCLIB="$XTERN_ROOT/apps/openmp/install/lib"
+fi
+
+ln -s $GCCLIB/../lib/gcc/*/4.5.4/libgcc.a src/ &>/dev/null
+ln -s $GCCLIB/libgomp.a src/ &> /dev/null
+ln -s $GCCLIB/libstdc++.a src/ &> /dev/null
+pushd src
+make
+popd
+ln -s src/scf.x .
+ln -s scf/optimized/serial/be.inpt .
+

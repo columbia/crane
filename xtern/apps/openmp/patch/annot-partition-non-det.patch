@@ -1,0 +1,53 @@
+--- gcc-4.5.4-orig/libstdc++-v3/include/parallel/partition.h	2011-02-25 09:04:40.000000000 -0500
++++ gcc-4.5.4/libstdc++-v3/include/parallel/partition.h	2013-08-18 23:28:11.396553337 -0400
+@@ -38,6 +38,7 @@
+ #include <parallel/random_number.h>
+ #include <bits/stl_algo.h>
+ #include <parallel/parallel.h>
++#include "tern/user.h"
+ 
+ /** @brief Decide whether to declare certain variables volatile. */
+ #define _GLIBCXX_VOLATILE volatile
+@@ -76,7 +77,11 @@
+       _DifferenceType __chunk_size = __s.partition_chunk_size;
+ 
+       omp_lock_t __result_lock;
++      soba_init(0, __num_threads, __num_threads*20);
++      soba_init(1, __num_threads, __num_threads*20);
++      pcs_enter();
+       omp_init_lock(&__result_lock);
++      pcs_exit();
+ 
+       //at least two chunks per thread
+       if (__right - __left + 1 >= 2 * __num_threads * __chunk_size)
+@@ -121,6 +126,8 @@
+ 	      __thread_left_border = __thread_left - 1;
+ 	      __thread_right = __n - 1;
+ 	      __thread_right_border = __thread_right + 1;
++	soba_wait(0);
++	pcs_enter();
+ 
+ 	      bool __iam_finished = false;
+ 	      while (!__iam_finished)
+@@ -177,6 +184,9 @@
+ 		      --__thread_right;
+ 		    }
+ 		}
++		pcs_barrier_exit(0, __num_threads);
++		soba_wait(1);
++
+ 
+ 	      // Now swap the leftover chunks to the right places.
+ 	      if (__thread_left <= __thread_left_border)
+@@ -313,7 +323,11 @@
+ 	delete[] __reserved_left;
+ 	delete[] __reserved_right;
+ 
++    soba_destroy(0);
++    soba_destroy(1);
++    pcs_enter();
+ 	omp_destroy_lock(&__result_lock);
++    pcs_exit();
+ 
+ 	// Element "between" __final_left and __final_right might not have
+ 	// been regarded yet

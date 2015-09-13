@@ -1,0 +1,32 @@
+diff -ruN parsec-3.0-orig/ext/splash2x/kernels/radix/src/radix.C parsec-3.0-modified/ext/splash2x/kernels/radix/src/radix.C
+--- parsec-3.0/ext/splash2x/kernels/radix/src/radix.C	2013-02-19 00:53:56.093531456 -0500
++++ parsec-3.0/ext/splash2x/kernels/radix/src/radix.C	2013-02-19 00:54:42.013529815 -0500
+@@ -39,6 +39,7 @@
+ #include <stdio.h>
+ #include <math.h>
+ #include <unistd.h>
++#include "tern/user.h"
+ 
+ #define DEFAULT_P                    1
+ #define DEFAULT_N               262144
+@@ -320,6 +321,7 @@
+ #ifdef ENABLE_PARSEC_HOOKS
+ 	__parsec_roi_begin();
+ #endif
++   soba_init(0, number_of_processors, number_of_processors*10);
+    CREATE(slave_sort, number_of_processors);
+    WAIT_FOR_END(number_of_processors);
+ #ifdef ENABLE_PARSEC_HOOKS
+@@ -449,9 +451,12 @@
+      global->Index++;
+    UNLOCK(global->lock_Index)
+ 
++   soba_wait(0);
++
+    BARINCLUDE(global->barrier_key);
+    BARINCLUDE(global->barrier_rank);
+ 
++
+ /* POSSIBLE ENHANCEMENT:  Here is where one might pin processes to
+    processors to avoid migration */
+ 

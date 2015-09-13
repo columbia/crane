@@ -1,0 +1,90 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+set -e
+
+if [ ! -d $XTERN_ROOT ]; then
+    echo "XTERN_ROOT is not defined"
+    exit 1
+fi
+
+if [ ! -f $XTERN_ROOT/apps/openmp/install/bin/g++ ]; then
+    echo "please recompile \$XTERN_ROOT/apps/openmp/mk with openmp (g++-4.5) available"
+    exit 1
+fi
+
+VER=6.8.0-4
+
+echo -e "\nPlease make sure you have run the 'mk' in $XTERN_ROOT/apps/openmp before you build imagick.\n"
+sleep 1
+
+# cleanup
+cd $XTERN_ROOT/apps/imagick
+rm -rf ImageMagick-$VER install
+if [ ! -f ImageMagick-$VER.tar.gz ]; then
+    wget https://launchpad.net/imagemagick/main/$VER/+download/ImageMagick-$VER.tar.gz
+fi
+tar zxvf ImageMagick-$VER.tar.gz
+
+# extract images
+if [ ! -f openmp_img.gz ]; then
+    wget http://www.cs.columbia.edu/~heming/release/openmp_img.gz
+fi
+tar xvf openmp_img.gz
+
+# patch ImageMagick
+cd ImageMagick-$VER
+patch -p1 < ../patch/add-convert-xtern-annot.patch
+patch -p1 < ../patch/add-resize-xtern-annot.patch
+patch -p1 < ../patch/add-compare-xtern-annot.patch
+patch -p1 < ../patch/add-colorspace-xtern-annot.patch
+patch -p1 < ../patch/add-fx-xtern-annot.patch
+patch -p1 < ../patch/add-morph-xtern-annot.patch
+patch -p1 < ../patch/add-shear-xtern-annot.patch
+patch -p1 < ../patch/add-segment-xtern-annot.patch
+patch -p1 < ../patch/add-fourier-xtern-annot.patch
+
+# compile ImageMagick
+mkdir obj
+cd obj
+CC_HOME=$XTERN_ROOT/apps/openmp/install
+
+CC="$CC_HOME/bin/gcc" \
+  CXX="$CC_HOME/bin/g++" \
+  CFLAGS+="-g -O2 -I/usr/include/x86_64-linux-gnu -I$XTERN_ROOT/include -fopenmp" \
+  CXXFLAGS+="-g -O2 -I$XTERN_ROOT/include -fopenmp" \
+  LDFLAGS+="-L$CC_HOME/lib -Wl,--rpath,$CC_HOME/lib -L$CC_HOME/lib64 -Wl,--rpath,$CC_HOME/lib64 -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook " \
+  LIBS+="-lgomp -lxtern-annot" \
+  LIBRARY_PATH="/usr/lib/x86_64-linux-gnu" \
+  ../configure --prefix=$XTERN_ROOT/apps/imagick/install --disable-shared --enable-static --enable-openmp 2>&1 | tee config.results
+
+make V=1 -j64
+make install
+
+# create link
+cd ../..
+find . -maxdepth 1 -type l -exec rm -rf {} \;
+bench=( animate composite convert identify mogrify stream compare conjure display import montage )
+for i in "${bench[@]}"
+do
+    ln -s install/bin/$i
+done

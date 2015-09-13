@@ -1,0 +1,13 @@
+#!/bin/bash
+cd $XTERN_ROOT/apps/ExaCT
+SOFTWARE="ExaCT_Proxy_Apps_20120322"
+
+cd $SOFTWARE/Combustion/Chemistry/bin/vodeDriver
+rm -rf out* serializer.log
+
+#Your Executable file name may be different
+#Run with xtern
+time LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so ./cdvode2d.Linux.g++.gfortran.OMP.ex pmf_file=drm19_0700.fab verbose=0
+
+#Run non-det
+time LD_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so ./cdvode2d.Linux.g++.gfortran.OMP.ex pmf_file=drm19_0700.fab verbose=0

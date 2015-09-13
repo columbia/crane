@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+cd $XTERN_ROOT/apps/pbzip2
+rm -rf out* serializer.log
+
+ROUTINE="--compress"
+if [ $1"X" != "X" ];
+then
+        ROUTINE=$1
+fi
+
+APP=$XTERN_ROOT/apps/pbzip2/pbzip2
+if [ ! -f db-5.3.15.tar.gz ]; then
+    wget http://download.oracle.com/berkeley-db/db-5.3.15.tar.gz &> /dev/null
+fi
+tar zxvf db-5.3.15.tar.gz &> /dev/null
+gunzip -f db-5.3.15.tar.gz
+mv db-5.3.15.tar input.tar
+
+if [ $ROUTINE = "--compress" ];
+then
+	INPUT="-p4 -rkvf input.tar"
+else
+	if [ $ROUTINE = "--decompress" ];
+	then
+		$APP -p4 -rkvf input.tar &> /dev/null
+		INPUT="-p4 -dkvf input.tar.bz2"
+	else
+		echo "Wrong routine: $ROUTINE, exiting...";
+		exit 1;
+	fi
+fi
+
+# Run with xtern and draw time chart.
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT
+
+sleep 2;
+
+# Run non-det and draw time chart.
+LD_NOT_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
+

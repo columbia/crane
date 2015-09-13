@@ -1,0 +1,18 @@
+--- pbzip2-0.9.5/pbzip2.cpp.bak	2013-03-01 19:08:15.436267944 -0500
++++ pbzip2-0.9.5/pbzip2.cpp	2013-03-01 19:09:02.912266244 -0500
+@@ -619,6 +619,7 @@
+ 			#ifdef PBZIP_DEBUG
+ 			fprintf(stderr, "consumer:  waitTimer.tv_sec: %d  waitTimer.tv_nsec: %d\n",  waitTimer.tv_sec, waitTimer.tv_nsec);
+ 			#endif
++			tern_set_base_timeval(&tv);
+ 			pret = pthread_cond_timedwait(fifo->notEmpty, fifo->mut, &waitTimer);
+ 			// we are not using a compatible pthreads library so abort
+ 			if (pret == EINVAL)
+@@ -978,6 +979,7 @@
+ 			#ifdef PBZIP_DEBUG
+ 			fprintf(stderr, "consumer:  waitTimer.tv_sec: %d  waitTimer.tv_nsec: %d\n", waitTimer.tv_sec, waitTimer.tv_nsec);
+ 			#endif
++			tern_set_base_timeval(&tv);
+ 			pret = pthread_cond_timedwait(fifo->notEmpty, fifo->mut, &waitTimer);
+ 			// we are not using a compatible pthreads library so abort
+ 			if (pret == EINVAL)

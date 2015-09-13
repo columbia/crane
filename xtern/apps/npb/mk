@@ -1,0 +1,119 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+set -e
+
+ROOT=`pwd`
+ARCH=`uname -m`
+
+if [ ! -d $XTERN_ROOT ]; then
+	echo "XTERN_ROOT is not defined"
+	exit 1
+fi
+
+if [ ! -f NPB3.3.1.tar.gz ]; then
+    wget http://www.cs.columbia.edu/~heming/release/NPB3.3.1.tar.gz
+fi
+
+if [ ! -f $XTERN_ROOT/apps/openmp/install/bin/gfortran ]; then
+    echo "please recompile \$XTERN_ROOT/apps/openmp/mk with fortran available"
+    exit 1
+fi
+
+pushd $XTERN_ROOT/apps/npb/
+
+# clean up
+rm -rf NPB3.3.1
+tar zxvf NPB3.3.1.tar.gz
+
+pushd NPB3.3.1/NPB3.3-OMP
+if [ "$ARCH" == "x86_64" ]; then
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libstdc++.a
+else
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libstdc++.a
+fi
+popd
+
+# Add patches.
+pushd NPB3.3.1
+# Uncomment below lu.patch for experiment with dbug. 
+# Comment it out for experiment with xtern only.
+#patch -p1 < ../patch/lu.patch
+patch -p1 < ../patch/annot-UA-omp-non-det.patch
+popd
+
+# make
+mkdir -p NPB3.3.1/NPB3.3-OMP/bin-s
+ln -s $XTERN_ROOT/apps/npb/make-small.def NPB3.3.1/NPB3.3-OMP/config/make.def
+ln -s $XTERN_ROOT/apps/npb/suite-small.def NPB3.3.1/NPB3.3-OMP/config/suite.def
+pushd NPB3.3.1/NPB3.3-OMP
+make suite
+popd
+
+mkdir -p NPB3.3.1/NPB3.3-OMP/bin-m
+rm -rf NPB3.3.1/NPB3.3-OMP/config/make.def
+rm -rf NPB3.3.1/NPB3.3-OMP/config/suite.def
+ln -s $XTERN_ROOT/apps/npb/make-medium.def NPB3.3.1/NPB3.3-OMP/config/make.def
+ln -s $XTERN_ROOT/apps/npb/suite-medium.def NPB3.3.1/NPB3.3-OMP/config/suite.def
+pushd NPB3.3.1/NPB3.3-OMP
+make suite
+popd
+
+mkdir -p NPB3.3.1/NPB3.3-OMP/bin-l
+rm -rf NPB3.3.1/NPB3.3-OMP/config/make.def
+rm -rf NPB3.3.1/NPB3.3-OMP/config/suite.def
+ln -s $XTERN_ROOT/apps/npb/make-large.def NPB3.3.1/NPB3.3-OMP/config/make.def
+ln -s $XTERN_ROOT/apps/npb/suite-large.def NPB3.3.1/NPB3.3-OMP/config/suite.def
+pushd NPB3.3.1/NPB3.3-OMP
+make suite
+popd
+
+rm -rf NPB3.3.1/NPB3.3-OMP/config/make.def
+ln -s $XTERN_ROOT/apps/npb/make.def NPB3.3.1/NPB3.3-OMP/config/
+rm -rf NPB3.3.1/NPB3.3-OMP/config/suite.def
+ln -s $XTERN_ROOT/apps/npb/suite.def NPB3.3.1/NPB3.3-OMP/config/
+pushd NPB3.3.1/NPB3.3-OMP
+make suite
+popd
+
+rm -rf ft-s mg-s sp-s lu-s bt-s is-s ep-s cg-s ua-s dc-s
+rm -rf ft-m mg-m sp-m lu-m bt-m is-m ep-m cg-m ua-m dc-m
+rm -rf ft-l mg-l sp-l lu-l bt-l is-l ep-l cg-l ua-l dc-l
+bench=( ft mg sp lu bt is ep cg ua dc )
+for i in "${bench[@]}"
+do
+    ln -s NPB3.3.1/NPB3.3-OMP/bin-s/$i.?.x $i-s
+    ln -s NPB3.3.1/NPB3.3-OMP/bin-m/$i.?.x $i-m
+    ln -s NPB3.3.1/NPB3.3-OMP/bin-l/$i.?.x $i-l
+done
+
+rm -rf ft mg sp lu bt is ep cg ua dc
+bench=( ft mg sp lu bt is ep cg ua dc )
+for i in "${bench[@]}"
+do
+    ln -s NPB3.3.1/NPB3.3-OMP/bin/$i.?.x $i
+done
+
+popd
+echo "DONE!"

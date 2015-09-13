@@ -1,0 +1,26 @@
+--- phoenix-2.0.0-orig/tests/word_count/word_count-pthread.c	2009-05-06 01:12:23.000000000 -0400
++++ phoenix-2.0.0/tests/word_count/word_count-pthread.c	2013-02-22 00:27:58.392312930 -0500
+@@ -40,6 +40,7 @@
+ 
+ #include "stddefines.h"
+ #include "sort-pthread.h"
++#include "tern/user.h"
+ 
+ #define DEFAULT_DISP_NUM 10
+ #define START_ARRAY_SIZE 2000
+@@ -137,6 +138,7 @@
+ 
+    int req_bytes = data->flen / num_procs;
+ 
++   soba_init(0, num_procs, num_procs*20);
+    for(i=0; i<num_procs; i++)
+    {
+       words[i] = (wc_count_t*)malloc(START_ARRAY_SIZE*sizeof(wc_count_t));
+@@ -229,6 +231,7 @@
+  */
+ void *wordcount_map(void *args_in) 
+ {
++   soba_wait(0);
+ 	t_args_t* args = (t_args_t*)args_in;
+ 
+    char *curr_start, curr_ltr;

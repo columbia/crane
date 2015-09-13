@@ -1,0 +1,90 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+set -e
+
+ARCH=`uname -m`
+XTERN_ANNOT_LIB="-I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot"
+VER=4.5.4
+echo -e "\nWe are compiling gcc-$VER by ourselves. We hope you have installed the same version of gcc on your machine, because we are going to use some libraries of it.\n";
+cd $XTERN_ROOT/apps/openmp
+rm -rf gcc-$VER install *.a ex//*.a
+if [ ! -f gcc-$VER.tar.gz ]; then
+    wget http://ftp.gnu.org/gnu/gcc/gcc-$VER/gcc-$VER.tar.gz
+fi
+tar zxf gcc-$VER.tar.gz
+
+# compile gcc
+cd gcc-$VER
+patch -p1 < ../patch/add-xtern-annot.patch
+patch -p1 < ../patch/annot-partition-non-det.patch
+patch -p1 < ../patch/add-detach.patch
+mkdir obj
+cd obj
+CFLAGS+="$XTERN_ANNOT_LIB" ../configure \
+--prefix=$XTERN_ROOT/apps/openmp/install --disable-linux-futex --enable-languages=c,c++,fortran --disable-multilib
+SYS_LIB_PATH=""
+if [ "$ARCH" == "x86_64" ]; then
+  SYS_LIB_PATH=/usr/lib/x86_64-linux-gnu
+else
+  SYS_LIB_PATH=/usr/lib/i386-linux-gnu
+fi
+LIBRARY_PATH=$SYS_LIB_PATH make -j64
+make -j64 install
+
+# Copy *.o files from system gcc libraries to our installed library, in order to avoid "missing crti*.o" compilation errors.
+if [ "$ARCH" == "x86_64" ]; then
+  cp $SYS_LIB_PATH/*.o $XTERN_ROOT/apps/openmp/install/lib64/
+else
+  cp $SYS_LIB_PATH/*.o $XTERN_ROOT/apps/openmp/install/lib/
+fi
+
+# Build the random shuffle benchmark.
+cd $XTERN_ROOT/apps/openmp
+if [ "$ARCH" == "x86_64" ]; then
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libstdc++.a
+else
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libstdc++.a
+fi
+#g++ -g  rand-shuf.cpp -o rand-serial
+
+# Heming: we must add "-lgomp" in order to make the compilation pass.
+g++ -g -static-libgcc -static-libstdc++ -D_GLIBCXX_PARALLEL -L. -fopenmp rand-shuf.cpp -o rand-para -lgomp $XTERN_ANNOT_LIB
+
+# Build the parallel for benchmark. Heming: we must add "-lgomp" in order to make the compilation pass.
+g++ -g -static-libgcc -static-libstdc++ -D_GLIBCXX_PARALLEL -L. -fopenmp examples/ex-for.cpp -o ex-for -lgomp $XTERN_ANNOT_LIB
+
+# Build some other examples.
+cd ex
+if [ "$ARCH" == "x86_64" ]; then
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib64/libstdc++.a
+else
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libgomp.a
+  ln -s $XTERN_ROOT/apps/openmp/install/lib/libstdc++.a
+fi
+make
+cd ..
+
+

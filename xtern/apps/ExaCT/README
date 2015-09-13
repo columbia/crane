@@ -1,0 +1,14 @@
+ExaCT proxy apps
+Contains 
+1.Exp_CNS_NoSpec
+2.MultiGrid_C
+3.VodeDriver
+
+see more details on http://exactcodesign.org/
+
+to make and compile, run
+./mk
+to benchmark, run
+./run*******
+
+Wavefunction_C is not considered as a proxy apps

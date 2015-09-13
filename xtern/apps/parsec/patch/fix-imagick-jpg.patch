@@ -1,0 +1,11 @@
+--- parsec-2.0/pkgs/libs/imagick/parsec_orig/gcc.bldconf	2013-02-23 04:23:09.089509297 -0500
++++ parsec-2.0/pkgs/libs/imagick/parsec/gcc.bldconf	2013-02-23 04:24:32.885506394 -0500
+@@ -17,7 +17,7 @@
+ build_deps=""
+ 
+ # Environment to use for configure script and Makefile
+-build_env=""
++build_env="CFLAGS=\"-I/usr/include/x86_64-linux-gnu ${CFLAGS}\""
+ 
+ # Whether the build system supports only in-place compilation.
+ # If TRUE, then all sources will be copied to the build directory before we

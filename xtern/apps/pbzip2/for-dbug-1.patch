@@ -1,0 +1,86 @@
+diff -ruN pbzip2-1.1.5/pbzip2.cpp pbzip2-1.1.5-modified/pbzip2.cpp
+--- pbzip2-1.1.5/pbzip2.cpp	2011-07-16 12:52:35.000000000 -0400
++++ pbzip2-1.1.5-modified/pbzip2.cpp	2012-09-24 21:29:46.104888520 -0400
+@@ -332,7 +332,7 @@
+ static const char *sigOutFilename = NULL;
+ static char BWTblockSizeChar = '9';
+ static sigset_t SignalMask;
+-static pthread_t SignalHandlerThread;
++//static pthread_t SignalHandlerThread;
+ static pthread_t TerminatorThread;
+ 
+ inline int syncGetProducerDone();
+@@ -346,7 +346,7 @@
+ void cleanupUnfinishedWork();
+ void cleanupAndQuit(int exitCode);
+ int initSignalMask();
+-int setupSignalHandling();
++//int setupSignalHandling();
+ int setupTerminator();
+ 
+ inline void safe_mutex_lock(pthread_mutex_t *mutex);
+@@ -1047,7 +1047,7 @@
+ /*
+  * Setup and start signal handling.
+  */
+-int setupSignalHandling()
++/*int setupSignalHandling()
+ {
+ 	int ret = initSignalMask();
+ 
+@@ -1057,7 +1057,7 @@
+ 	}
+ 
+ 	return ret;
+-}
++}*/
+ 
+ /*
+  * Setup and start signal handling.
+@@ -3362,7 +3362,12 @@
+ 	int fileLoop;
+ 	size_t i, j, k;
+ 	bool switchedMtToSt = false; // switched from multi- to single-thread
+-	
++
++  // init mutexes for dbug.
++  pthread_mutex_init(&ErrorHandlerMutex, NULL);
++  pthread_mutex_init(&TerminateFlagMutex, NULL);
++  pthread_mutex_init(&ProgressIndicatorsMutex, NULL);
++
+ 	// get current time for benchmark reference
+ 	#ifndef WIN32
+ 	gettimeofday(&tvStartTime, &tz);
+@@ -3817,12 +3822,12 @@
+ 	// setup signal handling (should be before creating any child thread)
+ 	sigInFilename = NULL;
+ 	sigOutFilename = NULL;
+-	ret = setupSignalHandling();
++	/*ret = setupSignalHandling();
+ 	if (ret != 0)
+ 	{
+ 		fprintf(stderr, "pbzip2: *ERROR: Can't setup signal handling [%d]. Aborting!\n", ret);
+ 		return 1;
+-	}
++	}*/
+ 
+ 	// Create and start terminator thread.
+ 	ret = setupTerminator();
+@@ -4421,7 +4426,7 @@
+ 	} /* for */
+ 
+ 	// Terminate signal handler thread sending SIGQUIT signal
+-	ret = pthread_kill(SignalHandlerThread, SIG_HANDLER_QUIT_SIGNAL);
++	/*ret = pthread_kill(SignalHandlerThread, SIG_HANDLER_QUIT_SIGNAL);
+ 	if (ret != 0)
+ 	{
+ 		fprintf(stderr, "Couldn't signal signal QUIT to SignalHandlerThread [%d]. Quitting prematurely!\n", ret);
+@@ -4434,7 +4439,7 @@
+ 		{
+ 			fprintf(stderr, "Error on join of SignalHandlerThread [%d]\n", ret);
+ 		}
+-	}
++	}*/
+ 
+ 	syncSetFinishedFlag(1);
+ 	ret = pthread_join(TerminatorThread, NULL);

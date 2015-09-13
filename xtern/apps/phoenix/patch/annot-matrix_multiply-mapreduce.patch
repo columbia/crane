@@ -1,0 +1,18 @@
+--- phoenix-2.0.0-orig/tests/matrix_multiply/matrix_multiply.c	2013-02-24 15:27:51.826290728 -0500
++++ phoenix-2.0.0/tests/matrix_multiply/matrix_multiply.c	2013-02-25 01:13:49.165073511 -0500
+@@ -41,6 +41,7 @@
+ 
+ #include "map_reduce.h"
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ typedef struct {
+     int row_num;
+@@ -142,6 +143,7 @@
+  */
+ void matrixmult_map(map_args_t *args)
+ {
++    soba_wait(0);
+     int row_count = 0;
+     int i,j, x_loc, y_loc,value;
+     int * a_ptr,* b_ptr;    

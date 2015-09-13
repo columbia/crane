@@ -1,0 +1,26 @@
+--- phoenix-2.0.0-orig/tests/string_match/string_match-pthread.c	2009-05-25 19:47:31.000000000 -0400
++++ phoenix-2.0.0/tests/string_match/string_match-pthread.c	2013-02-22 00:14:52.036341066 -0500
+@@ -43,6 +43,7 @@
+ 
+ #include "map_reduce.h"
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ #define DEFAULT_UNIT_SIZE 5
+ #define SALT_SIZE 2
+@@ -160,6 +161,7 @@
+                                                                                         * num_procs);
+     map_args_t* out = (map_args_t*)malloc(sizeof(map_args_t) * num_procs);
+ 
++    soba_init(0, num_procs, num_procs*20);
+     for(i=0; i<num_procs; i++)
+     {
+ 	    map_data[i].encrypt_file = data->encrypt_file;
+@@ -218,6 +220,7 @@
+  */
+ void *string_match_map(void *args)
+ {
++    soba_wait(0);
+     assert(args);
+     
+     str_map_data_t* data_in = (str_map_data_t*)( ((map_args_t*)args)->data);

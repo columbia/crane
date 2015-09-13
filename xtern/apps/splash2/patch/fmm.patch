@@ -1,0 +1,62 @@
+diff -Naur src/cost_zones.C src_modified/cost_zones.C
+--- parsec-3.0/ext/splash2x/apps/fmm/src/cost_zones.C	2012-09-04 22:56:24.000000000 -0400
++++ parsec-3.0/ext/splash2x/apps/fmm/src_modified/cost_zones.C	2013-02-23 19:32:27.830856578 -0500
+@@ -70,6 +70,7 @@
+ 
+    if (b->type == PARENT) {
+       while (b->interaction_synch != b->num_children) {
++         sched_yield();
+       }
+    }
+    b->interaction_synch = 0;
+diff -Naur src/interactions.C src_modified/interactions.C
+--- parsec-3.0/ext/splash2x/apps/fmm/src/interactions.C	2012-09-04 22:56:24.000000000 -0400
++++ parsec-3.0/ext/splash2x/apps/fmm/src_modified/interactions.C	2013-02-23 19:33:42.102854005 -0500
+@@ -100,7 +100,7 @@
+    }
+    else {
+       while (b->interaction_synch != b->num_children) {
+-	 /* wait */;
++	     sched_yield();
+       }
+    }
+    if (b->parent != NULL) {
+@@ -130,7 +130,7 @@
+ {
+    if (b->parent != NULL) {
+       while (b->parent->interaction_synch != 0) {
+-	 /* wait */;
++	     sched_yield();
+       }
+       ShiftLocalExp(b->parent, b);
+    }
+@@ -365,12 +365,12 @@
+ 
+    if (source_box->type == CHILDLESS) {
+       while (source_box->interaction_synch != 1) {
+-	 /* wait */;
++	    sched_yield();
+       }
+    }
+    else {
+       while (source_box->interaction_synch != source_box->num_children) {
+-	 /* wait */;
++	    sched_yield();
+       }
+    }
+ 
+@@ -444,12 +444,12 @@
+ 
+    if (source_box->type == CHILDLESS) {
+       while (source_box->interaction_synch != 1) {
+-	 /* wait */;
++	    sched_yield();
+       }
+    }
+    else {
+       while (source_box->interaction_synch != source_box->num_children) {
+-	 /* wait */;
++        sched_yield();
+       }
+    }
+ 

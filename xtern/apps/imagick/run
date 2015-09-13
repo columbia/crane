@@ -1,0 +1,103 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+BIN_DIR=$XTERN_ROOT/apps/openmp/imagick/install/bin/
+
+# TBD. Add a photo, please refer to the readme.txt.
+cd $XTERN_ROOT/apps/openmp/imagick/
+rm -rf out* *time-chart.txt
+
+runImagickCmds(){
+	# Run the convert command to sharpen a picture. This command has large overhead when running with XTERN (~200%).
+	CMD="$BIN_DIR/convert photo.jpg -sharpen 0x1 reconstruct.jpg"
+	echo "Running $CMD..."
+	i=1
+	time LD_PRELOAD=$PRELOAD_LIB $CMD &> out$i.txt
+	mv out out-$i-$SCHED
+	$XTERN_ROOT/eval/draw-time-chart.pl ./out-$i-$SCHED --keep-tid1
+	mv time-chart.txt $i-time-chart.txt
+
+	# Compare two pictures, store the diff into a png picture.
+	CMD="$BIN_DIR/compare -compose src photo.jpg reconstruct.jpg diff.png"
+	echo "Running $CMD..."
+	i=2
+	time LD_PRELOAD=$PRELOAD_LIB $CMD &> out$i.txt
+	mv out out-$i-$SCHED
+	$XTERN_ROOT/eval/draw-time-chart.pl ./out-$i-$SCHED --keep-tid1
+	mv time-chart.txt $i-time-chart.txt
+
+	# Run the mogrify command to resize a picture.
+	cp photo.jpg rose.jpg
+	CMD="$BIN_DIR/mogrify -resize 50% rose.jpg"
+	echo "Running $CMD..."
+	i=3
+	time LD_PRELOAD=$PRELOAD_LIB $CMD &> out$i.txt
+	mv out out-$i-$SCHED
+	$XTERN_ROOT/eval/draw-time-chart.pl ./out-$i-$SCHED --keep-tid1
+	mv time-chart.txt $i-time-chart.txt
+
+	# Another compare command. This command has very small overhead when running with XTERN.
+	CMD="$BIN_DIR/compare photo.jpg reconstruct.jpg diff.png"
+	echo "Running $CMD..."
+	i=4
+	time LD_PRELOAD=$PRELOAD_LIB $CMD &> out$is.txt
+	mv out out-$i-$SCHED
+	$XTERN_ROOT/eval/draw-time-chart.pl ./out-$i-$SCHED --keep-tid1
+	mv time-chart.txt $i-time-chart.txt
+
+	# Another compare command. This command has very small overhead when running with XTERN.
+	CMD="$BIN_DIR/compare -channel red -metric PSNR photo.jpg reconstruct.jpg difference.png"
+	echo "Running $CMD..."
+	i=5
+	time LD_PRELOAD=$PRELOAD_LIB $CMD &> out$is.txt
+	mv out out-$i-$SCHED
+	$XTERN_ROOT/eval/draw-time-chart.pl ./out-$i-$SCHED --keep-tid1
+	mv time-chart.txt $i-time-chart.txt
+
+
+	# Another compare command. This command has 100% overhead when running with XTERN.
+	CMD="$BIN_DIR/montage photo.jpg reconstruct.jpg frame.jpg"
+	echo "Running $CMD..."
+	i=6
+	time LD_PRELOAD=$PRELOAD_LIB $CMD &> out$is.txt
+	mv out out-$i-$SCHED
+	$XTERN_ROOT/eval/draw-time-chart.pl ./out-$i-$SCHED --keep-tid1
+	mv time-chart.txt $i-time-chart.txt
+}
+
+
+SCHED="rr"
+PRELOAD_LIB=$XTERN_ROOT/dync_hook/interpose.so
+echo "Running imagick commands with $PRELOAD_LIB..."
+runImagickCmds;
+
+
+#SCHED="random"
+#PRELOAD_LIB=""
+#echo "Running imagick commands with $PRELOAD_LIB..."
+#runImagickCmds;
+
+
+# TBD. There are other imagick commands too, but either they are related to a x server, or they are trivial (e.g., only print some stat info),
+# or I have not figured out a command to run them.
+
+# TBD. Try to add more commands. For the above commands, there are many other options such as "-channel" which can also trigger openmp operations.
+	

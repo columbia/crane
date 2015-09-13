@@ -1,0 +1,18 @@
+--- ImageMagick-6.8.0-4/magick/fourier.c	2013-03-25 04:15:05.549830660 -0400
++++ ImageMagick-6.8.0-4/magick/fourier.c	2013-03-25 04:14:47.577831590 -0400
+@@ -74,6 +74,7 @@
+ #define creal(z)  (z[0])
+ #endif
+ #endif
++#include "tern/user.h"
+ 
+ /*
+   Typedef declarations.
+@@ -513,6 +514,7 @@
+ #endif
+   fftw_r2c_plan=fftw_plan_dft_r2c_2d(fourier_info->width,fourier_info->height,
+     source,fourier,FFTW_ESTIMATE);
++  soba_wait(0);
+   fftw_execute(fftw_r2c_plan);
+   fftw_destroy_plan(fftw_r2c_plan);
+   source=(double *) RelinquishMagickMemory(source);

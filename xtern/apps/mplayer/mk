@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+VER=1.1
+cd $XTERN_ROOT/apps/mplayer
+rm -rf MPlayer-$VER install mencoder
+if [ ! -f MPlayer-$VER.tar.gz ]; then
+    wget http://www.mplayerhq.hu/MPlayer/releases/MPlayer-$VER.tar.gz
+fi
+tar zxvf MPlayer-$VER.tar.gz
+
+# Dep-lib.
+#sudo apt-get install libmp3lame-dev
+
+# Input command (with any mpg file from this link: http://www.fileformat.info/format/mpeg/sample/index.htm).
+#./mencoder input.mpg -o output.avi -oac mp3lame -ovc lavc -lavcopts threads=4
+
+# Old command.
+# Build mplayer. Most of the configuration options are used to avoid executing asm, which is not supported in KLEE.
+#LD=llvm-ld ./configure --cc=$LLVM_ROOT/scripts/llgcc --ranlib=llvm-ranlib --as=llvm-as --ar=llvm-ar --yasm= \
+#        --disable-nemesi --disable-live --disable-speex --disable-mplayer --extra-cflags="-I $TERN_ROOT/klee/klee-uclibc/include$
+#        --disable-runtime-cpudetection --disable-fastmemcpy --disable-iconv --disable-mmx --disable-mmxext \
+#        --disable-sse --disable-sse2 --disable-ssse3 --disable-vstream
+
+cd MPlayer-$VER
+patch -p1 < ../add-xtern-annot.patch
+./configure --disable-mplayer --yasm= --extra-cflags="-g \
+    -I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook  -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot"
+make -j64
+mv mencoder ../
+cd ../
+

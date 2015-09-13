@@ -1,0 +1,153 @@
+#!/bin/bash
+
+set -e
+
+ROOT=`pwd`
+
+if [ ! -d $XTERN_ROOT ]; then
+	echo "XTERN_ROOT is not defined"
+	exit 1
+fi
+
+echo "Checking required packages..."
+#package=( axel libxi-dev libxmu-dev freeglut3-dev gettext libjasper-runtime libjasper-dev libjpeg62-dev )
+set +e
+package=( axel libxi-dev libxmu-dev freeglut3-dev gettext libjasper-runtime libjasper-dev )
+for i in "${package[@]}"
+do
+    check=$(dpkg-query -W -f='${Status} ${Version}\n' $i 2>&1)
+    if [[ "$check" != "install ok"* ]]; then
+        echo "please run 'sudo apt-get install ${package[*]}'"
+        exit 1
+    fi
+done
+set -e
+
+AXEL=$(which axel)
+INST_SET=`uname -m`
+
+pushd $XTERN_ROOT/apps/parsec
+
+echo "Checking parsec sim file..."
+if [ ! -f parsec-2.0-sim.tar.gz ]; then
+    $AXEL http://coblitz.codeen.org/parsec.cs.princeton.edu/download/2.0/parsec-2.0-sim.tar.gz
+fi
+if [ ! -f parsec-2.0/pkgs/apps/blackscholes/parsec/simdev.runconf ]; then
+    tar zxvf parsec-2.0-sim.tar.gz
+fi
+
+echo "Checking parsec native file..."
+if [ ! -f parsec-2.0-native.tar.gz ]; then
+    $AXEL http://coblitz.codeen.org/parsec.cs.princeton.edu/download/2.0/parsec-2.0-native.tar.gz
+fi
+if [ ! -f parsec-2.0/pkgs/apps/x264/parsec/native.runconf ]; then
+    tar zxvf parsec-2.0-native.tar.gz
+fi
+
+echo "Checking parsec core file..."
+if [ ! -f parsec-2.0-core.tar.gz ]; then
+    $AXEL http://coblitz.codeen.org/parsec.cs.princeton.edu/download/2.0/parsec-2.0-core.tar.gz
+fi
+tar zxf parsec-2.0-core.tar.gz > /dev/null 2>&1
+
+echo "Checking gcc-4.2"
+if [ ! -f $XTERN_ROOT/apps/parsec/gcc-4.2/bin/gcc ]; then
+    ./setup-gcc-4.2
+fi
+
+echo "Patching Parsec 2.0"
+pushd parsec-2.0
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-bodytrack-pthreads.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-fluidanimate-non-det.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/fix-ferret-crash.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-ferret.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-swaptions.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-facesim.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-vips.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/simd-gcc.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/bodytrack.diff
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/vips.diff
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/fluidanimate-serial.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/bodytrack_avoid_deadlock.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/fix-imagick-jpg.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-x264.patch
+patch -p1 < $XTERN_ROOT/apps/parsec/patch/annot-freqmine-openmp.patch
+
+# generate configs for dthreads
+#set +e
+#bin/bldconfdel -n gcc-dthreads
+#set -e
+#patch -p1 < $XTERN_ROOT/apps/parsec/patch/parsec_dthreads_1.patch
+popd
+# openssl compiling error
+if [ ! -f openssl-0.9.8x.tar.gz ]; then
+    $AXEL http://www.openssl.org/source/openssl-0.9.8x.tar.gz
+fi
+tar zxf openssl-0.9.8x.tar.gz
+rm -rf parsec-2.0/pkgs/libs/ssl/src
+mv openssl-0.9.8x parsec-2.0/pkgs/libs/ssl/src
+ln -s $XTERN_ROOT/apps/parsec/parsec-2.0/pkgs/libs/ssl/src/config $XTERN_ROOT/apps/parsec/parsec-2.0/pkgs/libs/ssl/src/configure
+ln -s $XTERN_ROOT/apps/parsec/parsec-2.0/pkgs/libs/ssl/src/Configure $XTERN_ROOT/apps/parsec/parsec-2.0/pkgs/libs/ssl/src/Configure.pl
+# streamcluster deadlock
+sed -i "859 i\      pthread_barrier_wait(barrier);" $XTERN_ROOT/apps/parsec/parsec-2.0/pkgs/kernels/streamcluster/src/streamcluster.cpp
+# for compiling on ubuntu machine
+sed -i 's/${LDFLAGS} ${LIBS}/${LDFLAGS} -lz ${LIBS}/g' $XTERN_ROOT/apps/parsec/parsec-2.0/pkgs/apps/x264/parsec/gcc-pthreads.bldconf
+# log file might miss if the execution time is less than 1 second
+sed -i "51 s/%F_%T\"/%F_%T_%N\"/" $XTERN_ROOT/apps/parsec/parsec-2.0/config/linux.sysconf
+# posix time format
+sed -i "215 s/\"time\"/\"time -p\"/g" $XTERN_ROOT/apps/parsec/parsec-2.0/bin/parsecmgmt
+
+
+
+echo "Build Parsec"
+# patch building configs
+sed -i  's/-O3 -funroll-loops/-O3 -g -funroll-loops -I${XTERN_ROOT}\/include /g' parsec-2.0/config/gcc.bldconf
+sed -i '42 s|'/usr/local/gcc-4.2.1'|'$XTERN_ROOT/apps/parsec/gcc-4.2'|' parsec-2.0/config/gcc.bldconf
+sed -i '44 s|'/usr/local'|'/usr'|' parsec-2.0/config/gcc.bldconf
+sed -i '74 s|\"$| -Wl,--rpath,${CC_HOME}/lib64 -Wl,--rpath,${CC_HOME}/lib -L${XTERN_ROOT}/dync_hook -Wl,--rpath,${XTERN_ROOT}/dync_hook\"''|' parsec-2.0/config/gcc.bldconf
+sed -i '75 s|\"$|-lxtern-annot\"''|' parsec-2.0/config/gcc.bldconf
+sed -i '70 s/\"$/ -march=native\"/g' parsec-2.0/config/gcc.bldconf
+sed -i '71 s/\"$/ -march=native\"/g' parsec-2.0/config/gcc.bldconf
+cd parsec-2.0/bin
+./parsecmgmt -a build -p blackscholes
+./parsecmgmt -a build -p bodytrack
+./parsecmgmt -a build -p facesim
+./parsecmgmt -a build -p swaptions
+./parsecmgmt -a build -p fluidanimate
+./parsecmgmt -a build -p vips
+./parsecmgmt -a build -p x264
+./parsecmgmt -a build -p canneal
+./parsecmgmt -a build -p dedup
+./parsecmgmt -a build -p streamcluster
+./parsecmgmt -a build -p raytrace
+./parsecmgmt -a build -p ferret
+./parsecmgmt -a build -c gcc-openmp -p blackscholes
+./parsecmgmt -a build -c gcc-openmp -p freqmine
+./parsecmgmt -a build -c gcc-openmp -p bodytrack
+
+./parsecmgmt -a status
+
+# copy files
+cd $XTERN_ROOT/apps/parsec
+rm -rf blackscholes bodytrack facesim fluidanimate swaptions vips x264 ferret freqmine rtview canneal dedup streamcluster
+rm -rf freqmine-openmp blackscholes-openmp bodytrack-openmp
+workloads=( blackscholes bodytrack facesim fluidanimate swaptions vips x264 ferret )
+for i in "${workloads[@]}"
+do
+    ln -s parsec-2.0/pkgs/apps/$i/inst/$INST_SET-linux.gcc/bin/$i
+done
+workloads=( freqmine blackscholes bodytrack )
+for i in "${workloads[@]}"
+do
+    ln -s parsec-2.0/pkgs/apps/$i/inst/$INST_SET-linux.gcc-openmp/bin/$i $i-openmp
+done
+ln -s parsec-2.0/pkgs/apps/raytrace/inst/$INST_SET-linux.gcc/bin/rtview
+workloads=( canneal dedup streamcluster )
+for i in "${workloads[@]}"
+do
+    ln -s parsec-2.0/pkgs/kernels/$i/inst/$INST_SET-linux.gcc/bin/$i
+done
+
+popd
+
+echo "DONE!"

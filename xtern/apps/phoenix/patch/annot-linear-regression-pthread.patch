@@ -1,0 +1,26 @@
+--- phoenix-2.0.0-orig/tests/linear_regression/linear_regression-pthread.c	2009-05-06 01:12:23.000000000 -0400
++++ phoenix-2.0.0/tests/linear_regression/linear_regression-pthread.c	2013-02-21 16:06:01.101390537 -0500
+@@ -39,6 +39,7 @@
+ #include <ctype.h>
+ 
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ typedef struct {
+    char x;
+@@ -62,6 +63,7 @@
+  */
+ void *linear_regression_pthread(void *args_in) 
+ {
++  soba_wait(0);
+    lreg_args* args =(lreg_args*)args_in;
+    int i;
+ 
+@@ -133,6 +135,7 @@
+    tid_args = (lreg_args *)CALLOC(sizeof(lreg_args), num_procs); 
+ 
+ 	 // Assign a portion of the points for each thread
++   soba_init(0, num_threads, num_threads*20);
+    for(i = 0; i < num_threads; i++)
+    {
+ 	   tid_args[i].points = &points[i*req_units];

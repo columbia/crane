@@ -1,0 +1,38 @@
+diff -ruN XSBench-5-backup/src/makefile XSBench-5/src/makefile
+--- XSBench-5-backup/src/makefile	2013-07-16 15:17:20.064011640 -0400
++++ XSBench-5/src/makefile	2013-07-16 15:17:40.104010947 -0400
+@@ -30,7 +30,7 @@
+ 
+ # Regular gcc Compiler
+ ifeq ($(COMPILER),gnu)
+-  GCC = gcc
++  GCC = $(XTERN_ROOT)/apps/openmp/install/bin/gcc
+ endif
+ 
+ # BG/Q gcc Cross-Compiler
+@@ -39,13 +39,13 @@
+ endif
+ 
+ # Standard Flags
+-GCC_S_FLAGS := -fopenmp -Wall -std=gnu99
++GCC_S_FLAGS := -O3 -mtune=native -fno-stack-protector -static-libgcc -fopenmp -Wall -std=gnu99
+ 
+ # Optional/Extra Flags
+-GCC_O_FLAGS =
++GCC_O_FLAGS = -I$(XTERN_ROOT)/include
+ 
+ # Linker Flags
+-LDFLAGS = -lm
++LDFLAGS = -L. -lm -lgomp -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot -lrt
+ 
+ # Debug Flags
+ ifeq ($(DEBUG),yes)
+@@ -85,7 +85,7 @@
+ 	$(GCC) $(GCC_S_FLAGS) $(GCC_O_FLAGS) -c $< -o $@
+ 
+ do_flops.o: do_flops.c
+-	$(GCC) $(GCC_S_FLAGS) -c do_flops.c
++	$(GCC) $(GCC_S_FLAGS) $(GCC_O_FLAGS) -c do_flops.c
+ 
+ clean:
+ 	rm -rf XSBench XSBench.dSYM $(obj) do_flops.o

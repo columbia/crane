@@ -1,0 +1,7 @@
+<config>
+  <arbiter port="14901"/>
+  <explorer strategy="random" dpor="true" port="14902" log_dir="." timeout="600"/>
+  <prefix path="aget-mongoose.strategy"/>
+  <program command="./wrapper"/>
+</config>
+

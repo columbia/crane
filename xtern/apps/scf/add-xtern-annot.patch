@@ -1,0 +1,67 @@
+diff -urN src_backup/eti/tracing.h src/eti/tracing.h
+--- src_backup/eti/tracing.h	1969-12-31 19:00:00.000000000 -0500
++++ src/eti/tracing.h	2013-07-28 20:31:35.792370411 -0400
+@@ -0,0 +1,6 @@
++#ifndef _TRACING_H
++#define _TRACING_H
++static inline void ENTER_LOG(void *input){return;}
++static inline void EXIT_LOG(void *input){return;}
++static inline int tracing_emit_log(char* filename){return 0;}
++#endif
+diff -urN src_backup/Makefile src/Makefile
+--- src_backup/Makefile	2013-07-28 20:30:40.076372253 -0400
++++ src/Makefile	2013-07-28 20:32:20.128368787 -0400
+@@ -1,9 +1,11 @@
+ ## Makefile for SCF-C
+ 
+ 
+-CC = gcc
+-CFLAGS += -g -O3 -mtune=native -Wall -fopenmp
+-LDFLAGS += -lm 
++CC = "$(XTERN_ROOT)/apps/openmp/install/bin/gcc"
++CFLAGS += -g -O3 -mtune=native -fno-stack-protector -static-libgcc -Wall -fopenmp
++CFLAGS += -I$(XTERN_ROOT)/include -I.
++LDFLAGS += -L. -lm -lgomp
++LDFLAGS += -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ OBJFILES = input.o integ.o output.o timer.o scf.o diagonalize.o twoel.o
+ 
+diff -urN src_backup/scf.c src/scf.c
+--- src_backup/scf.c	2013-07-28 20:30:40.076372253 -0400
++++ src/scf.c	2013-07-28 20:33:53.840365627 -0400
+@@ -17,6 +17,8 @@
+ #include "output.h"
+ #include "timer.h"
+ #include "g.h"
++#include "omp.h"
++#include "tern/user.h"
+ 
+ double * g_dens, * g_fock, * g_tfock, * g_schwarz, * g_work, * g_ident, * g_orbs, * offsets;
+ double * g_schwarz_max_j, * g_fock_const;
+@@ -141,6 +143,7 @@
+   tinit = timer();
+ 
+  EXIT_LOG(timer);
++soba_init(0,omp_get_num_threads(),omp_get_num_threads()*20);//xtern annot
+ 
+ // *** ITERATE ****
+   for (iter = 0; iter <  mxiter; iter++) {
+diff -urN src_backup/twoel.c src/twoel.c
+--- src_backup/twoel.c	2013-07-28 20:30:40.076372253 -0400
++++ src/twoel.c	2013-07-28 20:34:46.012363744 -0400
+@@ -10,6 +10,7 @@
+ #include <omp.h>
+ #include <string.h>
+ #include <eti/tracing.h>
++#include "tern/user.h"
+ double twoel_reducer(void);
+ double contract_matrices(double *, double *);
+ 
+@@ -122,6 +123,7 @@
+   // 8-way symmetry
+   #pragma omp for OMP_SCHEDULE REDUCE_CLAUSE
+   for (i = 0; i < nbfn; i++) {
++soba_wait(0);
+     i_off = i * nbfn;
+     j_off = i_off;
+ 

@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+#if [ -z $1 ]; then
+#        # No version number
+#        echo "Usage: <version number: e.g. 1.1.5>"
+#        exit 1
+#fi
+
+VER=0.9.5
+cd $XTERN_ROOT/apps/pbzip2
+rm -rf pbzip2-$VER
+if [ ! -f pbzip2-$VER.tar.gz ]; then
+    wget http://pkgs.fedoraproject.org/repo/pkgs/pbzip2/pbzip2-$VER.tar.gz/94cbc6ff49a6f4df40f6b1552b613ce6/pbzip2-$VER.tar.gz
+fi
+tar zxvf pbzip2-$VER.tar.gz
+
+pushd pbzip2-$VER
+patch -p1 < ../add-xtern-annot-0.9.5-all.patch
+patch -p1 < ../add-set-base-time-annot.patch
+make
+mv pbzip2 ../pbzip2
+popd
+
+if [ ! -f db-5.3.15.tar.gz ]; then
+    wget http://download.oracle.com/berkeley-db/db-5.3.15.tar.gz &> /dev/null
+fi
+gunzip -f db-5.3.15.tar.gz
+mv db-5.3.15.tar input.tar
+./pbzip2 -p4 -rkvf input.tar &> /dev/null

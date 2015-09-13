@@ -1,0 +1,212 @@
+diff -Naur src_orig/map_reduce.c src/map_reduce.c
+--- phoenix-2.0.0/src/map_reduce.c	2013-02-26 20:11:54.059467808 -0500
++++ phoenix-2.0.0-modified/src/map_reduce.c	2013-02-26 23:50:31.679013633 -0500
+@@ -178,11 +178,13 @@
+     tpool_t         *tpool;         /* Thread pool. */
+ } mr_env_t;
+ 
++#define MAX_NUM_THREADS 64
++
+ #ifdef TIMING
+-static pthread_key_t emit_time_key;
++static void* emit_time_key[MAX_NUM_THREADS]
+ #endif
+-static pthread_key_t env_key;       /* Environment for current thread. */
+-static pthread_key_t tpool_key;
++static void* env_key[MAX_NUM_THREADS];       /* Environment for current thread. */
++static void* tpool_key[MAX_NUM_THREADS];
+ 
+ /* Data passed on to each worker thread. */
+ typedef struct
+@@ -230,12 +232,48 @@
+ static void run_combiner (mr_env_t* env, int thread_idx);
+ #endif
+ 
++static __thread int local_tid = -1;
++static int thread_counter;
++static pthread_mutex_t thread_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
++
++static int Pthread_key_create(void * key[], void (*nothing) (void *))
++{
++    int i;
++    for (i = 0; i < MAX_NUM_THREADS; ++i)
++        key[i] = NULL;
++    return 0;
++}
++
++static int
++Pthread_setspecific (void * key[], const void *value)
++{
++    if (local_tid < 0) {
++        pthread_mutex_lock(&thread_counter_mutex);
++        local_tid = thread_counter++; 
++        pthread_mutex_unlock(&thread_counter_mutex);
++    }
++    key[local_tid] = value;
++    return 0;
++}
++
++void *
++Pthread_getspecific (void * key[])
++{
++    if (local_tid < 0) {
++        pthread_mutex_lock(&thread_counter_mutex);
++        local_tid = thread_counter++;
++        pthread_mutex_unlock(&thread_counter_mutex);
++    }
++    return key[local_tid];
++}
++
++
+ int 
+ map_reduce_init ()
+ {
+-    CHECK_ERROR (pthread_key_create (&tpool_key, NULL));
++    CHECK_ERROR (Pthread_key_create (tpool_key, NULL));
+ 
+-    CHECK_ERROR (pthread_setspecific (tpool_key, NULL));
++    CHECK_ERROR (Pthread_setspecific (tpool_key, NULL));
+ 
+     return 0;
+ }
+@@ -265,7 +303,7 @@
+     assert (env->taskQueue != NULL);
+ 
+     /* Reuse thread pool. */
+-    env->tpool = pthread_getspecific (tpool_key);
++    env->tpool = Pthread_getspecific (tpool_key);
+     if (env->tpool == NULL) {
+         tpool_t *tpool;
+ 
+@@ -273,15 +311,15 @@
+         CHECK_ERROR (tpool == NULL);
+ 
+         env->tpool = tpool;
+-        CHECK_ERROR (pthread_setspecific (tpool_key, tpool));
++        CHECK_ERROR (Pthread_setspecific (tpool_key, tpool));
+     }
+ 
+ #ifdef TIMING
+-    CHECK_ERROR (pthread_key_create (&emit_time_key, NULL));
++    CHECK_ERROR (Pthread_key_create (emit_time_key, NULL));
+ #endif
+-    CHECK_ERROR (pthread_key_create (&env_key, NULL));
++    CHECK_ERROR (Pthread_key_create (env_key, NULL));
+ 
+-    pthread_setspecific (env_key, env);
++    Pthread_setspecific (env_key, env);
+ 
+     get_time (&end);
+ 
+@@ -322,12 +360,12 @@
+     /* Cleanup. */
+     get_time (&begin);
+     env_fini(env);
+-    CHECK_ERROR (pthread_key_delete (env_key));
++    /*CHECK_ERROR (Pthread_key_delete (env_key));*/
+     get_time (&end);
+ 
+ #ifdef TIMING
+     fprintf (stderr, "library finalize: %u\n", time_diff (&end, &begin));
+-    CHECK_ERROR (pthread_key_delete (emit_time_key));
++    /*CHECK_ERROR (Pthread_key_delete (emit_time_key));*/
+ #endif
+ 
+     return 0;
+@@ -337,10 +375,10 @@
+ {
+     tpool_t *tpool;
+ 
+-    tpool = pthread_getspecific (tpool_key);
++    tpool = Pthread_getspecific (tpool_key);
+     CHECK_ERROR (tpool_destroy (tpool));
+ 
+-    pthread_key_delete (tpool_key);
++    /*Pthread_key_delete (tpool_key);*/
+ 
+     return 0;
+ }
+@@ -746,9 +784,9 @@
+     /* Bind thread. */
+     CHECK_ERROR (proc_bind_thread (th_arg->cpu_id) != 0);
+ 
+-    CHECK_ERROR (pthread_setspecific (env_key, env));
++    CHECK_ERROR (Pthread_setspecific (env_key, env));
+ #ifdef TIMING
+-    CHECK_ERROR (pthread_setspecific (emit_time_key, 0));
++    CHECK_ERROR (Pthread_setspecific (emit_time_key, 0));
+ #endif
+ 
+     mwta.lgrp = loc_get_lgrp();
+@@ -786,7 +824,7 @@
+ 
+ #ifdef TIMING
+     thread_timing_t *timing = calloc (1, sizeof (thread_timing_t));
+-    uintptr_t emit_time = (uintptr_t)pthread_getspecific (emit_time_key);
++    uintptr_t emit_time = (uintptr_t)Pthread_getspecific (emit_time_key);
+     timing->user_time = user_time - emit_time;
+     timing->work_time = work_time - timing->user_time;
+     timing->combiner_time = combiner_time;
+@@ -943,9 +981,9 @@
+     /* Bind thread. */
+     CHECK_ERROR (proc_bind_thread (th_arg->cpu_id) != 0);
+ 
+-    CHECK_ERROR (pthread_setspecific (env_key, env));
++    CHECK_ERROR (Pthread_setspecific (env_key, env));
+ #ifdef TIMING
+-    CHECK_ERROR (pthread_setspecific (emit_time_key, 0));
++    CHECK_ERROR (Pthread_setspecific (emit_time_key, 0));
+ #endif
+ 
+     if (env->oneOutputQueuePerMapTask)
+@@ -977,7 +1015,7 @@
+ 
+ #ifdef TIMING
+     thread_timing_t *timing = calloc (1, sizeof (thread_timing_t));
+-    uintptr_t emit_time = (uintptr_t)pthread_getspecific (emit_time_key);
++    uintptr_t emit_time = (uintptr_t)Pthread_getspecific (emit_time_key);
+     timing->user_time = user_time - emit_time;
+     timing->work_time = work_time - timing->user_time;
+     return (void *)timing;
+@@ -1015,7 +1053,7 @@
+ 
+     CHECK_ERROR (proc_bind_thread (cpu) != 0);
+ 
+-    CHECK_ERROR (pthread_setspecific (env_key, env));
++    CHECK_ERROR (Pthread_setspecific (env_key, env));
+ 
+     /* Assumes num_merge_threads is modified before each call. */
+     int length = th_arg->merge_len / env->num_merge_threads;
+@@ -1383,10 +1421,10 @@
+     get_time (&end);
+ 
+ #ifdef TIMING
+-    uintptr_t total_emit_time = (uintptr_t)pthread_getspecific (emit_time_key);
++    uintptr_t total_emit_time = (uintptr_t)Pthread_getspecific (emit_time_key);
+     uintptr_t emit_time = time_diff (&end, &begin);
+     total_emit_time += emit_time;
+-    CHECK_ERROR (pthread_setspecific (emit_time_key, (void *)total_emit_time));
++    CHECK_ERROR (Pthread_setspecific (emit_time_key, (void *)total_emit_time));
+ #endif
+ }
+ 
+@@ -1429,10 +1467,10 @@
+     get_time (&end);
+ 
+ #ifdef TIMING
+-    uintptr_t total_emit_time = (uintptr_t)pthread_getspecific (emit_time_key);
++    uintptr_t total_emit_time = (uintptr_t)Pthread_getspecific (emit_time_key);
+     uintptr_t emit_time = time_diff (&end, &begin);
+     total_emit_time += emit_time;
+-    CHECK_ERROR (pthread_setspecific (emit_time_key, (void *)total_emit_time));
++    CHECK_ERROR (Pthread_setspecific (emit_time_key, (void *)total_emit_time));
+ #endif
+ }
+ 
+@@ -1895,5 +1933,5 @@
+ 
+ static inline mr_env_t* get_env (void)
+ {
+-    return (mr_env_t*)pthread_getspecific (env_key);
++    return (mr_env_t*)Pthread_getspecific (env_key);
+ }

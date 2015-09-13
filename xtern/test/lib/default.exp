@@ -1,0 +1,221 @@
+# This procedure executes one line of a test case's execution script.
+proc execOneLine { test PRS outcome lineno line } {
+  set status 0
+  set resultmsg ""
+  set retval [ catch { eval exec -keepnewline -- $line } errmsg ]
+  if { $retval != 0 } {
+    set code [lindex $::errorCode 0]
+    set lineno [expr $lineno + 1]
+    if { $PRS != ""} {
+      set PRS " for $PRS"
+    }
+    set errmsg " at line $lineno\nwhile running: $line\n$errmsg"
+    switch "$code" {
+      CHILDSTATUS {
+        set status [lindex $::errorCode 2]
+        if { $status != 0 } {
+          set resultmsg "$test$PRS\nFailed with exit($status)$errmsg"
+        }
+      }
+      CHILDKILLED {
+        set signal [lindex $::errorCode 2]
+        set resultmsg "$test$PRS\nFailed with signal($signal)$errmsg"
+      }
+      CHILDSUSP {
+        set signal [lindex $::errorCode 2]
+        set resultmsg "$test$PRS\nFailed with suspend($signal)$errmsg"
+      }
+      POSIX {
+        set posixNum [lindex $::errorCode 1]
+        set posixMsg [lindex $::errorCode 2]
+        set resultmsg "$test$PRS\nFailed with posix($posixNum,$posixMsg)$errmsg"
+      }
+      NONE {
+        # Any other error such as stderr output of a program, or syntax error in
+        # the RUN line.
+        set resultmsg "$test$PRS\nFailed with unknown error (or has stderr output)$errmsg"
+      }
+      default {
+        set resultmsg "$test$PRS\nFailed with unknown error$errmsg"
+      }
+    }
+  }
+  return $resultmsg
+}
+
+# This procedure performs variable substitutions on the RUN: lines of a test
+# cases.
+proc substitute { line test tmpFile } {
+  global srcroot objroot srcdir objdir subdir target_triplet
+  global gcc gxx
+  global projlibdir projbindir
+  global ternruntime ternannotlib
+  set path [file join $srcdir $subdir]
+
+  # Substitute all Tcl variables.
+  set new_line [subst $line ]
+
+  #replace %% with _#MARKER#_ to make the replacement of %% more predictable
+  regsub -all {%%} $new_line {_#MARKER#_} new_line
+  #replace %gcc with actual gcc
+  regsub -all {%gcc} $new_line "$gcc" new_line
+  #replace %gxx with actual gxx
+  regsub -all {%gxx} $new_line "$gxx" new_line
+  #replace %srcroot with project source root directory
+  regsub -all {%srcroot} $new_line "$srcroot" new_line
+  #replace %objroot with project object root directory
+  regsub -all {%objroot} $new_line "$objroot" new_line
+  #replace %projlibdir with project library directory
+  regsub -all {%projlibdir} $new_line "$projlibdir" new_line
+  #replace %projbindir with project bin directory
+  regsub -all {%projbindir} $new_line "$projbindir" new_line
+  #replace %ternruntime with tern runtime libraries
+  regsub -all {%ternruntime} $new_line "$ternruntime" new_line
+  #replace %ternannotlib with tern annotation libraries
+  regsub -all {%ternannotlib} $new_line "$ternannotlib" new_line
+  #replace %p with path to source,
+  regsub -all {%p} $new_line [file join $srcdir $subdir] new_line
+  #replace %s with filename
+  regsub -all {%s} $new_line $test new_line
+  #replace %t with temp filenames
+  regsub -all {%t} $new_line $tmpFile new_line
+  #replace %abs_tmp with absolute temp filenames
+  regsub -all {%abs_tmp} $new_line [file join [pwd] $tmpFile] new_line
+  #replace _#MARKER#_ with %
+  regsub -all {_#MARKER#_} $new_line % new_line
+
+  return $new_line
+}
+
+# This procedure runs the set of tests for the test_source_files array.
+proc RunTests { test_source_files } {
+  global srcroot objroot srcdir objdir subdir target_triplet
+  set timeout 60
+
+  set path [file join $objdir $subdir]
+
+  #Make Output Directory if it does not exist already
+  if { [file exists path] } {
+    cd $path
+  } else {
+    file mkdir $path
+    cd $path
+  }
+
+  file mkdir Output
+  cd Output
+
+  foreach test $test_source_files {
+    #Should figure out best way to set the timeout
+    #set timeout 40
+
+    set filename [file tail $test]
+    # verbose "ABOUT TO RUN: $filename" 2
+    set outcome PASS
+    set tmpFile "$filename.tmp"
+
+    # Mark that it should not be XFAIL for this target.
+    set targetPASS 0
+
+    #set hasRunline bool to check if testcase has a runline
+    set numLines 0
+
+    # Open the test file and start reading lines
+    set testFileId [ open $test r]
+    set runline ""
+    set PRNUMS ""
+    foreach line [split [read $testFileId] \n] {
+
+      # if its the END. line then stop parsing (optimization for big files)
+      if {[regexp {END.[[:space:]]*$} $line match endofscript]} {
+        break
+
+      # if the line is continued, concatenate and continue the loop
+      } elseif {[regexp {RUN: *(.+)(\\)$} $line match oneline suffix]} {
+        set runline "$runline$oneline "
+
+      # if its a terminating RUN: line then do substitution on the whole line
+      # and then save the line.
+      } elseif {[regexp {RUN: *(.+)$} $line match oneline suffix]} {
+        set runline "$runline$oneline"
+        set runline [ substitute $runline $test $tmpFile ]
+        set lines($numLines) $runline
+        set numLines [expr $numLines + 1]
+        set runline ""
+
+      # if its an PR line, save the problem report number
+      } elseif {[regexp {PR([0-9]+)} $line match prnum]} {
+        if {$PRNUMS == ""} {
+          set PRNUMS "PR$prnum"
+        } else {
+          set PRNUMS "$PRNUMS,$prnum"
+        }
+      # if its an XFAIL line, see if we should be XFAILing or not.
+      } elseif {[regexp {XFAIL:[ *](.+)} $line match targets]} {
+        set targets
+
+        #split up target if more then 1 specified
+        foreach target [split $targets ,] {
+          if { $target == "*" } {
+              if {$targetPASS != 1} {
+                 set outcome XFAIL
+              }
+          } elseif { [regexp $target $target_triplet match] } {
+              if {$targetPASS != 1} {
+                 set outcome XFAIL
+              }
+          }
+        }
+      } elseif {[regexp {XTARGET:[ *](.+)} $line match targets]} {
+        set targets
+
+        #split up target if more then 1 specified
+        foreach target [split $targets ,] {
+          if { [regexp {\*} $target match] } {
+              set targetPASS 1
+              set outcome PASS
+          } elseif { [regexp $target $target_triplet match] } {
+              set targetPASS 1
+              set outcome PASS
+          }
+        }
+      }
+    }
+
+    # Done reading the script
+    close $testFileId
+
+
+    if { $numLines == 0 } {
+      fail "$test: \nDoes not have a RUN line\n"
+    } else {
+      set failed 0
+      for { set i 0 } { $i < $numLines } { set i [ expr $i + 1 ] } {
+        regsub ^.*RUN:(.*) $lines($i) \1 theLine
+        set resultmsg [execOneLine $test $PRNUMS $outcome $i $theLine ]
+        if { $resultmsg != "" } {
+          if { $outcome == "XFAIL" } {
+            xfail "$resultmsg"
+          } else {
+            fail "$resultmsg"
+          }
+          set failed 1
+          break
+        }
+      }
+      if { $failed } {
+        continue
+      } else {
+        if { $PRNUMS != "" } {
+          set PRNUMS " for $PRNUMS"
+        }
+        if { $outcome == "XFAIL" } {
+          xpass "$test$PRNUMS"
+        } else {
+          pass "$test$PRNUMS"
+        }
+      }
+    }
+  }
+}
+

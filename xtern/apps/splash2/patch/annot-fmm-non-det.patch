@@ -1,0 +1,56 @@
+diff -ruN parsec-3.0-orig/ext/splash2x/apps/fmm/src/fmm.C parsec-3.0-modified/ext/splash2x/apps/fmm/src/fmm.C
+--- parsec-3.0-orig/ext/splash2x/apps/fmm/src/fmm.C	2013-02-19 00:53:56.073531457 -0500
++++ parsec-3.0-modified/ext/splash2x/apps/fmm/src/fmm.C	2013-02-20 23:07:50.275576393 -0500
+@@ -79,6 +79,7 @@
+ #include "cost_zones.h"
+ #include "construct_grid.h"
+ #include "interactions.h"
++#include "tern/user.h"
+ 
+ #ifdef ENABLE_PARSEC_HOOKS
+ #include <hooks.h>
+@@ -149,6 +150,9 @@
+ #ifdef ENABLE_PARSEC_HOOKS
+ 	__parsec_roi_begin();
+ #endif
++   //soba_init(0, Number_Of_Processors, Number_Of_Processors*20);
++   //soba_init(1, Number_Of_Processors, Number_Of_Processors*20);
++   //soba_init(2, Number_Of_Processors, Number_Of_Processors*20);
+    CREATE(ParallelExecute, Number_Of_Processors);
+    WAIT_FOR_END(Number_Of_Processors);
+ #ifdef ENABLE_PARSEC_HOOKS
+@@ -289,10 +293,13 @@
+ 
+    if (time_all)
+       CLOCK(start);
++   //soba_wait(0);
++   pcs_enter();
+    PartitionIterate(my_id, UpwardPass, BOTTOM);
+    if (time_all)
+       CLOCK(upward_end);
+    PartitionIterate(my_id, ComputeInteractions, BOTTOM);
++   pcs_barrier_exit(0, Number_Of_Processors);
+    if (time_all)
+       CLOCK(interaction_end);
+    BARRIER(G_Memory->synch, Number_Of_Processors);
+diff -ruN parsec-3.0-orig/ext/splash2x/apps/fmm/src/memory.C parsec-3.0-modified/ext/splash2x/apps/fmm/src/memory.C
+--- parsec-3.0-orig/ext/splash2x/apps/fmm/src/memory.C	2013-02-19 00:53:56.073531457 -0500
++++ parsec-3.0-modified/ext/splash2x/apps/fmm/src/memory.C	2013-02-20 23:06:47.955578620 -0500
+@@ -17,6 +17,7 @@
+ #include <float.h>
+ #include "defs.h"
+ #include "memory.h"
++#include "tern/user.h"
+ 
+ MAIN_ENV
+ 
+@@ -49,7 +50,9 @@
+    LOCKINIT(G_Memory->mal_lock);
+    LOCKINIT(G_Memory->single_lock);
+    LOCKINIT(G_Memory->count_lock);
++   pcs_enter();
+    ALOCKINIT(G_Memory->lock_array, MAX_LOCKS);
++   pcs_exit();
+    BARINIT(G_Memory->synch, Number_Of_Processors);
+    G_Memory->max_x = -MAX_REAL;
+    G_Memory->min_x = MAX_REAL;

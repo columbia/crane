@@ -1,0 +1,56 @@
+diff -ruN parsec-2.0-orig/pkgs/apps/bodytrack/src/TrackingBenchmark/main.cpp parsec-2.0-modified/pkgs/apps/bodytrack/src/TrackingBenchmark/main.cpp
+--- parsec-2.0-orig/pkgs/apps/bodytrack/src/TrackingBenchmark/main.cpp	2013-02-07 14:42:54.868848799 -0500
++++ parsec-2.0-modified/pkgs/apps/bodytrack/src/TrackingBenchmark/main.cpp	2013-02-18 23:29:11.465713384 -0500
+@@ -209,9 +209,12 @@
+ #endif
+ 
+ #if defined(USE_THREADS)
++#include "tern/user.h"
+ //Body tracking threaded with explicit Posix threads
+ int mainPthreads(string path, int cameras, int frames, int particles, int layers, int threads, bool OutputBMP)
+ {
++    soba_init(0, threads, 20*threads);
++    soba_init(1, threads, 20*threads);
+ 	cout << "Threading with Posix Threads" << endl;
+ 	if(threads < 1) {
+ 		cout << "Warning: Illegal or unspecified number of threads, using 1 thread" << endl;
+diff -ruN parsec-2.0-orig/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilterPthread.h parsec-2.0-modified/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilterPthread.h
+--- parsec-2.0-orig/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilterPthread.h	2013-02-07 14:42:54.868848799 -0500
++++ parsec-2.0-modified/pkgs/apps/bodytrack/src/TrackingBenchmark/ParticleFilterPthread.h	2013-02-18 23:32:46.721705683 -0500
+@@ -98,6 +98,8 @@
+ 	delete workInit;
+ }
+ 
++#include "tern/user.h"
++
+ //thread entry function
+ template<class T>
+ void ParticleFilterPthread<T>::Exec(threads::thread_cmd_t cmd, threads::thread_rank_t rank)
+@@ -114,6 +116,7 @@
+ 		ticket = particleTickets.getTicket();
+ 		while(ticket < (int)(particles->size())) {
+ 			//process all elements in work unit
++			soba_wait(0);
+ 			for(i = ticket; i < (int)(particles->size()) && i < ticket + WORKUNIT_SIZE_PARTICLEWEIGHTS; i++) {
+ 				(*valid)[i] = CalcWeight(*particles, i, rank);
+ 			}
+@@ -125,17 +128,18 @@
+ 			particleTickets.resetDispenser(WORKUNIT_SIZE_NEWPARTICLES);
+ 		}
+ 		workInit->Wait();
+-	
+ 		ticket = particleTickets.getTicket();
+ 		//distribute new particles randomly according to model stdDevs
+ 		while(ticket < mNParticles) {
+ 			//process all elements in work unit
++			soba_wait(1);
+ 			for(i = ticket; i < mNParticles && i < ticket + WORKUNIT_SIZE_NEWPARTICLES; i++) {
+ 				//add new particle for each entry in each bin distributed randomly about duplicated particle
+ 				mNewParticles[i] = mParticles[mIndex[i]];
+ 				AddGaussianNoise(mNewParticles[i], mModel->StdDevs()[annealing_parameter], mRnd[i]);
+ 			}
+ 			ticket = particleTickets.getTicket();
++
+ 		}
+ 	} else {
+ 		//unknown command

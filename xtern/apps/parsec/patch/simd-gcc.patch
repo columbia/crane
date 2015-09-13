@@ -1,0 +1,40 @@
+diff --git a/pkgs/apps/blackscholes/src/Makefile b/pkgs/apps/blackscholes/src/Makefile
+index 35520f2..5481066 100644
+--- a/pkgs/apps/blackscholes/src/Makefile
++++ b/pkgs/apps/blackscholes/src/Makefile
+@@ -3,6 +3,7 @@ PREFIX=${PARSECDIR}/pkgs/apps/blackscholes/inst/${PARSECPLAT}
+ ifdef source
+ 	ifeq "$(source)" "simd" 
+ 		SRC = blackscholes.simd.c
++		CXXFLAGS += -msse3
+ 	endif
+ else
+ 	SRC	= blackscholes.c
+diff --git a/pkgs/apps/blackscholes/src/blackscholes.simd.c b/pkgs/apps/blackscholes/src/blackscholes.simd.c
+index 4b73e87..bc63f34 100644
+--- a/pkgs/apps/blackscholes/src/blackscholes.simd.c
++++ b/pkgs/apps/blackscholes/src/blackscholes.simd.c
+@@ -45,6 +45,14 @@ BARDEC(barrier);
+ #define MAX_THREADS 128
+ #endif
+ 
++// fix for gcc
++#ifdef __GNUC__
++#define _MM_ALIGN16 __attribute__((aligned (16)))
++#define MUSTINLINE __attribute__((always_inline))
++#else
++#define MUSTINLINE __forceinline
++#endif
++
+ // NCO = Number of Concurrent Options = SIMD Width
+ // NCO is currently set in the Makefile.
+ //#define NCO 4
+@@ -120,7 +128,7 @@ int nThreads;
+ // See Hull, Section 11.8, P.243-244
+ #define inv_sqrt_2xPI 0.39894228040143270286
+ 
+-__forceinline void CNDF ( fptype * OutputX, fptype * InputX ) 
++MUSTINLINE void CNDF ( fptype * OutputX, fptype * InputX ) 
+ {
+     int sign[SIMD_WIDTH];
+     int i;

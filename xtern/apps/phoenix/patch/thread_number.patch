@@ -1,0 +1,84 @@
+diff -Naur tests_orig/histogram/histogram-pthread.c tests/histogram/histogram-pthread.c
+--- phoenix-2.0.0/tests_orig/histogram/histogram-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/histogram/histogram-pthread.c	2013-03-10 01:59:23.143630391 -0500
+@@ -206,7 +206,7 @@
+    pthread_attr_init(&attr);
+    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+    
+-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++   CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+    num_per_thread = num_pixels / num_procs;
+    excess = num_pixels % num_procs;
+    
+diff -Naur tests_orig/kmeans/kmeans-pthread.c tests/kmeans/kmeans-pthread.c
+--- phoenix-2.0.0/tests_orig/kmeans/kmeans-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/kmeans/kmeans-pthread.c	2013-03-10 01:59:33.939629696 -0500
+@@ -283,7 +283,7 @@
+    
+    pthread_attr_init(&attr);
+    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++   CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+       
+    CHECK_ERROR( (pid = (pthread_t *)malloc(sizeof(pthread_t) * num_procs)) == NULL);
+    
+diff -Naur tests_orig/linear_regression/linear_regression-pthread.c tests/linear_regression/linear_regression-pthread.c
+--- phoenix-2.0.0/tests_orig/linear_regression/linear_regression-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/linear_regression/linear_regression-pthread.c	2013-03-10 01:59:46.287629449 -0500
+@@ -117,7 +117,7 @@
+    CHECK_ERROR((fdata = mmap(0, finfo.st_size + 1, 
+       PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL);
+ 
+-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++   CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+    printf("The number of processors is %d\n\n", num_procs);
+ 
+    pthread_attr_init(&attr);
+diff -Naur tests_orig/matrix_multiply/matrix_multiply-pthread.c tests/matrix_multiply/matrix_multiply-pthread.c
+--- phoenix-2.0.0/tests_orig/matrix_multiply/matrix_multiply-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/matrix_multiply/matrix_multiply-pthread.c	2013-03-10 01:59:57.407628786 -0500
+@@ -79,7 +79,7 @@
+     assert(data->matrix_B);
+     assert(data->output);
+ 
+-    CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++    CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+     dprintf("THe number of processors is %d\n", num_procs);
+ 
+     tid = (pthread_t *)MALLOC(num_procs * sizeof(pthread_t));
+diff -Naur tests_orig/pca/pca-pthread.c tests/pca/pca-pthread.c
+--- phoenix-2.0.0/tests_orig/pca/pca-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/pca/pca-pthread.c	2013-03-10 03:00:06.919628693 -0400
+@@ -193,7 +193,7 @@
+    int i;
+    mean_arg_t *mean_args;
+ 
+-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++   CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+    printf("The number of processors is %d\n", num_procs);
+ 
+    tid = (pthread_t *)MALLOC(num_procs * sizeof(pthread_t));
+diff -Naur tests_orig/string_match/string_match-pthread.c tests/string_match/string_match-pthread.c
+--- phoenix-2.0.0/tests_orig/string_match/string_match-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/string_match/string_match-pthread.c	2013-03-10 03:01:02.811626815 -0400
+@@ -141,7 +141,7 @@
+     pthread_t * tid;
+     int i, num_procs;
+ 
+-    CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++    CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+     printf("THe number of processors is %d\n", num_procs);
+ 
+     str_data_t * data = (str_data_t *)data_in; 
+diff -Naur tests_orig/word_count/word_count-pthread.c tests/word_count/word_count-pthread.c
+--- phoenix-2.0.0/tests_orig/word_count/word_count-pthread.c	2013-03-10 01:58:51.763631337 -0500
++++ phoenix-2.0.0/tests/word_count/word_count-pthread.c	2013-03-10 03:01:29.891625863 -0400
+@@ -122,7 +122,7 @@
+    pthread_t * tid;
+    int i,num_procs;
+ 
+-   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
++   CHECK_ERROR((num_procs = atoi(GETENV("PHOENIX_THREADS"))) <= 0);
+    dprintf("THe number of processors is %d\n\n", num_procs);
+ 
+    wc_data_t * data = (wc_data_t *)data_in; 

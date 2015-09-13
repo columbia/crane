@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+GCC="$XTERN_ROOT/apps/openmp/install/bin/g++"
+if [ -f $GCC ]; then
+    echo "Using $GCC as compiler..."
+else
+    echo "Please refer to $XTERN_ROOT/apps/openmp/readme.txt and build the g++ first."
+    exit
+fi
+
+ARCH=`uname -m`
+GCCLIB=""
+cd $XTERN_ROOT/apps/stl/
+XTERN_ANNOT_LIB="-I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot"
+if [ "$ARCH" == "x86_64" ]; then
+  GCCLIB="$XTERN_ROOT/apps/openmp/install/lib64"
+else
+  GCCLIB="$XTERN_ROOT/apps/openmp/install/lib"
+fi
+ln -s $GCCLIB/libgomp.a . &> /dev/null
+ln -s $GCCLIB/libstdc++.a . &> /dev/null
+
+cd src
+ALLSRC=`ls *.cpp`
+cd ..
+for SRC in $ALLSRC
+do
+  PROG=`echo $SRC | sed 's/\(.*\)\..*/\1/'`
+  CMD="$GCC -g -O2 -fno-stack-protector -static-libgcc -static-libstdc++ -D_GLIBCXX_PARALLEL -L. \
+    -fopenmp src/$SRC -o $PROG -lgomp $XTERN_ANNOT_LIB"
+  echo "Compiling src/$SRC..."   #" with command $CMD..."
+  `$CMD`
+done

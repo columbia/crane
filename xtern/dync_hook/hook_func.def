@@ -1,0 +1,756 @@
+STARTDEF
+int
+pthread_create
+/libpthread.so.0
+pthread_t *,
+const pthread_attr_t *,
+void *(*)(void*),
+void *
+SECTION
+pthread_t *thread,
+const pthread_attr_t *attr,
+void *(*start_routine)(void*), 
+void *arg
+SECTION
+thread, attr, start_routine, arg
+SECTION
+ENDDEF
+
+STARTDEF
+int
+pthread_cancel
+/libpthread.so.0
+pthread_t
+SECTION
+pthread_t thread
+SECTION
+thread
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+pthread_mutex_lock
+/libpthread.so.0
+pthread_mutex_t *
+SECTION
+pthread_mutex_t *mutex
+SECTION
+mutex
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+pthread_mutex_trylock
+/libpthread.so.0
+pthread_mutex_t *
+SECTION
+pthread_mutex_t *mutex
+SECTION
+mutex
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+pthread_mutex_unlock
+/libpthread.so.0
+pthread_mutex_t *
+SECTION
+pthread_mutex_t *mutex
+SECTION
+mutex
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+pthread_cond_wait
+/libpthread.so.0
+pthread_cond_t *, pthread_mutex_t *
+SECTION
+pthread_cond_t *cond, pthread_mutex_t *mutex
+SECTION
+cond, mutex
+SECTION
+ENDDEF
+
+
+STARTDEF
+int 
+pthread_cond_timedwait
+/libpthread.so.0
+pthread_cond_t *, pthread_mutex_t *, const struct timespec *
+SECTION
+pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime
+SECTION
+cond, mutex, abstime
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+pthread_join
+/libpthread.so.0
+pthread_t, void**
+SECTION
+pthread_t thread, void **retval
+SECTION
+thread, retval
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+pthread_detach
+/libpthread.so.0
+pthread_t
+SECTION
+pthread_t thread
+SECTION
+thread
+SECTION
+ENDDEF
+
+STARTDEF
+int 
+socket
+/libc.so.6
+int, int, int
+SECTION
+int domain, int type, int protocol
+SECTION
+domain, type, protocol
+SECTION
+ENDDEF
+
+STARTDEF
+ssize_t 
+send
+/libc.so.6
+int, const void*, size_t, int 
+SECTION
+int sockfd, const void* buf, size_t len, int flags
+SECTION
+sockfd, buf, len, flags
+SECTION
+ENDDEF
+
+STARTDEF
+ssize_t 
+recv
+/libc.so.6
+int, void*, size_t, int 
+SECTION
+int sockfd, void* buf, size_t len, int flags
+SECTION
+sockfd, buf, len, flags
+SECTION
+ENDDEF
+
+STARTDEF
+int
+connect
+/libc.so.6
+int , const struct sockaddr *, socklen_t
+SECTION
+int sockfd, const struct sockaddr *addr, socklen_t addrlen
+SECTION
+sockfd, addr, addrlen
+SECTION
+ENDDEF
+
+STARTDEF
+struct hostent *
+gethostbyname
+/libc.so.6
+const char *
+SECTION
+const char *name
+SECTION
+name
+SECTION
+ENDDEF
+
+STARTDEF
+int
+gethostbyname_r
+/libc.so.6
+const char *, struct hostent *, char *, size_t , struct hostent **, int *
+SECTION
+const char *name, struct hostent *ret2, char *buf, size_t buflen, struct hostent **result, int *h_errnop
+SECTION
+name, ret2, buf, buflen, result, h_errnop
+SECTION
+ENDDEF
+
+STARTDEF
+int
+getaddrinfo
+/libc.so.6
+const char *, const char *, const struct addrinfo *, struct addrinfo **
+SECTION
+const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res
+SECTION
+node, service, hints, res
+SECTION
+ENDDEF
+
+STARTDEF
+void
+freeaddrinfo
+/libc.so.6
+struct addrinfo *
+SECTION
+struct addrinfo *res
+SECTION
+res
+SECTION
+ENDDEF
+
+STARTDEF
+struct hostent *
+gethostbyaddr
+/libc.so.6
+const void *, socklen_t, int
+SECTION
+const void *addr, socklen_t len, int type
+SECTION
+addr, len, type
+SECTION
+ENDDEF
+
+STARTDEF
+char *
+inet_ntoa
+/libc.so.6
+struct in_addr
+SECTION
+struct in_addr in
+SECTION
+in
+SECTION
+ENDDEF
+
+STARTDEF
+char *
+strtok
+/libc.so.6
+char *, const char *
+SECTION
+char * str, const char * delimiters
+SECTION
+str, delimiters
+SECTION
+ENDDEF
+
+STARTDEF
+int
+accept
+/libc.so.6
+int , struct sockaddr *, socklen_t *
+SECTION
+int sockfd, struct sockaddr *addr, socklen_t *addrlen
+SECTION
+sockfd, addr, addrlen
+SECTION
+ENDDEF
+
+STARTDEF
+int
+accept4
+/libc.so.6
+int , struct sockaddr *, socklen_t *, int
+SECTION
+int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags
+SECTION
+sockfd, addr, addrlen, flags
+SECTION
+ENDDEF
+
+STARTDEF
+int
+listen
+/libc.so.6
+int, int
+SECTION
+int sockfd, int backlog
+SECTION
+sockfd, backlog
+SECTION
+ENDDEF
+
+STARTDEF
+int
+getsockopt
+/libc.so.6
+int, int, int, void *, socklen_t *
+SECTION
+int sockfd, int level, int optname, void *optval, socklen_t *optlen
+SECTION
+sockfd, level, optname, optval, optlen
+SECTION
+ENDDEF
+
+STARTDEF
+int
+setsockopt
+/libc.so.6
+int, int, int, const void *, socklen_t
+SECTION
+int sockfd, int level, int optname, const void *optval, socklen_t optlen
+SECTION
+sockfd, level, optname, optval, optlen
+SECTION
+ENDDEF
+
+STARTDEF
+int
+pipe
+/libc.so.6
+int [2]
+SECTION
+int pipefd[2]
+SECTION
+pipefd
+SECTION
+ENDDEF
+
+STARTDEF
+ssize_t
+read
+/libc.so.6
+int, void*, size_t
+SECTION
+int fd, void *buf, size_t count
+SECTION
+fd, buf, count
+SECTION
+ENDDEF
+
+STARTDEF
+ssize_t
+write
+/libc.so.6
+int, const void*, size_t
+SECTION
+int fd, const void *buf, size_t count
+SECTION
+fd, buf, count
+SECTION
+ENDDEF
+
+STARTDEF
+size_t
+fread
+/libc.so.6
+void *, size_t, size_t, FILE *
+SECTION
+void * ptr, size_t size, size_t count, FILE * stream
+SECTION
+ptr, size, count, stream
+SECTION
+ENDDEF
+
+STARTDEF
+ssize_t
+pread
+/libc.so.6
+int, void *, size_t, off_t
+SECTION
+int fd, void *buf, size_t count, off_t offset
+SECTION
+fd, buf, count, offset
+SECTION
+ENDDEF
+
+STARTDEF
+ssize_t
+pwrite
+/libc.so.6
+int, const void *, size_t, off_t
+SECTION
+int fd, const void *buf, size_t count, off_t offset
+SECTION
+fd, buf, count, offset
+SECTION
+ENDDEF
+
+STARTDEF
+int
+sigwait
+/libc.so.6
+const sigset_t *, int*
+SECTION
+const sigset_t *set, int *sig
+SECTION
+set, sig
+SECTION
+ENDDEF
+
+STARTDEF
+int
+select
+/libc.so.6
+int, fd_set*, fd_set *, fd_set*, struct timeval*
+SECTION
+int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout
+SECTION
+nfds, readfds, writefds, exceptfds, timeout
+SECTION
+ENDDEF
+
+STARTDEF
+int
+poll
+/libc.so.6
+struct pollfd *, nfds_t, int
+SECTION
+struct pollfd *fds, nfds_t nfds, int timeout
+SECTION
+fds, nfds, timeout
+SECTION
+ENDDEF
+
+STARTDEF
+int
+bind
+/libc.so.6
+int, const struct sockaddr *, socklen_t
+SECTION
+int socket, const struct sockaddr *address, socklen_t address_len
+SECTION
+socket, address, address_len
+SECTION
+ENDDEF
+
+STARTDEF
+int
+__libc_start_main
+/libc.so.6
+void *, int, char *[], void*, void*, void*
+SECTION
+void *func_ptr, int argc, char* argv[], void *init_func, void *fini_func, void *stack_end
+SECTION
+func_ptr, argc, argv, init_func, fini_func, stack_end
+SECTION
+ENDDEF
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+sem_init
+(sem_t *sem, int pshared, unsigned int value)
+END_SHORT_DEFINE
+
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+sem_wait
+(sem_t *sem)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_mutex_init
+(pthread_mutex_t * /*restrict*/  mutex, const pthread_mutexattr_t * /*restrict*/  attr)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_mutex_timedlock
+(pthread_mutex_t * /*restrict*/  mutex, const struct timespec * /*restrict*/  abs_timeout)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_cond_broadcast
+(pthread_cond_t *cond)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+void
+pthread_exit
+(void *retval)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_cond_signal
+(pthread_cond_t *cond)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_barrier_wait
+(pthread_barrier_t *barrier)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_barrier_init
+(pthread_barrier_t * /*restrict*/  barrier, const pthread_barrierattr_t * /*restrict*/  attr, unsigned count)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_barrier_destroy
+(pthread_barrier_t *barrier)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+sem_post
+(sem_t *sem)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+sem_trywait
+(sem_t *sem)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+sem_timedwait
+(sem_t *sem, const struct timespec *abs_timeout)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+ssize_t
+sendto
+(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+ssize_t
+sendmsg
+(int sockfd, const struct msghdr *msg, int flags)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+ssize_t
+recvfrom
+(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+ssize_t 
+recvmsg
+(int sockfd, struct msghdr *msg, int flags)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+shutdown
+(int sockfd, int how)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+close
+(int fd)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int 
+sched_yield
+(void)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+unsigned int 
+sleep
+(unsigned int seconds)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int 
+usleep
+(__useconds_t usec)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+nanosleep
+(const struct timespec *req, struct timespec *rem)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+epoll_wait
+(int epfd, struct epoll_event *events, int maxevents, int timeout)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+epoll_create
+(int size)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+epoll_ctl
+(int epfd, int op, int fd, struct epoll_event *event)
+END_SHORT_DEFINE
+
+STARTDEF
+char*
+fgets
+/libc.so.6
+char *,
+int ,
+FILE*
+SECTION
+char *s,
+int size,
+FILE* stream
+SECTION
+s, size, stream
+SECTION
+ENDDEF
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+kill
+(pid_t pid, int sig)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+pid_t
+fork
+()
+END_SHORT_DEFINE
+
+STARTDEF
+int
+execv
+/libc.so.6
+const char *, char *const []
+SECTION
+const char * path, char * const argv[]
+SECTION
+path, argv
+SECTION
+ENDDEF
+
+START_SHORT_DEFINE
+/libc.so.6
+pid_t
+wait
+(int *status)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+pid_t
+waitpid
+(pid_t pid, int *status, int options)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+time_t
+time
+(time_t *t)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/librt.so.1
+int
+clock_getres
+(clockid_t clk_id, struct timespec *res)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/librt.so.1
+int
+clock_gettime
+(clockid_t clk_id, struct timespec *tp)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/librt.so.1
+int
+clock_settime
+(clockid_t clk_id, const struct timespec *tp)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+gettimeofday
+(struct timeval *tv, struct timezone *tz)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libc.so.6
+int
+settimeofday
+(const struct timeval *tv, const struct timezone *tz)
+END_SHORT_DEFINE
+
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+pthread_rwlock_rdlock
+(pthread_rwlock_t *rwlock)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_rwlock_tryrdlock
+(pthread_rwlock_t *rwlock)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int
+pthread_rwlock_trywrlock
+(pthread_rwlock_t *rwlock)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_rwlock_wrlock
+(pthread_rwlock_t *rwlock)
+END_SHORT_DEFINE
+
+START_SHORT_DEFINE
+/libpthread.so.0
+int 
+pthread_rwlock_unlock
+(pthread_rwlock_t *rwlock)
+END_SHORT_DEFINE
+

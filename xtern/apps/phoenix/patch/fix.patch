@@ -1,0 +1,24 @@
+diff -Naur phoenix-2.0.0/tests/kmeans/Makefile phoenix-2.0.0_modified/tests/kmeans/Makefile
+--- phoenix-2.0.0/tests/kmeans/Makefile	2009-05-27 22:59:59.000000000 -0400
++++ phoenix-2.0.0_modified/tests/kmeans/Makefile	2013-01-25 01:27:37.224253458 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -lpthread
+ 
+ KMEANS_OBJS = kmeans.o
+ KMEANS_SEQ_OBJS = kmeans-seq.o
+diff -Naur phoenix-2.0.0/tests/pca/Makefile phoenix-2.0.0_modified/tests/pca/Makefile
+--- phoenix-2.0.0/tests/pca/Makefile	2009-05-27 23:00:08.000000000 -0400
++++ phoenix-2.0.0_modified/tests/pca/Makefile	2013-01-25 01:27:52.760252920 -0500
+@@ -31,7 +31,7 @@
+ 
+ include $(HOME)/Defines.mk
+ 
+-LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX)
++LIBS += -L$(HOME)/$(LIB_DIR) -l$(PHOENIX) -lpthread
+ 
+ PCA_OBJS = pca.o
+ PCA_SEQ_OBJS = pca-seq.o

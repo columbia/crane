@@ -1,0 +1,38 @@
+diff -ruN parsec-3.0-orig-radiosity/ext/splash2x/apps/radiosity/src/rad_main.C parsec-3.0-radiosity/ext/splash2x/apps/radiosity/src/rad_main.C
+--- parsec-3.0-orig-radiosity/ext/splash2x/apps/radiosity/src/rad_main.C	2013-03-04 23:26:21.198905413 -0500
++++ parsec-3.0-radiosity/ext/splash2x/apps/radiosity/src/rad_main.C	2013-03-04 23:29:44.682898367 -0500
+@@ -22,6 +22,7 @@
+  *
+  ***************************************************************/
+ 
++#include "tern/user.h"
+ #include <stdio.h>
+ #include <string.h>
+ #if defined(SGI_GL)
+@@ -252,6 +253,7 @@
+ #ifdef ENABLE_PARSEC_HOOKS
+ 	__parsec_roi_begin();
+ #endif
++            soba_init(0, n_processors, n_processors*200);
+             CREATE(radiosity, n_processors);
+             WAIT_FOR_END(n_processors);
+ #ifdef ENABLE_PARSEC_HOOKS
+diff -ruN parsec-3.0-orig-radiosity/ext/splash2x/apps/radiosity/src/taskman.C parsec-3.0-radiosity/ext/splash2x/apps/radiosity/src/taskman.C
+--- parsec-3.0-orig-radiosity/ext/splash2x/apps/radiosity/src/taskman.C	2013-03-04 23:27:38.590902734 -0500
++++ parsec-3.0-radiosity/ext/splash2x/apps/radiosity/src/taskman.C	2013-03-04 23:32:10.158893331 -0500
+@@ -25,6 +25,7 @@
+  *************************************************************************/
+ 
+ #include <stdio.h>
++#include "tern/user.h"
+ 
+ EXTERN_ENV;
+ 
+@@ -84,6 +85,7 @@
+                     process_rays( t->task.ray.e, process_id ) ;
+                     break ;
+                 case TASK_VISIBILITY:
++			soba_wait(0);
+                     visibility_task( t->task.vis.e, t->task.vis.inter,
+                                     t->task.vis.n_inter, t->task.vis.k, process_id ) ;
+                     break ;

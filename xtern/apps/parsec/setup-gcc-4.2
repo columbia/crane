@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -e
+
+# if get an error like " cannot find crti.o ..."
+# sudo ln -s /usr/lib/x86_64-linux-gnu /usr/lib64
+
+ROOT=`pwd`
+
+if [ ! -d $XTERN_ROOT ]; then
+	echo "XTERN_ROOT is not defined"
+	exit 1
+fi
+
+PARSEC_ROOT=$XTERN_ROOT/apps/parsec
+
+SOURCE=$PARSEC_ROOT/gcc-4.2-src/
+INSTALL=$PARSEC_ROOT/gcc-4.2/
+
+rm -rf $SOURCE $INSTALL
+
+pushd $PARSEC_ROOT
+
+if [ ! -f gcc-4.2.4.tar.bz2 ]; then
+    wget http://ftp.gnu.org/gnu/gcc/gcc-4.2.4/gcc-4.2.4.tar.bz2
+fi
+tar jxf gcc-4.2.4.tar.bz2
+mv gcc-4.2.4 $SOURCE
+
+pushd $SOURCE
+cores=$( grep "^physical id" /proc/cpuinfo | wc -l )
+job=$[cores*2]
+
+patch -p1 < ../patch/xtern_annot.patch
+XTERN_ANNOT_LIB="-I$XTERN_ROOT/include -L$XTERN_ROOT/dync_hook -Wl,--rpath,$XTERN_ROOT/dync_hook -lxtern-annot"
+CFLAGS+="$XTERN_ANNOT_LIB" ./configure --prefix=$INSTALL --disable-linux-futex --enable-languages=c,c++ --disable-multilib
+make -j$job
+mkdir -p $INSTALL
+make -j$job install
+
+inst_set=`uname -m`
+
+if [[ "$inst_set" == 'x86_64' ]]; then
+    ln -s $INSTALL/lib64/libgomp.spec $INSTALL/lib/gcc/x86_64-unknown-linux-gnu/4.2.4/
+    mv $INSTALL/lib64/libstdc++.so $INSTALL/lib64/libstdc++.so.bak
+    mv $INSTALL/lib64/libstdc++.so.6 $INSTALL/lib64/libstdc++.so.6.bak
+    ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6 $INSTALL/lib64/libstdc++.so
+    ln -s /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.16 $INSTALL/lib64/libstdc++.so.6
+elif [[ "$inst_set" == 'i686' ]]; then
+    mv $INSTALL/lib/libstdc++.so $INSTALL/lib/libstdc++.so.bak
+    mv $INSTALL/lib/libstdc++.so.6 $INSTALL/lib/libstdc++.so.6.bak
+    ln -s /usr/lib/i686-linux-gnu/libstdc++.so.6 $INSTALL/lib/libstdc++.so
+    ln -s /usr/lib/i686-linux-gnu/libstdc++.so.6.0.16 $INSTALL/lib/libstdc++.so.6
+else
+    echo "This machine has instruction set '$inst_set'... which is never tested.."
+    exit 1
+fi
+
+popd
+popd

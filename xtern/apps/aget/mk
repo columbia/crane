@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+#if [ -z $1 ]; then
+#        # No version number
+#        echo "Usage: <version number: e.g. 0.4.1>"
+#        exit 1
+#fi
+
+VER=0.4.1
+cd $XTERN_ROOT/apps/aget
+rm -rf aget-$VER 
+if [ ! -f aget-$VER.tar.gz ]; then
+    wget http://www.enderunix.org/aget/aget-$VER.tar.gz
+fi
+tar zxvf aget-$VER.tar.gz
+cd aget-$VER
+#patch -p1 < ../for-dbug-1.patch
+patch -p1 < ../fix-off-by-one.patch
+patch -p1 < ../fix-pwrite-bug.patch
+
+# This is a patch in order to make aget work with the mongoose web server. Provided by Jiri.
+# I did some sample run, and the performance of downloading from clic server is roughly the same.
+patch -p1 < ../for-mongoose.patch
+
+make CFLAGS='-D_GNU_SOURCE -g -w'
+mv aget ../

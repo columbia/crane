@@ -1,0 +1,26 @@
+--- phoenix-2.0.0-orig/tests/kmeans/kmeans.c	2013-02-24 15:27:51.826290728 -0500
++++ phoenix-2.0.0/tests/kmeans/kmeans.c	2013-02-24 17:12:20.966074540 -0500
+@@ -35,6 +35,7 @@
+ #include <math.h>
+ #include "stddefines.h"
+ #include "map_reduce.h"
++#include "tern/user.h"
+ 
+ #define DEF_NUM_POINTS 100000
+ #define DEF_NUM_MEANS 100
+@@ -311,6 +312,7 @@
+  */
+ void kmeans_map(map_args_t *args) 
+ {
++    soba_wait(0);
+     assert(args);
+     assert(args->length == 1);
+     
+@@ -324,6 +326,7 @@
+  */
+ void kmeans_reduce(void *key_in, iterator_t *itr)
+ {
++    soba_wait(1);
+     assert (key_in);
+     assert (itr);
+     

@@ -1,0 +1,15 @@
+--- parsec-3.0/ext/splash2x/kernels/cholesky/src_orig/mf.C	2013-02-11 02:44:31.958334514 -0500
++++ parsec-3.0/ext/splash2x/kernels/cholesky/src/mf.C	2013-02-11 03:42:30.414214125 -0500
+@@ -152,8 +153,9 @@
+         break;
+     }
+     else {
+-    while (!tasks[MyNum].taskQ && !tasks[MyNum].probeQ)
+-      ;
++      while (!tasks[MyNum].taskQ && !tasks[MyNum].probeQ) {
++        sched_yield();
++      }
+     }
+   }
+ 
+

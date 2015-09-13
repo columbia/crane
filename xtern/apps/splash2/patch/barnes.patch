@@ -1,0 +1,10 @@
+--- parsec-3.0/ext/splash2x/apps/barnes/src_orig/load.C	2013-03-12 02:08:54.342026594 -0400
++++ parsec-3.0/ext/splash2x/apps/barnes/src/load.C	2013-03-12 02:09:32.310025279 -0400
+@@ -375,6 +375,7 @@
+ 	 r = Subp(q)[i];
+ 	 if (r != NULL) {
+ 	    while(!Done(r)) {
++            sched_yield();
+ 	       /* wait */
+ 	    }
+ 	    Mass(q) += Mass(r);

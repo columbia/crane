@@ -1,0 +1,115 @@
+diff -ruN parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/fo.C parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/fo.C
+--- parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/fo.C	2012-09-04 22:56:31.000000000 -0400
++++ parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/fo.C	2013-03-04 19:12:57.755431824 -0500
+@@ -18,6 +18,7 @@
+ 
+ #include "matrix.h"
+ #include <math.h>
++#include "tern/user.h"
+ 
+ extern struct GlobalMemory *Global;
+ extern BMatrix LB;
+@@ -115,19 +116,21 @@
+ void BNumericSolveFO(long MyNum, struct LocalCopies *lc)
+ {
+   long i;
+-
+   for (i=0; i<LB.n; i++)
+     lc->link[i] = -1;
+ 
+   lc->storage = (double *) MyMalloc(lc->max_panel*sizeof(double), MyNum);
+   for (i=0; i<lc->max_panel; i++)
+     lc->storage[i] = 0.0;
+-
+   for (i=LB.proc_domains[MyNum]; i<LB.proc_domains[MyNum+1]; i++)
+     FactorLLDomain(i, MyNum, lc);
+   MyFree(lc->storage);
+   lc->storage = NULL;
++  soba_wait(0);
++  pcs_enter();
+     DriveParallelFO(MyNum, lc);
++  pcs_barrier_exit(0, P);
++  soba_wait(0);
+ }
+ 
+ 
+diff -ruN parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/malloc.C parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/malloc.C
+--- parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/malloc.C	2012-09-04 22:56:31.000000000 -0400
++++ parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/malloc.C	2013-03-04 18:27:17.539526680 -0500
+@@ -20,6 +20,7 @@
+ EXTERN_ENV
+ 
+ #include "matrix.h"
++#include "tern/user.h"
+ 
+ #define ALIGN 8
+ #define MAXFAST 16
+@@ -51,8 +52,10 @@
+   mem_pool++;
+   /****** access to mem_pool[-1] is valid ******/
+ 
++  pcs_enter();
+   for (p = -1; p<mallocP; p++)
+     InitOneFreeList(p);
++  pcs_exit();
+ }
+ 
+ 
+diff -ruN parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/mf.C parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/mf.C
+--- parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/mf.C	2012-09-04 22:56:31.000000000 -0400
++++ parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/mf.C	2013-03-04 18:35:09.291510205 -0500
+@@ -16,6 +16,7 @@
+ 
+ EXTERN_ENV
+ 
++#include "tern/user.h"
+ #include "matrix.h"
+ #define HashNum 1024
+ #define Bucket(desti, destj, src) ((desti+destj+src)%HashNum)
+@@ -37,7 +38,7 @@
+ void InitTaskQueues(long P)
+ {
+   long i;
+-
++  pcs_enter();
+   tasks = (struct taskQ *) MyMalloc(P*sizeof(struct taskQ), DISTRIBUTED);
+   for (i=0; i<P; i++) {
+     LOCKINIT(tasks[i].taskLock)
+@@ -47,6 +48,7 @@
+     tasks[i].probeQ = (struct Task *) NULL;
+     tasks[i].probeQlast = (struct Task *) NULL;
+     }
++  pcs_exit();
+ }
+ 
+ 
+diff -ruN parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/solve.C parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/solve.C
+--- parsec-3.0-orig/ext/splash2x/kernels/cholesky/src/solve.C	2012-09-04 22:56:31.000000000 -0400
++++ parsec-3.0-cholesky/ext/splash2x/kernels/cholesky/src/solve.C	2013-03-04 18:27:05.987527081 -0500
+@@ -39,6 +39,7 @@
+ 
+ #include <math.h>
+ #include "matrix.h"
++#include "tern/user.h"
+ 
+ #define SH_MEM_AMT   100000000
+ #define DEFAULT_PPS         32
+@@ -139,8 +140,10 @@
+   Global = (struct GlobalMemory *)
+     G_MALLOC(sizeof(struct GlobalMemory), 0);
+   BARINIT(Global->start, P)
++  pcs_enter();
+   LOCKINIT(Global->waitLock)
+   LOCKINIT(Global->memLock)
++  pcs_exit();
+ 
+   MallocInit(P);  
+ 
+@@ -264,6 +267,7 @@
+ 	__parsec_roi_begin();
+ #endif
+ 
++  soba_init(0, P, P*10000);
+   CREATE(Go, P);
+   WAIT_FOR_END(P);
+ 

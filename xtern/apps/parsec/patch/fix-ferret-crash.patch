@@ -1,0 +1,19 @@
+--- parsec-2.0-built/pkgs/apps/ferret/src/benchmark/ferret-parallel.c	2013-02-05 21:48:55.134117084 -0500
++++ parsec-2.0/pkgs/apps/ferret/src/benchmark/ferret-parallel.c	2013-02-06 16:28:35.339713362 -0500
+@@ -550,13 +550,14 @@
+ 
+ 	pthread_mutex_lock(&done_mutex);
+ 	if (!output_end) pthread_cond_wait(&done, &done_mutex);
+-	tpool_cancel(p_load);
++	/*tpool_cancel(p_load); Heming: we must not cancel threads here, otherwise ferret would crash.
+ 	tpool_cancel(p_seg);
+ 	tpool_cancel(p_extract);
+ 	tpool_cancel(p_vec);
+ 	tpool_cancel(p_rank);
+-	tpool_cancel(p_out);
++	tpool_cancel(p_out);*/
+ 	pthread_mutex_unlock(&done_mutex);
++    exit(0); // Add this to fix a ferret crash (seg fault) at the end of execution.
+ 	pthread_mutex_destroy(&done_mutex);
+ 
+ #ifdef ENABLE_PARSEC_HOOKS

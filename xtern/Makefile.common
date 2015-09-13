@@ -1,0 +1,144 @@
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# -*- Makefile -*-
+
+include $(LEVEL)/Makefile.config
+
+AdditionalIncludes = -I$(SRC_ROOT)/include -I$(OBJ_ROOT)/include -I$(SRC_DIR)
+
+CFLAGS   += -g -O2 -Wno-variadic-macros -fPIC $(AdditionalIncludes)
+CXXFLAGS = $(CFLAGS)
+
+##########################################################################
+# C and C++ compiler and flags
+Compile.C     = $(CC) $(CPP.Flags) $(C.Flags) $(CFLAGS) $(CPPFLAGS) \
+                $(TargetCommonOpts) $(CompileCommonOpts) -c
+Compile.CXX   = $(CXX) $(CPP.Flags) $(CXX.Flags) $(CXXFLAGS) $(CPPFLAGS) \
+                $(TargetCommonOpts) $(CompileCommonOpts) -c
+
+##########################################################################
+# object and lib directories
+ObjDir      := $(OBJ_DIR)
+LibDir      := $(OBJ_ROOT)/$(BuildMode)/lib
+
+VPATH=$(SRC_DIR)
+
+##########################################################################
+# set up the source files to build
+ifndef SOURCES
+  Sources := $(notdir $(wildcard $(SRC_DIR)/*.cpp \
+             $(SRC_DIR)/*.cc $(SRC_DIR)/*.c))
+else
+  Sources := $(SOURCES)
+endif
+
+ifdef BUILT_SOURCES
+Sources += $(filter %.cpp %.c %.cc,$(BUILT_SOURCES))
+endif
+
+BaseNameSources := $(sort $(basename $(Sources)))
+ObjectsO  := $(BaseNameSources:%=$(ObjDir)/%.o)
+
+
+##########################################################################
+# set up recursive targets
+
+RecursiveTargets := all clean clean-all
+
+.PHONY: all clean clean-all all-local clean-local clean-all-local
+all:: all-local
+clean:: clean-local
+clean-all:: clean-local clean-all-local
+
+SubDirs :=
+
+ifdef DIRS
+SubDirs += $(DIRS)
+
+ifneq ($(SRC_ROOT),$(OBJ_ROOT))
+$(RecursiveTargets)::
+	for dir in $(DIRS); do \
+	  if [ ! -f $$dir/Makefile ]; then \
+	    mkdir $$dir; \
+	    cp $(SRC_DIR)/$$dir/Makefile $$dir/Makefile; \
+	  fi; \
+	  (make -C $$dir $@ ) || exit 1; \
+	done
+else
+$(RecursiveTargets)::
+	for dir in $(DIRS); do \
+	  (make -C $$dir $@ ) || exit 1; \
+	done
+endif
+endif
+
+##########################################################################
+# build libraries
+
+ifdef LIBRARYNAME
+
+LIBRARYNAME := $(strip $(LIBRARYNAME))
+LibName.A  := $(LibDir)/lib$(LIBRARYNAME).a
+
+all-local:: $(LibName.A)
+
+$(LibName.A): $(ObjectsO) $(LibDir)/.dir
+	echo Building Archive Library $(notdir $@)
+	-rm -f $@
+	ar cru $@ $(ObjectsO)
+	ranlib $@
+
+clean-local::
+ifneq ($(strip $(LibName.A)),)
+	-rm -f $(LibName.A)
+
+endif
+endif
+
+##########################################################################
+# build object files
+
+DEPEND_OPTIONS = -MMD -MP -MF "$(ObjDir)/$*.d.tmp" \
+         -MT "$(ObjDir)/$*.o" -MT "$(ObjDir)/$*.d"
+
+%/.dir:
+	mkdir -p $* > /dev/null
+	date > $@
+
+# If the build succeeded, move the dependency file over, otherwise
+# remove it.
+DEPEND_MOVEFILE = then mv -f "$(ObjDir)/$*.d.tmp" "$(ObjDir)/$*.d"; \
+                  else rm "$(ObjDir)/$*.d.tmp"; exit 1; fi
+
+$(ObjDir)/%.o: %.cpp $(ObjDir)/.dir $(BUILT_SOURCES) $(SRC_DIR)/Makefile
+	echo "Compiling $*.cpp for $(BuildMode) build" $(PIC_FLAG)
+	if $(Compile.CXX) $(DEPEND_OPTIONS) $< -o $(ObjDir)/$*.o ; \
+	       $(DEPEND_MOVEFILE)
+
+$(ObjDir)/%.o: %.cc $(ObjDir)/.dir $(BUILT_SOURCES) $(SRC_DIR)/Makefile
+	echo "Compiling $*.cc for $(BuildMode) build" $(PIC_FLAG)
+	if $(Compile.CXX) (DEPEND_OPTIONS) $< -o $(ObjDir)/$*.o ; \
+	       $(DEPEND_MOVEFILE)
+
+$(ObjDir)/%.o: %.c $(ObjDir)/.dir $(BUILT_SOURCES) $(SRC_DIR)/Makefile
+	echo "Compiling $*.c for $(BuildMode) build" $(PIC_FLAG)
+	if $(Compile.C) $(DEPEND_OPTIONS) $< -o $(ObjDir)/$*.o ; \
+	       $(DEPEND_MOVEFILE)
+

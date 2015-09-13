@@ -1,0 +1,8 @@
+<config>
+  <arbiter port="12345" command="/home/heming/rcs/smt+mc/mc-tools/dbug/install/bin/dbug-arbiter -l"/>
+  <explorer log_dir="/tmp" port="12346" timeout="6000"/>
+  <interposition path="/home/heming/rcs/smt+mc/xtern/dync_hook/interpose_mc.so"/>
+<!-- <interposition path="/home/heming/rcs/smt+mc/mc-tools/dbug/install/lib/libdbug.so"/> -->
+<!--  <program command="/home/heming/rcs/smt+mc/mc-tools/ex2"/> -->
+  <program command="/home/heming/rcs/smt+mc/xtern/apps/pfscan/pfscan  -n2 pcs_enter /home/heming/rcs/smt+mc/xtern/apps/pfscan/input-dir"/>
+</config>

@@ -1,0 +1,15 @@
+diff -rupN aget-0.4.1/Misc.c aget-0.4.1-modified/Misc.c
+--- aget-0.4.1/Misc.c	2013-02-01 16:34:48.994583387 -0500
++++ aget-0.4.1-modified/Misc.c	2013-02-01 16:35:54.039062153 -0500
+@@ -141,9 +141,9 @@ void revstr(char *str)
+ 
+ 	if ((size = strlen(str)) == 0)
+ 		return;
+-	p = (char *)calloc(size, sizeof(char));
++	p = (char *)calloc(size + 1, sizeof(char));
+ 	s = p;
+-	for (i = size; i >= 0; i--, s++)
++	for (i = size; i > 0; i--, s++)
+ 		*s = *(str + i - 1);
+ 	*s = '\0';
+ 	memset(str, 0, size);

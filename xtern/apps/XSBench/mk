@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+
+cd $XTERN_ROOT/apps/XSBench
+rm -rf XSBench-5 XSBench out results.txt
+if [ ! -f XSBench-5_0.tar ]; then
+	echo "Source file missing, please register and download XSBench-5.0 at https://cesar.mcs.anl.gov/"
+	exit 1
+fi
+tar -xvf XSBench-5_0.tar
+
+pushd XSBench-5/src
+
+ARCH=`uname -m`
+GCCLIB=""
+if [ "$ARCH" == "x86_64" ]; then
+  GCCLIB="$XTERN_ROOT/apps/openmp/install/lib64"
+else
+  GCCLIB="$XTERN_ROOT/apps/openmp/install/lib"
+fi
+
+ln -s $GCCLIB/libgomp.a  &> /dev/null
+ln -s $GCCLIB/libstdc++.a  &> /dev/null
+popd
+patch -p0 < makefile.patch
+
+pushd XSBench-5/src
+make
+popd
+ln -s XSBench-5/src/XSBench .

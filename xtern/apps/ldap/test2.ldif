@@ -1,0 +1,10 @@
+dn: dc=example,dc=com
+objectClass: dcObject
+objectClass: organization
+dc: example
+o: Example Company
+
+dn: cn=Manager,dc=example,dc=com
+objectClass: organizationalRole
+objectClass: top
+cn: Manager

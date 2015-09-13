@@ -1,0 +1,16 @@
+#!/bin/bash
+#this program is not counted as proxy apps according to official introduction
+cd $XTERN_ROOT/apps/ExaCT
+SOFTWARE="ExaCT_Proxy_Apps_20120322"
+
+cd $SOFTWARE/BoxLib/Tutorials/WaveEquation_C/
+rm -rf out* serializer.log
+
+#Your Executable file name may be different
+#Run with xtern
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so ./main2d.Linux.g++.gfortran.OMP.ex inputs_2d
+
+sleep 2
+#Run non-det
+LD_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so ./main2d.Linux.g++.gfortran.OMP.ex inputs_2d
+

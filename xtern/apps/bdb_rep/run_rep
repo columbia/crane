@@ -1,0 +1,46 @@
+#!/bin/bash
+
+cd $XTERN_ROOT/apps/bdb_rep
+rm -rf out* data* rep*.log master* slave* rr-* random-*
+killall -9 rep_mgr
+PRELOAD_LIB=""
+SCHED=""
+
+runRep(){
+	# Start the master.
+	mkdir master && cd master && mkdir data1
+	../gen-input | LD_PRELOAD=$PRELOAD_LIB ../rep_mgr -M -h data1 -l 127.0.0.1:10001 -r 127.0.0.1:10002 -r 127.0.0.1:10003 > rep1.log 2>&1 &
+	cd $XTERN_ROOT/apps/bdb_rep
+	mv master $SCHED-master
+	sleep 20
+
+	# Start the first slave.
+	mkdir slave1 && cd slave1 && mkdir data2
+	../gen-input | LD_PRELOAD=$PRELOAD_LIB ../rep_mgr -C -h data2 -l 127.0.0.1:10002 -r 127.0.0.1:10001 -r 127.0.0.1:10003 > rep2.log 2>&1 &
+	cd $XTERN_ROOT/apps/bdb_rep
+	mv slave1 $SCHED-slave1
+	sleep 20
+
+	# Start the second slave.
+	mkdir slave2 && cd slave2 && mkdir data3
+	../gen-input | LD_PRELOAD=$PRELOAD_LIB ../rep_mgr -C -h data3 -l 127.0.0.1:10003 -r 127.0.0.1:10001 -r 127.0.0.1:10002 > rep3.log 2>&1 &
+	cd $XTERN_ROOT/apps/bdb_rep
+	mv slave2 $SCHED-slave2
+	sleep 20
+
+	ps -a | grep rep_mgr
+	#killall -9 rep_mgr
+}
+
+SCHED="rr"
+PRELOAD_LIB=$XTERN_ROOT/dync_hook/interpose.so
+echo "Running rep with $PRELOAD_LIB..."
+runRep;
+
+SCHED="random"
+PRELOAD_LIB=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so
+echo "Running rep with $PRELOAD_LIB..."
+runRep;
+
+
+

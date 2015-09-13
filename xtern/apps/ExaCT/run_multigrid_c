@@ -1,0 +1,13 @@
+#!/bin/bash
+cd $XTERN_ROOT/apps/ExaCT
+SOFTWARE="ExaCT_Proxy_Apps_20120322"
+
+cd $SOFTWARE/BoxLib/Tutorials/MultiGrid_C/
+rm -rf out* serializer.log
+
+#Your Executable file name may be different
+#Run with xtern
+LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so ./main3d.Linux.gcc.gfortran.OMP.ex inputs.3d
+
+#Run non-det
+LD_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so ./main3d.Linux.gcc.gfortran.OMP.ex inputs.3d

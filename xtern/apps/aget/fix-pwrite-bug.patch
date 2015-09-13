@@ -1,0 +1,14 @@
+diff -ruN aget-0.4.1/Download.c aget-0.4.1-modified/Download.c
+--- aget-0.4.1/Download.c	2009-05-12 01:30:23.000000000 -0400
++++ aget-0.4.1-modified/Download.c	2013-09-03 19:26:20.247091499 -0400
+@@ -95,8 +95,8 @@
+ 	}
+ 	td->offset = td->soffset;
+ 
+-	if ((dr - i ) > foffset) 
+-		dw = pwrite(td->fd, s, (foffset - i), td->soffset);
++  if (td->soffset + dr - i > foffset) 
++    dw = pwrite(td->fd, s, foffset - td->soffset, td->soffset);
+ 	else
+ 		dw = pwrite(td->fd, s, (dr - i), td->soffset);
+ 	td->offset = td->soffset + dw;

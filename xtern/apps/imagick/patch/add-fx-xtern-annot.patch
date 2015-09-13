@@ -1,0 +1,54 @@
+diff -Naur ImageMagick-6.8.0-4/magick/enhance.c ImageMagick-6.8.0-4_modified/magick/enhance.c
+--- ImageMagick-6.8.0-4/magick/enhance.c	2012-10-14 19:45:47.000000000 -0400
++++ ImageMagick-6.8.0-4_modified/magick/enhance.c	2013-02-05 13:44:46.449279416 -0500
+@@ -77,6 +77,7 @@
+ #include "magick/threshold.h"
+ #include "magick/token.h"
+ #include "magick/xml-tree.h"
++#include "tern/user.h"
+ 
+ /*
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@@ -1465,6 +1466,7 @@
+         continue;
+       }
+     indexes=GetCacheViewAuthenticIndexQueue(image_view);
++    soba_wait(0);
+     for (x=0; x < (ssize_t) image->columns; x++)
+     {
+       if ((channel & RedChannel) != 0)
+@@ -3591,6 +3593,7 @@
+             continue;
+           }
+         indexes=GetCacheViewAuthenticIndexQueue(image_view);
++        soba_wait(0);
+         for (x=0; x < (ssize_t) image->columns; x++)
+         {
+           if ((GetPixelRed(q) != GetPixelGreen(q)) ||
+@@ -3661,6 +3664,7 @@
+         continue;
+       }
+     indexes=GetCacheViewAuthenticIndexQueue(image_view);
++    soba_wait(0);
+     for (x=0; x < (ssize_t) image->columns; x++)
+     {
+       if ((channel & RedChannel) != 0)
+diff -Naur ImageMagick-6.8.0-4/magick/threshold.c ImageMagick-6.8.0-4_modified/magick/threshold.c
+--- ImageMagick-6.8.0-4/magick/threshold.c	2012-09-24 13:02:16.000000000 -0400
++++ ImageMagick-6.8.0-4_modified/magick/threshold.c	2013-02-05 13:43:04.329282950 -0500
+@@ -84,6 +84,7 @@
+ #include "magick/threshold.h"
+ #include "magick/transform.h"
+ #include "magick/xml-tree.h"
++#include "tern/user.h"
+ 
+ /*
+   Define declarations.
+@@ -824,6 +825,7 @@
+         continue;
+       }
+     indexes=GetCacheViewAuthenticIndexQueue(image_view);
++    soba_wait(0);
+     for (x=0; x < (ssize_t) image->columns; x++)
+     {
+       if ((channel & RedChannel) != 0)

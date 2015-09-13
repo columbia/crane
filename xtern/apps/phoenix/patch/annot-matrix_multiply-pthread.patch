@@ -1,0 +1,27 @@
+--- phoenix-2.0.0-orig/tests/matrix_multiply/matrix_multiply-pthread.c	2009-05-25 19:41:29.000000000 -0400
++++ phoenix-2.0.0/tests/matrix_multiply/matrix_multiply-pthread.c	2013-02-22 00:36:20.748294956 -0500
+@@ -42,6 +42,7 @@
+ 
+ #include "map_reduce.h"
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ typedef struct {
+     int row_num;
+@@ -88,7 +89,7 @@
+ 
+     int req_rows = data->matrix_len / num_procs;
+ 
+-
++    soba_init(0, num_procs, num_procs*20);
+     for(i=0; i<num_procs; i++)
+     {
+ 	    map_args_t* out = (map_args_t*)malloc(sizeof(map_args_t));
+@@ -124,6 +125,7 @@
+  */
+ void *matrixmult_map(void *args_in)
+ {
++    soba_wait(0);
+     map_args_t* args = (map_args_t*)args_in;
+ 
+     int row_count = 0;

@@ -1,0 +1,57 @@
+diff -ruN pbzip2-0.9.5/Makefile pbzip2-0.9.5-modified/Makefile
+--- pbzip2-0.9.5/Makefile	2005-12-31 13:41:42.000000000 -0500
++++ pbzip2-0.9.5-modified/Makefile	2013-03-26 01:33:21.000220156 -0400
+@@ -11,7 +11,8 @@
+ 
+ # Standard pbzip2 compile
+ pbzip2: pbzip2.cpp
+-	$(CC) -O3 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -o pbzip2 pbzip2.cpp -pthread -lpthread -lbz2
++	$(CC) -O3 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -o pbzip2 pbzip2.cpp -pthread -lpthread -lbz2 \
++	-g -I$(XTERN_ROOT)/include -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ # Choose this if you want to compile in a static version of the libbz2 library
+ pbzip2-static: libbz2.a pbzip2.cpp
+diff -ruN pbzip2-0.9.5/pbzip2.cpp pbzip2-0.9.5-modified/pbzip2.cpp
+--- pbzip2-0.9.5/pbzip2.cpp	2005-12-31 13:41:42.000000000 -0500
++++ pbzip2-0.9.5-modified/pbzip2.cpp	2013-03-26 01:45:35.756194715 -0400
+@@ -87,6 +87,7 @@
+ #include <time.h>
+ #include <utime.h>
+ #include <bzlib.h>
++#include <tern/user.h>
+ #ifndef WIN32
+ #include <sys/time.h>
+ #include <unistd.h>
+@@ -649,6 +650,7 @@
+ 			fprintf(stderr, " *ERROR: Could not allocate memory (DecompressedData)!  Skipping...\n");
+ 			return (NULL);
+ 		}
++		soba_wait(0);
+ 
+ 		// decompress the memory buffer (verbose=0)
+ 		ret = BZ2_bzBuffToBuffDecompress(DecompressedData, &outSize, FileData, inSize, 0, Verbosity);
+@@ -674,6 +676,7 @@
+ 				return (NULL);
+ 			}
+ 
++			soba_wait(0);
+ 			// decompress the memory buffer (verbose=0)
+ 			ret = BZ2_bzBuffToBuffDecompress(DecompressedData, &outSize, FileData, inSize, 0, Verbosity);
+ 		} // while
+@@ -1009,6 +1012,7 @@
+ 			return (NULL);
+ 		}
+ 
++		soba_wait(0);
+ 		// compress the memory buffer (blocksize=9*100k, verbose=0, worklevel=30)
+ 		ret = BZ2_bzBuffToBuffCompress(CompressedData, &outSize, FileData, inSize, BWTblockSize, Verbosity, 30);
+ 		if (ret != BZ_OK)
+@@ -1666,6 +1670,8 @@
+ 	}
+ 	pthread_mutex_init(MemMutex, NULL);
+ 
++	soba_init(0, numCPU, 20*numCPU);
++
+ 	// create queue
+ 	fifo = queueInit(numCPU);
+ 	if (fifo == NULL)

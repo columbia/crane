@@ -1,0 +1,27 @@
+--- phoenix-2.0.0-orig/tests/histogram/histogram-pthread.c	2009-05-06 01:12:23.000000000 -0400
++++ phoenix-2.0.0/tests/histogram/histogram-pthread.c	2013-02-22 00:38:05.436291212 -0500
+@@ -38,6 +38,7 @@
+ #include <pthread.h>
+ 
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ #define IMG_DATA_OFFSET_POS 10
+ #define BITS_PER_PIXEL_POS 28
+@@ -93,7 +94,7 @@
+  * assigned to each thread
+  */
+ void *calc_hist(void *arg) {
+-   
++   soba_wait(0);
+    int *red;
+    int *green;
+    int *blue;
+@@ -214,6 +215,7 @@
+    
+    /* Assign portions of the image to each thread */
+    long curr_pos = (long)(*data_pos);
++   soba_init(0, num_procs, num_procs*20);
+    for (i = 0; i < num_procs; i++) {
+       arg[i].data = (unsigned char *)fdata;
+       arg[i].data_pos = curr_pos;

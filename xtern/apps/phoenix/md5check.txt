@@ -1,0 +1,5 @@
+da6e1853d22100b29590c0bb307b0251  histogram.tar.gz
+d9ef0440ddb8b425bb9d6c2b89e62ee0  linear_regression.tar.gz
+32eb9fdc722e395a02add2b7cde6666d  string_match.tar.gz
+964568f6fca53aa4ae82539d798cd705  reverse_index.tar.gz
+903969c78d2dbd44357fdf7cbe750bc7  word_count.tar.gz

@@ -1,0 +1,13 @@
+diff -rupN db-5.3.15/src/os/os_uid.c db-5.3.15-modified/src/os/os_uid.c
+--- db-5.3.15/src/os/os_uid.c	2011-12-19 20:00:51.000000000 -0500
++++ db-5.3.15-modified/src/os/os_uid.c	2013-08-13 08:41:31.469101162 -0400
+@@ -37,8 +37,7 @@ __os_unique_id(env, idp)
+ 	__os_id(dbenv, &pid, NULL);
+ 	__os_gettime(env, &v, 1);
+ 
+-	id = (u_int32_t)pid ^
+-	    (u_int32_t)v.tv_sec ^ (u_int32_t)v.tv_nsec ^ P_TO_UINT32(&pid);
++	id = (u_int32_t)v.tv_sec ^ (u_int32_t)v.tv_nsec;
+ 
+ 	/*
+ 	 * We could try and find a reasonable random-number generator, but

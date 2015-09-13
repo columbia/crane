@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+cd $XTERN_ROOT/apps/bdb_rep
+rm -rf out* serializer.log TXN
+mkdir TXN
+INIT_ENV_CMD="rm -rf TXN/*"
+APP=$XTERN_ROOT/apps/bdb_rep/bench3n
+NTHREADS=4
+NPARTITIONS=64
+INPUT="-c 300000 -t $NTHREADS -nosynctxn -logbufsize 100 -partition $NPARTITIONS -n 3000 TXN"                  # 2 child threads, etc. Refer to: http://libdb.wordpress.com/3n1/
+echo "Running $APP $INPUT ..."
+
+# Run with xtern and draw time chart.
+$INIT_ENV_CMD;
+time LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $APP $INPUT
+mv out out-rr
+# Since in this bdb local.options, we do not start idle thread, so we must keep tid1.
+#$XTERN_ROOT/eval/draw-time-chart.pl ./out-rr --keep-tid1
+#mv time-chart.txt rr-time-chart.txt
+
+sleep 2;
+
+# Run non-det and draw time chart.
+$INIT_ENV_CMD;
+time LD_PRELOAD=$XTERN_ROOT/eval/rand-intercept/rand-intercept.so $APP $INPUT
+mv out out-random
+#$XTERN_ROOT/eval/draw-time-chart.pl ./out-random
+#mv time-chart.txt random-time-chart.txt
+

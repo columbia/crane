@@ -1,0 +1,41 @@
+diff -ruN MPlayer-1.1/ffmpeg/libavcodec/pthread.c MPlayer-1.1-modified/ffmpeg/libavcodec/pthread.c
+--- MPlayer-1.1/ffmpeg/libavcodec/pthread.c	2012-06-02 14:13:20.000000000 -0400
++++ MPlayer-1.1-modified/ffmpeg/libavcodec/pthread.c	2012-12-25 01:51:37.738878303 -0500
+@@ -62,6 +62,8 @@
+ #include "os2threads.h"
+ #endif
+ 
++#include "tern/user.h"
++
+ typedef int (action_func)(AVCodecContext *c, void *arg);
+ typedef int (action_func2)(AVCodecContext *c, void *arg, int jobnr, int threadnr);
+ 
+@@ -223,6 +225,8 @@
+         }
+         pthread_mutex_unlock(&c->current_job_lock);
+ 
++        soba_wait(0);
++        
+         c->rets[our_job%c->rets_count] = c->func ? c->func(avctx, (char*)c->args + our_job*c->job_size):
+                                                    c->func2(avctx, c->args, our_job, self_id);
+ 
+@@ -335,6 +339,7 @@
+     pthread_cond_init(&c->last_job_cond, NULL);
+     pthread_mutex_init(&c->current_job_lock, NULL);
+     pthread_mutex_lock(&c->current_job_lock);
++    soba_init(0, thread_count, 100);
+     for (i=0; i<thread_count; i++) {
+         if(pthread_create(&c->workers[i], NULL, worker, avctx)) {
+            avctx->thread_count = i;
+diff -ruN MPlayer-1.1/Makefile MPlayer-1.1-modified/Makefile
+--- MPlayer-1.1/Makefile	2012-05-30 17:21:46.000000000 -0400
++++ MPlayer-1.1-modified/Makefile	2012-12-25 01:51:17.470879025 -0500
+@@ -695,7 +695,7 @@
+ FFMPEGFILES = $(foreach part, $(FFMPEGPARTS), $(wildcard $(addprefix ffmpeg/$(part)/,*.[chS] /*/*.[chS] /*/*.asm)))
+
+ COMMON_LIBS-$(FFMPEG_A)           += $(FFMPEGLIBS)
+-COMMON_LIBS                       += $(COMMON_LIBS-yes)
++COMMON_LIBS                       += $(COMMON_LIBS-yes) -I$(XTERN_ROOT)/include -L$(XTERN_ROOT)/dync_hook -Wl,--rpath,$(XTERN_ROOT)/dync_hook -lxtern-annot
+ 
+ OBJS_COMMON    += $(addsuffix .o, $(basename $(SRCS_COMMON)))
+ OBJS_MENCODER  += $(addsuffix .o, $(basename $(SRCS_MENCODER)))

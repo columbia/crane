@@ -1,0 +1,85 @@
+# This configuration file is used to generate options.h and options.cpp.
+# Execute lib/common/get_opt.pl to obtain the options codes like:
+#   get_opt.pl <default.options path> <options.h directory path> <options.cpp path>
+# 
+# In the runtime, a dump.options will be generated to backup options.
+# Also, you can create a local.options file to modify the options value
+# at runtime.
+
+# determine whether DMT system is turned on or not. 
+DMT = 1
+
+# seed for seeded round-robin scheduler
+scheduler_seed = 0x12345 
+
+# determine the output log format, options are:
+# 1.  bin     binary log of instructions
+# 2.  txt     text log of synchronizations
+log_type = txt      
+
+# default output directory                   
+output_dir = ./dmt_out 
+
+# if turned on, dynamic library will obtain eip
+dync_geteip = 0
+
+# if turned on, dynamic library will use signature of the whole stack instead of eip, DEPTH_LIMIT=20
+whole_stack_eip_signature = 0
+
+# if turned on, record-schedule will do sleep, otherwise simple bypass sleep.
+exec_sleep = 0
+
+# if turned on, mutex_init will automatically set attr to PTHREAD_MUTEX_ERRORCHECK
+set_mutex_errorcheck = 0
+
+# this number set the conversion between physical time and turn number. 
+# notice better to set this number of a 32-bit integer.
+nanosec_per_turn = 3000
+
+# whether we ignore read/write to regular files
+RR_ignore_rw_regular_file = 1
+
+# determine whether we start an idle thread to avoid empty runq 
+launch_idle_thread = 1
+
+# determine whether or not put process ID in the logfilename
+pid_in_logfilename = 1
+
+# if set all sockets as non-block and enforce maximum recv buffer.
+non_block_recv = 0
+
+# If turned on, enforce the non-deterministic primitive at runtime.
+enforce_non_det_annotations = 0
+
+# Specify the bound of non-determinism (the window of logical clocks that allows the pcs_exit() to return).
+enforce_non_det_clock_bound = 0
+non_det_clock_bound = 1000
+
+# if turned on, sync operations will be logged.
+log_sync = 0
+
+# if turned on, sync operations will be logged.
+light_log_sync = 0
+
+# the algorithm to enforce turn, options are:
+# 1.  Value: 1      	semaphore.
+# 2.  Value: 2              busy wait flag + cond wait (default).
+# 3.  Value: 3              busy wait only.
+enforce_turn_type = 2
+
+# if turned on, enforce xtern annotations such as lineup, workload and non_det.
+enforce_annotations = 1
+
+# if turned on, xtern must run with the proxy of libevent_paxos.
+sched_with_paxos = 0
+sched_with_paxos_min = 1000
+sched_with_paxos_max = 10000
+sched_with_paxos_usleep = 100
+
+# if turned on, record runtime stat such as # of sync operations called.
+record_runtime_stat = 0
+
+# if turned on, record the runtime rdtsc value at begin and end of sync operations.
+record_rdtsc = 0
+rdtsc_output_dir = ./dmt_rdtsc_out 
+

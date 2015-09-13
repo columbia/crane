@@ -1,0 +1,19 @@
+diff -Naur ImageMagick-6.8.0-4_modified/magick/colorspace.c ImageMagick-6.8.0-4/magick/colorspace.c
+--- ImageMagick-6.8.0-4_modified/magick/colorspace.c	2013-02-05 11:16:47.089586846 -0500
++++ ImageMagick-6.8.0-4/magick/colorspace.c	2013-02-05 11:17:59.901584327 -0500
+@@ -63,6 +63,7 @@
+ #include "magick/string_.h"
+ #include "magick/string-private.h"
+ #include "magick/utility.h"
++#include "tern/user.h"
+ 
+ /*
+   Typedef declarations.
+@@ -419,6 +420,7 @@
+             status=MagickFalse;
+             continue;
+           }
++        soba_wait(0);
+         for (x=0; x < (ssize_t) image->columns; x++)
+         {
+           double

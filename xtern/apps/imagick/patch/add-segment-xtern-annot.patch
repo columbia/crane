@@ -1,0 +1,18 @@
+--- ImageMagick-6.8.0-4/magick/segment.c	2013-03-25 03:23:32.193937645 -0400
++++ ImageMagick-6.8.0-4/magick/segment.c	2013-03-25 03:24:11.937937485 -0400
+@@ -102,6 +102,7 @@
+ #include "magick/segment.h"
+ #include "magick/string_.h"
+ #include "magick/thread-private.h"
++#include "tern/user.h"
+ 
+ /*
+   Define declarations.
+@@ -560,6 +561,7 @@
+         continue;
+       }
+     indexes=GetCacheViewAuthenticIndexQueue(image_view);
++    soba_wait(0);
+     for (x=0; x < (ssize_t) image->columns; x++)
+     {
+       SetPixelIndex(indexes+x,0);

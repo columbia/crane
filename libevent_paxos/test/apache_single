@@ -1,0 +1,98 @@
+#! /bin/bash
+#run some test for the program
+#to be added
+
+#start one leader, test whether all the initializations finish
+
+
+check_output(){
+
+#    LOG_NAME_0=${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX}
+#    LOG_NAME_1=${FILEPATH}/log/${TEST_NAME}_1_${NO}${LOG_SUFFIX}
+#    LOG_NAME_2=${FILEPATH}/log/${TEST_NAME}_2_${NO}${LOG_SUFFIX}
+#
+#    RESULT_1=$(diff ${LOG_NAME_0} ${LOG_NAME_1} | wc -l)
+#
+#    if [ "${RESULT_1}" -ne "0" ];then
+#        echo ${RESULT_1}
+#        exit 1
+#    fi
+#
+#    RESULT_2=$(diff ${LOG_NAME_0} ${LOG_NAME_2} | wc -l)
+#
+#    if [ "${RESULT_2}" -ne "0" ];then
+#        exit 1
+#    fi
+
+    exit 0
+}
+
+TEST_NAME=$(basename $0)
+NO=${1}
+
+#echo "==========Node Start Test =========="
+
+CUR_DIR=$(pwd)
+
+LOG_SUFFIX=".log"
+SLEEP_TIME=3
+GROUP_SIZE=3
+SECONDARIES_SIZE=2
+#do not re-compile
+:<<'END'
+cd ..
+make clean 
+make
+cd ${CUR_DIR}
+END
+
+if [ ! -e ${CUR_DIR}/${TEST_NAME} ];then
+    FILEPATH=${CUR_DIR}/test
+else
+    FILEPATH=${CUR_DIR}
+fi
+
+if [ ! -e ${FILEPATH}/${TEST_NAME} ];then
+    echo ${CUR_DIR}
+    echo ${FILEPATH}
+    echo "Script Execution Path Error"
+    exit 1
+fi
+
+
+if [ ! -d ${FILEPATH}/log ];then
+    mkdir ${FILEPATH}/log
+fi
+
+exec 2>${FILEPATH}/log/${TEST_NAME}_err_${NO}
+
+export LD_LIBRARY_PATH=${FILEPATH}/../.local/lib
+
+
+rm -rf ${FILEPATH}/.db
+
+REAL_SERVER_PREFIX=$MSMR_ROOT/apps/apache/install/bin
+
+${REAL_SERVER_PREFIX}/apachectl -k start &>${FILEPATH}/log/${TEST_NAME}_0_${NO}_s${LOG_SUFFIX} &
+
+
+REAL_SERVER_PID_1=$!
+
+SERVER_PROGRAM=${FILEPATH}/../target/server.out
+CONFIG_FILE=${FILEPATH}/../target/single_server.cfg
+
+#echo "The Log File Will Be Stored In ${FILEPATH}/log/${TEST_NAME}_*_${NO}"
+#echo "Now We Start The Leader"
+${SERVER_PROGRAM} -n 0 -r -m s -c ${CONFIG_FILE} 1>${FILEPATH}/log/${TEST_NAME}_0_${NO}${LOG_SUFFIX} 2>${FILEPATH}/log/${TEST_NAME}_extra_0_${NO} &
+PRIMARY_PID=$!
+
+echo 'sleep some time'
+sleep 5
+read -p hh
+LD_PRELOAD=$MSMR_ROOT/libevent_paxos/client-ld-preload/libclilib.so ${REAL_SERVER_PREFIX}/ab -n 10 -c 10 http://127.0.0.1:9000/
+
+kill -15 ${PRIMARY_PID} &>/dev/null
+
+${REAL_SERVER_PREFIX}/apachectl -k stop
+
+check_output

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Download the archive used by the test.
+# SOURCE="llvm-gcc4.2-2.7-x86_64-linux.tar.bz2"
+# cd $XTERN_ROOT/apps/mongoose
+# rm -rf $SOURCE
+# wget http://llvm.org/releases/2.7/$SOURCE
+
+# Create mongoose binary
+#cd $XTERN_ROOT/apps/mongoose
+#./mk
+
+# Create aget binary
+#cd $XTERN_ROOT/apps/aget
+#./mk
+
+# Create strategy file for the dBug test that guarantees that the server is actually listening for connections
+cd /tmp
+rm -rf strategy
+
+# This imply a non-det strategy, and it may turn out that client starts before server, so it may crash.
+#echo 0 >> strategy
+
+# This may imply a correct strategy that server starts first and then the client.
+echo 5 >> strategy
+echo 3 3 >> strategy
+echo 3 3 >> strategy
+echo 1 2 >> strategy
+echo 1 2 >> strategy
+echo 1 2 >> strategy
+
+# Run the dBug test
+killall -9 aget mg-server dbug-arbiter-server
+$SMT_MC_ROOT/mc-tools/dbug/install-xtern+dbug/bin/dbug-arbiter-server -s strategy -b 3 -l /tmp/dbug/dbug-server &
+sleep 3
+
+#PRELOAD_LIB="$SMT_MC_ROOT/mc-tools/dbug/install/lib/libdbug.so"
+PRELOAD_LIB="$XTERN_ROOT/dync_hook/interpose.so"
+
+LD_PRELOAD=$PRELOAD_LIB $XTERN_ROOT/apps/mongoose/mg-server -t 2 -r $XTERN_ROOT/apps/mongoose &
+#LD_PRELOAD=$PRELOAD_LIB $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://127.0.0.1/llvm-gcc-4.2-2.7.source.tgz
+LD_PRELOAD=$PRELOAD_LIB $XTERN_ROOT/apps/aget/aget -f -n2 -p 8080 http://127.0.0.1/test.txt
+
+#LD_PRELOAD=$XTERN_ROOT/dync_hook/interpose.so $XTERN_ROOT/../mc-tools/dbug-ex2
+#LD_PRELOAD=$SMT_MC_ROOT/mc-tools/dbug/install/lib/libdbug.so $XTERN_ROOT/../mc-tools/dbug-ex2
+

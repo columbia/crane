@@ -1,0 +1,59 @@
+diff -ruN perf/Makefile perf-mod/Makefile
+--- perf/Makefile	2005-06-22 14:55:58.000000000 -0400
++++ perf-mod/Makefile	2012-10-01 00:03:08.894010731 -0400
+@@ -1,8 +1,8 @@
+ 
+ t: t.c
+ 	cc t.c -o t \
+-	-g -I/usr/local/BerkeleyDB.4.3/include -L/usr/local/BerkeleyDB.4.3/lib -ldb-4.3
++	-g -I$(XTERN_ROOT)/apps/bdb_rep/install/include -L$(XTERN_ROOT)/apps/bdb_rep/install/lib -ldb-5.3 -lrt
+ 
+ test:
+-	time ./t
++	LD_LIBRARY_PATH=$(XTERN_ROOT)/apps/bdb_rep/install/lib time ./t
+ 	rm -rf ./TESTDIR
+diff -ruN perf/t.c perf-mod/t.c
+--- perf/t.c	2006-06-28 19:15:47.000000000 -0400
++++ perf-mod/t.c	2012-10-01 00:04:03.074008775 -0400
+@@ -12,6 +12,8 @@
+ #endif
+ 
+ #include "db.h"
++#include <time.h>
++#include <sys/time.h>
+ 
+ #define PERF_CHECK(e)							\
+ 	((e) ? (void)0 :						\
+@@ -38,7 +40,13 @@
+ 
+ char		*progname;
+ 
+-extern void __os_clock(DB_ENV *, u_int32_t *, u_int32_t *);
++void __os_clock(DB_ENV *dbenv, u_int32_t *secsp, u_int32_t *usecsp)
++{
++  struct timespec ts;
++  clock_gettime(CLOCK_REALTIME, &ts);
++  *secsp = (u_int32_t)ts.tv_sec;
++  *usecsp = ts.tv_nsec/1000;
++}
+ 
+ void cleanup(void);
+ void op_ds(u_int, int);
+@@ -318,7 +326,7 @@
+ 	else
+ 		++progname;
+ 
+-	ops = 1000000;
++	ops = 1000; // Heming: have to reduce the input scale temporarily, otherwise a "cache allocation failure" would occur.
+ 
+ 	while ((ch = getopt(argc, argv, "d:k:o:p:")) != EOF)
+ 		switch (ch) {
+@@ -364,7 +372,7 @@
+ 	op_tds(ops, 0, 0);
+ 	res("Transactional Data Store (read):", ops);
+ 
+-	op_tds(ops, 1, DB_LOG_INMEMORY);
++	op_tds(ops, 1, DB_LOG_IN_MEMORY);
+ 	res("Transactional Data Store (write, in-memory logging):", ops);
+ 
+ 	op_tds(ops, 1, DB_TXN_NOSYNC);

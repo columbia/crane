@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+timeout=1200
+sendmail="/usr/sbin/sendmail"
+toaddr="dmt-dev@lists.cs.columbia.edu"
+xtern_git="git@repair.cs.columbia.edu:xtern"
+
+# toaddr="junfeng@cs.columbia.edu"
+# xtern_git="/home/junfeng/work/xtern"
+
+#testdir=`date +%F`
+testdir="/tmp/xtern-nightly-test"
+rm -rf $testdir
+mkdir -p $testdir
+cd $testdir
+testdir=$PWD
+log=$testdir/out.txt
+
+export XTERN_ROOT="$testdir/xtern"
+
+# build xtern
+cd $testdir
+git clone $xtern_git
+cd $XTERN_ROOT
+mkdir obj
+cd obj
+../configure --prefix=$XTERN_ROOT/install >> $log
+make >> $log
+
+# run tests
+cd $XTERN_ROOT/obj
+export LD_LIBRARY_PATH="$XTERN_ROOT/dync_hook" # for testing annotations
+timeout $timeout make -C test >> $log 2>&1
+status=$?
+if test $status != 0 ; then
+    if test $status == 124 ; then
+        echo "$timeout seconds have passed; killed process $pid" >> $log
+    fi
+    (
+        echo "TO: $toaddr"
+        echo "FROM: junfeng@cs.columbia.edu"
+        echo "SUBJECT: xtern nightly test failed with status $status"
+        cat $log
+        echo "."
+    ) | $sendmail $toaddr
+fi

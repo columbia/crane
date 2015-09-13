@@ -1,0 +1,49 @@
+diff -ruN parsec-3.0-orig/ext/splash2x/apps/raytrace/src/main.C parsec-3.0-raytrace/ext/splash2x/apps/raytrace/src/main.C
+--- parsec-3.0-orig/ext/splash2x/apps/raytrace/src/main.C	2012-09-04 22:56:29.000000000 -0400
++++ parsec-3.0-raytrace/ext/splash2x/apps/raytrace/src/main.C	2013-03-03 23:06:33.609938112 -0500
+@@ -83,6 +83,7 @@
+ #include <stdio.h>
+ #include <math.h>
+ #include "rt.h"
++#include "tern/user.h"
+ 
+ #ifdef ENABLE_PARSEC_HOOKS
+ #include <hooks.h>
+@@ -366,7 +367,9 @@
+ 
+ 	BARINIT(gm->start)
+ 	LOCKINIT(gm->pidlock)
++	pcs_enter();
+ 	LOCKINIT(gm->ridlock)
++	pcs_exit();
+ 	LOCKINIT(gm->memlock)
+ 	ALOCKINIT(gm->wplock, nprocs)
+ 
+diff -ruN parsec-3.0-orig/ext/splash2x/apps/raytrace/src/trace.C parsec-3.0-raytrace/ext/splash2x/apps/raytrace/src/trace.C
+--- parsec-3.0-orig/ext/splash2x/apps/raytrace/src/trace.C	2012-09-04 22:56:29.000000000 -0400
++++ parsec-3.0-raytrace/ext/splash2x/apps/raytrace/src/trace.C	2013-03-03 23:04:30.313942525 -0500
+@@ -219,7 +219,7 @@
+  * RETURNS
+  *	Nothing.
+  */
+-
++#include "tern/user.h"
+ VOID	RayTrace(pid)
+ INT	pid;
+ 	{
+@@ -247,6 +247,7 @@
+ 			xx = (REAL)x;
+ 			yy = (REAL)y;
+ 
++			pcs_enter();
+ 			if (AntiAlias)
+ 				for (j = 0; j < NumSubRays; j++)
+ 					{
+@@ -312,6 +313,7 @@
+ 					AddPixelColor(c, ray->x, ray->y);
+ 					}
+ 				}
++			pcs_exit();
+ 			}
+ 		}
+ 	}

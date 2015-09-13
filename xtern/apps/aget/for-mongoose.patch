@@ -1,0 +1,68 @@
+diff -rupN aget-0.4.1/Aget.c aget-0.4.1-modified/Aget.c
+--- aget-0.4.1/Aget.c	2013-01-29 12:11:02.601710156 -0500
++++ aget-0.4.1-modified/Aget.c	2013-01-29 12:16:06.855569361 -0500
+@@ -98,7 +98,7 @@ void get(struct request *req)
+ 		wthread[i].sin.sin_port = htons(req->port);
+ 		wthread[i].fd = dup(fd);
+ 		wthread[i].clength = req->clength;
+-		snprintf(fmt, GETREQSIZ, GETREQ, req->url, req->host, PROGVERSION, soffset);
++		snprintf(fmt, GETREQSIZ, GETREQ, req->url, req->host, PROGVERSION, wthread[i].soffset, wthread[i].foffset);
+ 		strncpy(wthread[i].getstr, fmt, GETREQSIZ);
+ 		pthread_create(&(wthread[i].tid), NULL, http_get, &(wthread[i]));
+ 	}
+@@ -176,7 +176,7 @@ void resume_get(struct hist_data *h)
+ 	for (i = 0; i < nthreads; i++) {
+ 		wthread[i].soffset = wthread[i].offset;
+ 		wthread[i].fd = dup(fd);
+-		snprintf(fmt, GETREQSIZ, GETREQ, req->url, req->host, PROGVERSION, wthread[i].offset);
++		snprintf(fmt, GETREQSIZ, GETREQ, req->url, req->host, PROGVERSION, wthread[i].offset, wthread[i].foffset);
+ 		strncpy(wthread[i].getstr, fmt, GETREQSIZ);
+ 		pthread_create(&(wthread[i].tid), NULL, http_get, &(wthread[i]));
+ 	}
+diff -rupN aget-0.4.1/Defs.h aget-0.4.1-modified/Defs.h
+--- aget-0.4.1/Defs.h	2009-05-12 01:44:59.000000000 -0400
++++ aget-0.4.1-modified/Defs.h	2013-01-29 12:02:39.086751508 -0500
+@@ -24,6 +24,6 @@ enum {
+ 
+ #define	PROGVERSION  "EnderUNIX Aget v0.4.1"
+ #define	HEADREQ  "HEAD %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n"
+-#define	GETREQ  "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: %s\r\nRange: bytes=%lld-\r\nConnection: close\r\n\r\n"
++#define	GETREQ  "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: %s\r\nRange: bytes=%lld-%lld\r\nConnection: close\r\n\r\n"
+ 
+ #endif
+Binary files aget-0.4.1/llvm-gcc-4.2-2.7.source.tgz and aget-0.4.1-modified/llvm-gcc-4.2-2.7.source.tgz differ
+diff -rupN aget-0.4.1/Makefile aget-0.4.1-modified/Makefile
+--- aget-0.4.1/Makefile	2009-05-13 01:28:42.000000000 -0400
++++ aget-0.4.1-modified/Makefile	2013-01-29 12:23:29.166263123 -0500
+@@ -2,7 +2,7 @@
+ # http://www.enderunix.org/aget/
+ 
+ OBJS = main.o Aget.o Misc.o Head.o Signal.o Download.o Resume.o
+-CFLAGS = -g -W
++CFLAGS = -g -W -D_GNU_SOURCE
+ LDFLAGS = -pthread
+ CC = gcc
+ STRIP = strip
+@@ -12,7 +12,7 @@ all: $(OBJS)
+ 
+ strip: $(all)
+ 	$(STRIP) aget
+-	
++
+ install:
+ 	cp -f aget /usr/local/bin/aget
+ 	cp -f aget.1 /usr/share/man/man1/
+diff -rupN aget-0.4.1/Misc.c aget-0.4.1-modified/Misc.c
+--- aget-0.4.1/Misc.c	2009-05-12 01:22:55.000000000 -0400
++++ aget-0.4.1-modified/Misc.c	2013-01-29 12:24:57.386798934 -0500
+@@ -30,8 +30,8 @@ void parse_url(char *url, struct request
+ 
+ 	if (req->port == 0) {
+ 		req->port = 80;
+-		req->proto = PROTO_HTTP;
+-	}
++        }
++        req->proto = PROTO_HTTP;
+ 
+ 
+ 	s = url + 7; 	/* Jump pass http:// part	*/

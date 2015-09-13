@@ -1,0 +1,36 @@
+--- db-5.2.36~/examples/c/ex_rep/base/rep_net.c	2011-09-14 10:30:12.000000000 -0400
++++ db-5.2.36/examples/c/ex_rep/base/rep_net.c	2012-02-26 17:40:53.000000000 -0500
+@@ -396,10 +396,17 @@
+ 
+ 	ret = machtab_add(machtab, ns, host, port, eidp);
+ 	if (ret == EEXIST) {
++                /* YJF: tell the other end that I've chosen the socket I
++                   connected (instead of this accepted socket) */
++                char not_chosen = 0;
++                writesocket(ns, &not_chosen, 1);
+ 		closesocket(ns);
+ 		goto accept_wait;
+ 	} else if (ret != 0)
+ 		goto err;
++        /* YJF: tell the other end that I've chosen this socket */
++        char chosen = 1;
++        writesocket(ns, &chosen, 1);
+ 	printf("Connected to host %x port %d, eid = %d\n", host, port, *eidp);
+ 	return (ns);
+ 
+@@ -470,6 +477,15 @@
+ 	nport = htons(myport);
+ 	writesocket(s, &nport, 2);
+ 
++        /* YJF: check if the other end also chose this socket */
++        char c;
++        if(readn(s, &c, 1) != 1 || c != 1) {
++                fprintf(stderr, "%s: other end didn't chose this socket\n",
++                        progname);
++                (void)machtab_rem(machtab, *eidp, 1);
++                return (-1);
++        }
++
+ 	return (s);
+ }
+ 

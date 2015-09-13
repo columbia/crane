@@ -1,0 +1,99 @@
+#
+# Copyright (c) 2013,  Regents of the Columbia University 
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other 
+# materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+##----------------------------------------------------------*- Makefile -*-===##
+##
+## Common rules for generating, linking, and compiling via LLVM.  This is
+## used to implement a robust testing framework for LLVM
+##
+##-------------------------------------------------------------------------===##
+
+# If the user specified a TEST= option on the command line, we do not want to do
+# the default testing type.  Instead, we change the default target to be the
+# test:: target.
+#
+ifdef TEST
+test::
+endif
+
+# We do not want to make .d files for tests! 
+DISABLE_AUTO_DEPENDENCIES=1
+
+include ${LEVEL}/Makefile.common
+
+# Specify ENABLE_STATS on the command line to enable -stats and -time-passes
+# output from gccas and gccld.
+ifdef ENABLE_STATS
+STATS = -stats -time-passes
+endif
+
+.PHONY: clean default
+
+# These files, which might be intermediate results, should not be deleted by
+# make
+.PRECIOUS: Output/%.bc  Output/%.ll
+.PRECIOUS: Output/%.tbc Output/%.tll
+.PRECIOUS: Output/.dir
+.PRECIOUS: Output/%.llvm.bc
+.PRECIOUS: Output/%.llvm
+
+LCCFLAGS  += -O2 -Wall
+LCXXFLAGS += -O2 -Wall
+LLCFLAGS =
+TESTRUNR = @echo Running test: $<; \
+             PATH="$(LLVMTOOLCURRENT):$(LLVM_SRC_ROOT)/test/Scripts:$(PATH)" \
+                  $(LLVM_SRC_ROOT)/test/TestRunner.sh
+
+LLCLIBS = $(LLCLIBS) -lm
+
+clean::
+	$(RM) -f a.out core
+	$(RM) -rf Output/
+
+# Compile from X.c to Output/X.ll
+Output/%.ll: %.c $(LCC1) Output/.dir $(INCLUDES)
+	-$(LLVMGCCWITHPATH) $(CPPFLAGS) $(LCCFLAGS) -S $< -o $@
+
+# Compile from X.cpp to Output/X.ll
+Output/%.ll: %.cpp $(LCC1XX) Output/.dir $(INCLUDES)
+	-$(LLVMGXXWITHPATH) $(CPPFLAGS) $(LCXXFLAGS) -S $< -o $@
+
+# Compile from X.cc to Output/X.ll
+Output/%.ll: %.cc $(LCC1XX) Output/.dir $(INCLUDES)
+	-$(LLVMGXXWITHPATH) $(CPPFLAGS) $(LCXXFLAGS) -S $< -o $@
+
+# LLVM Assemble from Output/X.ll to Output/X.bc.  Output/X.ll must have come
+# from GCC output, so use GCCAS.
+#
+Output/%.bc: Output/%.ll $(LGCCAS)
+	-$(LGCCAS) $(STATS) $< -o $@
+
+# LLVM Assemble from X.ll to Output/X.bc.  Because we are coming directly from
+# LLVM source, use the non-transforming assembler.
+#
+Output/%.bc: %.ll $(LLVMAS) Output/.dir
+	-$(LLVMAS) -f $< -o $@
+
+## Cancel built-in implicit rules that override above rules
+%: %.s
+
+%: %.c
+
+%.o: %.c
+

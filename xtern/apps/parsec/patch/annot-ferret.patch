@@ -1,0 +1,35 @@
+--- parsec-2.0-orig-core/pkgs/apps/ferret/src/benchmark/ferret-parallel.c	2013-03-07 23:29:04.761925402 -0500
++++ parsec-2.0/pkgs/apps/ferret/src/benchmark/ferret-parallel.c	2013-03-07 22:01:46.822106753 -0500
+@@ -17,6 +17,7 @@
+ along with this program; if not, write to the Free Software Foundation,
+ Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
++#include "tern/user.h"
+ #include <stdio.h>
+ #include <math.h>
+ #include <sys/types.h>
+@@ -315,6 +316,7 @@
+ 
+ 	//	cass_result_alloc_list(&result_m, 0, T1);
+ 	//	cass_table_query(table, &query, &vec->result);
++		soba_wait(0);
+ 		cass_table_query(table, &query, &vec->result);
+ 
+ 		queue_enqueue_wait(&q_vec_rank, vec);
+@@ -353,6 +355,7 @@
+ 
+ 
+ 		cass_result_alloc_list(&rank->result, 0, top_K);
++		soba_wait(0);
+ 		cass_table_query(query_table, &query, &rank->result);
+ 
+ 		cass_result_free(&vec->result);
+@@ -540,6 +543,8 @@
+ #ifdef ENABLE_PARSEC_HOOKS
+ 	__parsec_roi_begin();
+ #endif
++	soba_init(0, NTHREAD_VEC+NTHREAD_RANK, (NTHREAD_VEC+NTHREAD_RANK)*10000);
++
+ 	p_load = tpool_create(t_load_desc, NTHREAD_LOAD);
+ 	p_seg = tpool_create(t_seg_desc, NTHREAD_SEG);
+ 	p_extract = tpool_create(t_extract_desc, NTHREAD_EXTRACT);

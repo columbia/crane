@@ -1,0 +1,34 @@
+# EnderUNIX Aget Makefile
+# http://www.enderunix.org/aget/
+
+OBJS = rep_msg.o rep_net.o rep_common.o
+DB_INSTALL_DIR=$(XTERN_ROOT)/apps/bdb_rep/install/
+CFLAGS = -g -O3 -W -I$(DB_INSTALL_DIR)/include/
+LDFLAGS = $(DB_INSTALL_DIR)/lib/libdb.a -lpthread
+CC = gcc
+LD = gcc
+STRIP = strip
+
+all: $(OBJS) rep_base.o rep_mgr.o
+#	$(LD) -o rep_mgr rep_mgr.o $(OBJS) $(LDFLAGS)
+	$(LD) -o rep_base rep_base.o $(OBJS) $(LDFLAGS)
+	cp rep_base rep_mgr
+
+rep_base.o: base/rep_base.c
+	$(CC) $^ $(CFLAGS) -c
+
+rep_msg.o: base/rep_msg.c
+	$(CC) $^ $(CFLAGS) -c
+
+rep_net.o: base/rep_net.c
+	$(CC) $^ $(CFLAGS) -c
+
+rep_common.o: common/rep_common.c
+	$(CC) $^ $(CFLAGS) -c
+
+rep_mgr.o: mgr/rep_mgr.c
+	$(CC) $^ $(CFLAGS) -c
+
+clean: 
+	rm -f rep_mgr *.o 
+

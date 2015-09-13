@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd $XTERN_ROOT/apps/redis
+rm -rf out* serializer.log
+INIT_ENV_CMD=""
+APP=$XTERN_ROOT/apps/bdb_rep/redis-server
+CLIENT=$XTERN_ROOT/apps/bdb_rep/redis-benchmark
+NTHREADS=8
+INPUT="tbd..."
+echo "Running $APP $INPUT ..."
+

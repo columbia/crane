@@ -1,0 +1,34 @@
+--- phoenix-2.0.0-orig/tests/pca/pca-pthread.c	2009-05-06 01:12:23.000000000 -0400
++++ phoenix-2.0.0/tests/pca/pca-pthread.c	2013-02-21 23:43:28.632408455 -0500
+@@ -35,6 +35,7 @@
+ #include <math.h>
+ #include <pthread.h>
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ #define DEF_GRID_SIZE 100  // all values in the matrix are from 0 to this value 
+ #define DEF_NUM_ROWS 10
+@@ -135,6 +136,7 @@
+  *  Compute the mean for the rows allocated to a thread
+  */
+ void *calc_mean(void *arg) {
++   soba_wait(0);
+    int i, j;
+    int sum = 0;
+    mean_arg_t *mean_arg = (mean_arg_t *)arg;
+@@ -164,6 +166,7 @@
+    pthread_mutex_unlock(&row_lock);
+    
+    while (i < num_rows) {
++      soba_wait(0);
+       for (j = i; j < num_rows; j++) {
+          sum = 0;
+          for (k = 0; k < num_cols; k++) {
+@@ -205,6 +208,7 @@
+    int curr_row = 0;
+    
+    /* Assign rows to each thread. One thread per processor */
++   soba_init(0, num_procs, num_procs*20);
+    for(i=0; i<num_procs; i++){
+       mean_args[i].first_row = curr_row;
+       mean_args[i].last_row = curr_row + rows_per_thread;

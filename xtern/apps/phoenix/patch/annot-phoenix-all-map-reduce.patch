@@ -1,0 +1,102 @@
+diff -ruN phoenix-2.0.0-orig/include/map_reduce.h phoenix-2.0.0-wordcount/include/map_reduce.h
+--- phoenix-2.0.0-orig/include/map_reduce.h	2013-02-24 15:27:51.822290729 -0500
++++ phoenix-2.0.0-wordcount/include/map_reduce.h	2013-02-25 01:39:18.589020511 -0500
+@@ -200,4 +200,6 @@
+  */
+ int default_partition(int reduce_tasks, void* key, int key_size);
+ 
++void identity_reduce_wordcount (void *, iterator_t *itr);
++
+ #endif // MAP_REDUCE_H_
+diff -ruN phoenix-2.0.0-orig/src/tpool.c phoenix-2.0.0-wordcount/src/tpool.c
+--- phoenix-2.0.0-orig/src/tpool.c	2013-02-24 15:27:51.826290728 -0500
++++ phoenix-2.0.0-wordcount/src/tpool.c	2013-02-25 01:38:56.901021256 -0500
+@@ -32,6 +32,7 @@
+ #include "memory.h"
+ #include "tpool.h"
+ #include "stddefines.h"
++#include "tern/user.h"
+ 
+ typedef struct {
+     sem_t           sem_run;
+@@ -93,6 +94,9 @@
+     CHECK_ERROR (pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED));
+ 
+     tpool->die = 0;
++    soba_init(0, num_threads, num_threads*20);
++    soba_init(1, num_threads, num_threads*20);
++    soba_init(2, num_threads, num_threads*20);
+     for (i = 0; i < num_threads; ++i) {
+         /* Initialize thread argument. */
+         CHECK_ERROR (sem_init (&(tpool->thread_args[i].sem_run), 0, 0));
+diff -ruN phoenix-2.0.0-orig/tests/word_count/sort.c phoenix-2.0.0-wordcount/tests/word_count/sort.c
+--- phoenix-2.0.0-orig/tests/word_count/sort.c	2013-02-24 15:27:51.826290728 -0500
++++ phoenix-2.0.0-wordcount/tests/word_count/sort.c	2013-02-25 01:39:46.869019536 -0500
+@@ -108,7 +108,7 @@
+     memset(&map_reduce_args, 0, sizeof(map_reduce_args_t));
+     map_reduce_args.task_data = base; // Array to sort
+     map_reduce_args.map = mr_sort_map;
+-    map_reduce_args.reduce = NULL; // Identity Reduce
++    map_reduce_args.reduce = identity_reduce_wordcount; // Identity Reduce wordcount.
+     map_reduce_args.splitter = NULL; // Array splitter //mr_sort_splitter;
+     map_reduce_args.key_cmp = compar;
+     map_reduce_args.unit_size = width;
+diff -ruN phoenix-2.0.0-orig/tests/word_count/word_count.c phoenix-2.0.0-wordcount/tests/word_count/word_count.c
+--- phoenix-2.0.0-orig/tests/word_count/word_count.c	2013-02-24 15:27:51.826290728 -0500
++++ phoenix-2.0.0-wordcount/tests/word_count/word_count.c	2013-02-25 01:39:33.861019999 -0500
+@@ -41,6 +41,7 @@
+ #include "map_reduce.h"
+ #include "stddefines.h"
+ #include "sort.h"
++#include "tern/user.h"
+ 
+ #define DEFAULT_DISP_NUM 10
+ 
+@@ -148,6 +149,7 @@
+  */
+ void wordcount_map(map_args_t *args) 
+ {
++    soba_wait(0);
+     char *curr_start, curr_ltr;
+     int state = NOT_IN_WORD;
+     int i;
+@@ -199,6 +201,7 @@
+  */
+ void wordcount_reduce(void *key_in, iterator_t *itr)
+ {
++    soba_wait(1);
+     char *key = (char *)key_in;
+     void *val;
+     intptr_t sum = 0;
+diff -Naur src/map_reduce.c src_modified/map_reduce.c
+--- a/src/map_reduce.c	2013-02-27 00:12:39.542967658 -0500
++++ b/src/map_reduce.c	2013-02-27 00:16:05.482960508 -0500
+@@ -54,6 +54,7 @@
+ #include "locality.h"
+ #include "struct.h"
+ #include "tpool.h"
++#include "tern/user.h"
+ 
+ #if !defined(_LINUX_) && !defined(_SOLARIS_)
+ #error OS not supported
+@@ -1808,6 +1809,20 @@
+     void        *val;
+     mr_env_t    *env;
+ 
++    env = get_env();
++    while (iter_next (itr, &val))
++    {
++        emit_inline (env, key, val);
++    }
++}
++
++void
++identity_reduce_wordcount (void *key, iterator_t *itr)
++{
++    soba_wait(2);
++    void        *val;
++    mr_env_t    *env;
++
+     env = get_env();
+     while (iter_next (itr, &val))
+     {

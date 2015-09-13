@@ -1,0 +1,91 @@
+diff -ruN aget-0.4.1/Aget.c modified-aget-0.4.1/Aget.c
+--- aget-0.4.1/Aget.c	2009-05-12 01:38:38.000000000 -0400
++++ modified-aget-0.4.1/Aget.c	2012-09-24 16:10:53.677573081 -0400
+@@ -115,10 +115,10 @@
+ 			nok++;
+ 	}
+ 
+-	if (nok == nthreads) 
++	/*if (nok == nthreads) 
+ 		pthread_cancel(hthread);
+ 	else
+-		pthread_join(hthread, NULL);
++		pthread_join(hthread, NULL);*/
+ 
+ 	/* Get the finish time, derive some stats	*/
+ 	time(&t_finish);
+@@ -190,10 +190,10 @@
+ 			nok++;
+ 	}
+ 
+-	if (nok == nthreads) 
++	/*if (nok == nthreads) 
+ 		pthread_cancel(hthread);
+ 	else
+-		pthread_join(hthread, NULL);
++		pthread_join(hthread, NULL);*/
+ 
+ 
+ 
+Binary files aget-0.4.1/Aget.o and modified-aget-0.4.1/Aget.o differ
+diff -ruN aget-0.4.1/Download.c modified-aget-0.4.1/Download.c
+--- aget-0.4.1/Download.c	2009-05-12 01:30:23.000000000 -0400
++++ modified-aget-0.4.1/Download.c	2012-09-24 16:09:14.009576660 -0400
+@@ -70,7 +70,7 @@
+ 		pthread_exit((void *)1);
+ 	}
+ 
+-        if ((dr = recv(sd, rbuf, GETRECVSIZ, 0)) == -1) {
++        if ((dr = recv(sd, rbuf, GETRECVSIZ, MSG_WAITALL)) == -1) {
+ 		Log("<THREAD #%ld> recv failed: %s", tid, strerror(errno));
+ 		pthread_exit((void *)1);
+         }
+@@ -108,7 +108,7 @@
+ 
+ 	while (td->offset < foffset) {
+ 		memset(rbuf, GETRECVSIZ, 0);
+-		dr = recv(sd, rbuf, GETRECVSIZ, 0);
++		dr = recv(sd, rbuf, GETRECVSIZ, MSG_WAITALL);
+ 		if ((td->offset + dr) > foffset)
+ 			dw = pwrite(td->fd, rbuf, foffset - td->offset, td->offset);
+ 		else
+Binary files aget-0.4.1/Download.o and modified-aget-0.4.1/Download.o differ
+Binary files aget-0.4.1/Head.o and modified-aget-0.4.1/Head.o differ
+diff -ruN aget-0.4.1/main.c modified-aget-0.4.1/main.c
+--- aget-0.4.1/main.c	2009-05-12 01:41:23.000000000 -0400
++++ modified-aget-0.4.1/main.c	2012-09-24 16:09:58.045575072 -0400
+@@ -15,6 +15,8 @@
+ #include "main.h"
+ #include <errno.h>
+ 
++extern pthread_mutex_t bwritten_mutex;
++
+ int main(int argc, char **argv)
+ {
+ 	extern char *optarg;
+@@ -23,6 +25,8 @@
+ 	struct hist_data h;
+ 	int retlog;
+ 
++	pthread_mutex_init(&bwritten_mutex, NULL);
++
+ 	/* Allocate heap for download request	
+ 	 * struct request stores all the information that might be
+ 	 * of interest
+@@ -38,10 +42,10 @@
+ 	pthread_sigmask(SIG_BLOCK, &signal_set, NULL);
+ 
+ 	/* Create a thread for hadling signals	*/
+-	if ((ret = pthread_create(&hthread, NULL, signal_waiter, NULL)) != 0) {
++	/*if ((ret = pthread_create(&hthread, NULL, signal_waiter, NULL)) != 0) {
+ 		fprintf(stderr, "main: cannot create signal_waiter thread: %s, exiting...\n", strerror(errno));
+ 		exit(-1);
+-	}
++	}*/
+ 
+ 	while (!error && (c = getopt(argc,argv,"p:l:n:hfv")) != -1) {
+ 		switch(c) {
+Binary files aget-0.4.1/main.o and modified-aget-0.4.1/main.o differ
+Binary files aget-0.4.1/Misc.o and modified-aget-0.4.1/Misc.o differ
+Binary files aget-0.4.1/Resume.o and modified-aget-0.4.1/Resume.o differ
+Binary files aget-0.4.1/Signal.o and modified-aget-0.4.1/Signal.o differ

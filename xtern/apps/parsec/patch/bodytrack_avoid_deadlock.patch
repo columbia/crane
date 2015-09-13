@@ -1,0 +1,32 @@
+diff -Naur parsec-2.0/pkgs/apps/bodytrack/src/TrackingBenchmark_orig/threads/Thread.cpp parsec-2.0/pkgs/apps/bodytrack/src/TrackingBenchmark/threads/Thread.cpp
+--- parsec-2.0/pkgs/apps/bodytrack/src/TrackingBenchmark_orig/threads/Thread.cpp	2013-02-12 03:27:44.327253393 -0500
++++ parsec-2.0/pkgs/apps/bodytrack/src/TrackingBenchmark/threads/Thread.cpp	2013-02-12 03:28:40.059251188 -0500
+@@ -65,18 +65,18 @@
+ 
+ //Wait until Thread object has finished
+ void Thread::Join() {
+-  Stoppable *_tobj;
+-  bool isStoppable = true;
++  //Stoppable *_tobj;
++  //bool isStoppable = true;
+ 
+   //call Stop() function if implemented
+-  try {
+-    _tobj = &dynamic_cast<Stoppable &>(tobj);
+-  } catch(std::bad_cast e) {
+-    isStoppable = false;
+-  }
+-  if(isStoppable) {
+-    _tobj->Stop();
+-  }
++  //try {
++  //  _tobj = &dynamic_cast<Stoppable &>(tobj);
++  //} catch(std::bad_cast e) {
++  //  isStoppable = false;
++  //}
++  //if(isStoppable) {
++  //  _tobj->Stop();
++  //}
+ 
+ #if defined(HAVE_LIBPTHREAD)
+   pthread_join(t, NULL);

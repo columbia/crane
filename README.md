@@ -22,20 +22,9 @@ export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib:$LD_LIBRARY_PATH
 > git clone https://github.com/hemingcui/m-smr
 > cd $MSMR_ROOT
 > git pull
-> git submodule init
-> git submodule update
-
-Then,  you will have the latest xtern and libevent_paxos repo (submodules).
-You do not need to checkout these submodules one by one, just run the git
-commands above.
 
 
-2. Commands to get the latest project:
-> cd $MSMR_ROOT
-> git pull
-> git submodule update
-
-3. Compile xtern and libevent_paxos.
+2. Compile xtern.
 > cd $XTERN_ROOT
 > mkdir obj
 > cd obj
@@ -47,10 +36,11 @@ please run:
 > cd $XTERN_ROOT/obj
 > make clean; make; make install     <PLEASE RUN MAKE CLEAN EVERYTIME>
 
-
+3. Compile libevent_paxos.
 > cd $MSMR_ROOT/libevent_paxos
 > ./mk
 > make clean; make  <PLEASE RUN MAKE CLEAN EVERYTIME>
+TBD. reconfigure IP addresses for Crane.
 
 
 4. Install analysis tools.
@@ -133,3 +123,19 @@ When you run sudo in the u1 container, avoid asking sudo password, append this l
 > sudo make install (the PREFIX directory for criu by default is /usr/local/)
 > which criu
   /usr/local/sbin/criu
+
+
+7. Install server applications depending on which one you would like to run.
+Currently we have tested Crane with these servers: mongoose, apache, clamav, mediatomb, and mysql.
+> cd $MSMR_ROOT/apps/apache
+> ./mk
+
+8. Run apache with Crane.
+> cd $MSMR_ROOT/eval-container
+> ./new-run.sh configs/apache.sh no_build joint_sched 1
+Run the apache un-replicated nondeterministic execution.
+> ./new-run.sh configs/apache.sh no_build orig 1
+Run the apache with proxy (paxos) only.
+> ./new-run.sh configs/apache.sh no_build proxy_only 1
+Run the apache with DMT (Parrot) only.
+> ./new-run.sh configs/apache.sh no_build xtern_only 1

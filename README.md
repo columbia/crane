@@ -12,16 +12,17 @@ Install depdendent libraries/tools. Use ubuntu 14.04 hardy, with amd64.
 > sudo pip install numpy
 > sudo pip install OutputCheck          (this utility is only required by the testing framework)
 
-0. Set env vars in ~/.bashrc.
-export MSMR_ROOT=<...>
-export XTERN_ROOT=<...>
-export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib:$LD_LIBRARY_PATH
 
-
-1. Commands to checkout a brand-new project:
-> git clone https://github.com/hemingcui/m-smr
+0. Commands to checkout a brand-new project:
+> git clone https://github.com/columbia/crane
 > cd $MSMR_ROOT
 > git pull
+
+
+1. Set env vars in ~/.bashrc.
+export MSMR_ROOT=<absolute path of crane>
+export XTERN_ROOT=<absolute path of crane/xtern>
+export LD_LIBRARY_PATH=$MSMR_ROOT/libevent_paxos/.local/lib:$LD_LIBRARY_PATH
 
 
 2. Compile xtern.

@@ -24,7 +24,7 @@ if [ $proxy -eq 1 ]
 then
     proxy_port=9000
 fi
-client_cmd="${msmr_root_client}/eval-container/utility-scripts/parallel-curl.sh 128.59.17.174 ${proxy_port}"
+client_cmd="${msmr_root_client}/eval-container/utility-scripts/parallel-curl.sh ${primary_ip} ${proxy_port}"
 
 server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl \
 	-f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"

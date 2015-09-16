@@ -23,8 +23,8 @@ num_req=1000
 num_thd=8
 
 # IO bound workloads.
-#client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/"
-#client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/"
+#client_opt_7000="-n ${num_req} -c ${num_thd} http://${primary_ip}:7000/"
+#client_opt_9000="-n ${num_req} -c ${num_thd} http://${primary_ip}:9000/"
 
 if [ $1"X" != "X" ]; then
   if [ $1"X" == "joint_schedX" ]; then
@@ -47,8 +47,8 @@ fi
 sleep 1
 
 # CPU bound workloads.
-client_opt_7000="-n ${num_req} -c ${num_thd} http://128.59.17.174:7000/test.php"
-client_opt_9000="-n ${num_req} -c ${num_thd} http://128.59.17.174:9000/test.php"
+client_opt_7000="-n ${num_req} -c ${num_thd} http://${primary_ip}:7000/test.php"
+client_opt_9000="-n ${num_req} -c ${num_thd} http://${primary_ip}:9000/test.php"
 
 if [ $proxy -eq 1 ]
 then

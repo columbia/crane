@@ -44,12 +44,12 @@ fi
 sleep 1
 
 # CPU bound workloads.
-client_opt_7000="-n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
-client_opt_9000="-n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+client_opt_7000="-n 8 -c 8 http://${primary_ip}:7000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
+client_opt_9000="-n 8 -c 8 http://${primary_ip}:9000/content/media/object_id/8/res_id/none/pr_name/vlcmpeg/tr/1"
 
 # IO bound workloads.
-#client_opt_7000="-n 8 -c 8 http://128.59.17.174:7000/content/media/object_id/8/res_id/0"
-#client_opt_9000="-n 8 -c 8 http://128.59.17.174:9000/content/media/object_id/8/res_id/0"
+#client_opt_7000="-n 8 -c 8 http://${primary_ip}:7000/content/media/object_id/8/res_id/0"
+#client_opt_9000="-n 8 -c 8 http://${primary_ip}:9000/content/media/object_id/8/res_id/0"
 
 if [ $proxy -eq 1 ]
 then

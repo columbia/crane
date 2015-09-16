@@ -14,9 +14,9 @@ analysis_tools=""                                     # for executing analysis t
 
 if [ $proxy -eq 1 ]
 then
-    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=128.59.17.174:9000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 2"
+    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=${primary_ip}:9000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 2"
 else
-    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=128.59.17.174:7000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 2"
+    client_cmd="cd ${msmr_root_client}/apps/mongodb/ycsb-0.1.4 && ./bin/ycsb run mongodb -s -p mongodb.url=${primary_ip}:7000 -p mongodb.writeConcern=normal -p mongodb.database=local -P workloads/workloadb -threads 2"
 fi
                                                       # command to start the clients
 server_cmd="'${msmr_root_server}/apps/mongodb/install/bin/mongod --port=7000 --dbpath=${msmr_root_server}/apps/mongodb/install/data --pidfilepath=${msmr_root_server}/apps/mongodb/install/mongod.pid --quiet '"

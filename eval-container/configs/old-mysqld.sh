@@ -18,9 +18,9 @@ analysis_tools=""                                     # for executing analysis t
 
 if [ $proxy -eq 1 ]
 then
-    client_cmd="cd ${msmr_root_client}/apps/mysql && ./client-test '128.59.17.174' '9000' && ./run-sysbench -i '128.59.17.174' -p 9000 -t 4"
+    client_cmd="cd ${msmr_root_client}/apps/mysql && ./client-test '${primary_ip}' '9000' && ./run-sysbench -i '${primary_ip}' -p 9000 -t 4"
 else
-    client_cmd="cd ${msmr_root_client}/apps/mysql && ./client-test '128.59.17.174' '7000' && ./run-sysbench -i '128.59.17.174' -p 7000 -t 4"
+    client_cmd="cd ${msmr_root_client}/apps/mysql && ./client-test '${primary_ip}' '7000' && ./run-sysbench -i '${primary_ip}' -p 7000 -t 4"
 fi
                                                       # command to start the clients
 server_cmd="'cd ${msmr_root_server}/apps/mysql && ./start-mysqld'"

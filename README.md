@@ -131,7 +131,26 @@ Currently we have tested Crane with these servers: mongoose, apache, clamav, med
 > cd $MSMR_ROOT/apps/apache
 > ./mk
 
-8. Run apache with Crane.
+8. Config the IPs of three replicas and one client machine.
+The default IPs are already set for the RCS@Columbia team, so if you are in this team, you don't need to run this command.
+You will need three replica machines to host servers, and one client machine.
+For instance, in our Crane project, our client machine is 128.59.21.11, three replicas: (128.59.17.174 (head), 128.59.17.172, 128.59.17.173).
+If your machine IPs are not this setting, please run these same commands on all the replica (server) machines:
+> cd $MSMR_ROOT/eval-container
+> ./config-node-IPs.sh <primary IP> <backup1 IP> <backup2 IP>"
+
+For instance, we ran these same command (including the order of IPs) on 128.59.17.174, 128.59.17.172, 128.59.17.173.
+> cd $MSMR_ROOT/eval-container
+> ./config-node-IPs.sh 128.59.17.174 128.59.17.172 128.59.17.173
+
+
+9. Run apache with Crane. Run the below commands on your "client" machine (not any server machine).
+
+But, please first make sure the firewalls of our client and replica machines are correctly set so that your client machine can indeed
+sent requests to the server machines. To verify this, you can just manually start an apache server on each replica (server) machine, 
+and manually launch a "ab" client benchmark on your client machine, and see whether ab gets responses correctly.
+
+For instance, these commands are ran on our client machine: 128.59.21.11.
 > cd $MSMR_ROOT/eval-container
 > ./new-run.sh configs/apache.sh no_build joint_sched 1
 Run the apache un-replicated nondeterministic execution.
@@ -140,3 +159,50 @@ Run the apache with proxy (paxos) only.
 > ./new-run.sh configs/apache.sh no_build proxy_only 1
 Run the apache with DMT (Parrot) only.
 > ./new-run.sh configs/apache.sh no_build xtern_only 1
+
+Below are one sample output from the ab server, if you ran any one of the above "new-run.sh" commands.
+===============================
+This is ApacheBench, Version 2.3 <$Revision: 655654 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking 128.59.17.174 (be patient)
+
+
+Server Software:        Apache/2.2.11
+Server Hostname:        128.59.17.174
+Server Port:            9000
+
+Document Path:          /test.php
+Document Length:        27 bytes
+
+Concurrency Level:      8
+Time taken for tests:   148.135 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      212000 bytes
+HTML transferred:       27000 bytes
+Requests per second:    6.75 [#/sec] (mean)
+Time per request:       1185.077 [ms] (mean)
+Time per request:       148.135 [ms] (mean, across all concurrent requests)   ***** This number is the one that Crane's evaluation grabs.
+Transfer rate:          1.40 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.1      0       1
+Processing:  1151 1185  39.2   1177    1543
+Waiting:     1150 1184  39.2   1176    1542
+Total:       1151 1185  39.2   1177    1543
+
+Percentage of the requests served within a certain time (ms)
+  50%   1177
+  66%   1182
+  75%   1186
+  80%   1190
+  90%   1211
+  95%   1230
+  98%   1262
+  99%   1329
+ 100%   1543 (longest request)
+

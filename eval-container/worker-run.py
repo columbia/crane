@@ -30,9 +30,12 @@ def set_local_config(args):
             "Joint scheduling need to be enabled with XTERN and libevent_paxos together!"
 
     # Copy the libevent_paxos configuration file to the current folder 
-    #if not os.path.isfile('nodes.local.cfg'):
-    print "Copy nodes.local.cfg to current folder"
-    tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg .'
+    if not os.path.isfile('$MSMR_ROOT/eval-container/nodes.local.cfg'):
+        tcmd = 'cp $MSMR_ROOT/libevent_paxos/target/nodes.local.cfg $MSMR_ROOT/eval-container/nodes.local.cfg'
+        proc =subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
+        time.sleep(1)
+    print "Copy $MSMR_ROOT/eval-container/nodes.local.cfg to current folder"
+    tcmd = 'cp $MSMR_ROOT/eval-container/nodes.local.cfg .'
     proc =subprocess.Popen(tcmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
     time.sleep(1)
     os.system("sed -i -e 's/sched_with_dmt = [0-9]\+/sched_with_dmt = " + str(args.sd) + "/g' nodes.local.cfg")

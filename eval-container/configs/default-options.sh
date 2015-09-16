@@ -1,3 +1,5 @@
+primary_ip=`cat $MSMR_ROOT/eval-container/head`
+
 # Common default options.
 xtern=0                                               # 1 use xtern, 0 otherwise.
 proxy=0                                               # 1 use proxy, 0 otherwise

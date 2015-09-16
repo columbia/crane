@@ -1,7 +1,17 @@
-m-smr
+Crane
 =====
 
 Multi-threaded State Machine Replication
+
+Machines: three replicas to hold server programs, one client machine.
+Server machine: 24 hyperthreading cores (cat /proc/cpuinfo). The number of 
+cores on these server machines is critical, because our 
+crane/eval-container/configs/*.sh files specified 8~12 as the concurrency 
+level. If your servers do not have 24 cores, you had better decrease these 
+concurrency levels in these *.sh files.
+Client machine: we used a 8 core machine. The number of cores on this machine  is not critical.
+OS: ubuntu 14.04 64bit.
+Gcc: 4.8.
 
 Install depdendent libraries/tools. Use ubuntu 14.04 hardy, with amd64.
 > sudo apt-get install build-essential
@@ -14,6 +24,8 @@ Install depdendent libraries/tools. Use ubuntu 14.04 hardy, with amd64.
 
 
 0. Commands to checkout a brand-new project:
+Please make sure the absolute paths of the "crane" repo are the same on all the 
+machines, including the three replica machines and the client machine.
 > git clone https://github.com/columbia/crane
 > cd $MSMR_ROOT
 > git pull

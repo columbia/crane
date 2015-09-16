@@ -139,8 +139,7 @@ If your machine IPs are not this setting, please run these same commands on all 
 > cd $MSMR_ROOT/eval-container
 > ./config-node-IPs.sh <primary IP> <backup1 IP> <backup2 IP>"
 
-For instance, we ran these same command (including the order of IPs) on 128.59.17.174, 128.59.17.172, 128.59.17.173.
-> cd $MSMR_ROOT/eval-container
+For instance, we ran this same command (including the order of IPs) on 128.59.17.174, 128.59.17.172, 128.59.17.173.
 > ./config-node-IPs.sh 128.59.17.174 128.59.17.172 128.59.17.173
 
 

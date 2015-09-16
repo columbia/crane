@@ -8,7 +8,7 @@ xtern=1                                               # 1 use xtern, 0 otherwise
 proxy=1                                               # 1 use proxy, 0 otherwise
 sch_paxos=1                                           # 1 xtern will schedule with paxos, 0 otherwise
 sch_dmt=1                                             # 1 libevent_paxos will schedule with DMT, 0 otherwise
-enable_lxc="no"
+enable_lxc="yes"
 
 dmt_log_output=0
 leader_elect=0                                        # 1 enable leader election demo, 0 otherwise
@@ -29,6 +29,7 @@ num_thd=8
 if [ $1"X" != "X" ]; then
   if [ $1"X" == "joint_schedX" ]; then
     use_joint_scheduling_plan;
+    enable_lxc="yes"; # Heming: enable_lxc is tested.
   elif [ $1"X" == "separate_schedX" ]; then
     use_separate_scheduling_plan;
   elif [ $1"X" == "xtern_onlyX" ]; then
@@ -61,5 +62,5 @@ else
     client_cmd="${msmr_root_client}/apps/apache/install/bin/ab ${client_opt_7000}"
 fi
                                                       # command to start the clients
-server_cmd="'${msmr_root_server}/apps/apache/install/bin/apachectl \
+server_cmd="'rm ${msmr_root_server}/apps/apache/install/logs/*; ${msmr_root_server}/apps/apache/install/bin/apachectl \
 	-f ${msmr_root_server}/apps/apache/install/conf/httpd.conf -k start '"

@@ -82,7 +82,7 @@ def execute_servers(args):
         p = subprocess.Popen(cmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
         output, err = p.communicate()
         print output
-        time.sleep(5)
+        time.sleep(10) # Heming: the lxc's daemon processes (e.g., sshd) need much time to bootstrap.
     
         # Copy the local.options into lxc via /dev/shm (already setup the map).
         cmd = "cp local.options /dev/shm"

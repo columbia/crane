@@ -24,9 +24,6 @@ msmr_root_server=`echo $MSMR_ROOT`
 input_url="127.0.0.1"                                 # url for client to query
 analysis_tools=""     #"--worker1=helgrind"                                     # for executing analysis tools (e.g., analysis_tools="--worker1=helgrind")
 
-num_threads=8
-num_req=1000
-
 if [ $1"X" != "X" ]; then
   if [ $1"X" == "joint_schedX" ]; then
     use_joint_scheduling_plan;
@@ -46,22 +43,14 @@ else
 fi
 sleep 1
 
-client_cmd_7000="/usr/bin/sysbench  --mysql-host=${primary_ip}  --mysql-user=root \
---mysql-port=7000  --num-threads=${num_threads}  --max-requests=${num_req}  --test=oltp  \
---oltp-table-size=2000000  --oltp-table-name=sbtest  --mysql-db=sysbench_db \
---oltp-test-mode=simple run"
-
-client_cmd_9000="/usr/bin/sysbench  --mysql-host=${primary_ip}  --mysql-user=root \
---mysql-port=9000  --num-threads=${num_threads}  --max-requests=${num_req}  --test=oltp  \
---oltp-table-size=2000000  --oltp-table-name=sbtest  --mysql-db=sysbench_db \
---oltp-test-mode=simple run"
-
 if [ $proxy -eq 1 ]
 then
-    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'LD_PRELOAD=${msmr_root_server}/libevent_paxos/client-ld-preload/libclilib.so \
-	${client_cmd_9000} &> workload-out.txt; cat workload-out.txt '"
+    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mysql; \
+	LD_PRELOAD=${msmr_root_server}/libevent_paxos/client-ld-preload/libclilib.so \
+	./workload.sh ${primary_ip} 9000 &> workload-out.txt; cat workload-out.txt | grep real; ./cal-avg.sh workload-out.txt '"
 else
-    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head '${client_cmd_7000} &> workload-out.txt; cat workload-out.txt '"
+    client_cmd="parallel-ssh -v -p 1 -i -t 15 -h head 'cd ${msmr_root_server}/apps/mysql; \
+        ./workload.sh 127.0.0.1 7000 &> workload-out.txt; cat workload-out.txt | grep real; ./cal-avg.sh workload-out.txt  '"
 fi
 
 # We didn't use start-server script because we have to LD_PRELOAD for the whole scripts.

@@ -150,10 +150,10 @@ You will need three replica machines to host servers, and one client machine.
 For instance, in our Crane project, our client machine is 128.59.21.11, three replicas: (128.59.17.174 (head), 128.59.17.172, 128.59.17.173).
 If your machine IPs are not this setting, please run these same commands on all the replica (server) machines:
 > cd $MSMR_ROOT/eval-container
-> ./config-node-IPs.sh <primary IP> <backup1 IP> <backup2 IP>"
+> ./update-replica-IPs.sh <primary IP> <backup1 IP> <backup2 IP>"
 
 For instance, we ran this same command (including the order of IPs) on 128.59.17.174, 128.59.17.172, 128.59.17.173.
-> ./config-node-IPs.sh 128.59.17.174 128.59.17.172 128.59.17.173
+> ./update-replica-IPs.sh 128.59.17.174 128.59.17.172 128.59.17.173
 
 
 9. Run apache with Crane. Run the below commands on your "client" machine (not any server machine).

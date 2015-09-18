@@ -143,7 +143,7 @@ extern "C" {
 static __thread timespec my_time;
 
 /** Pop all send operations with the conn_id. **/
-void popSendOps(uint64_t conn_id, unsigned recv_len);
+void popSendOps(uint64_t conn_id, int recv_len);
 
 extern "C" void *idle_thread(void*);
 extern "C" pthread_t idle_th;
@@ -1265,7 +1265,7 @@ int RecorderRT<_S>::pthreadCondTimedWait(unsigned ins, int &error,
 
   timespec cur_time, rel_time;
   if (my_base_time.tv_sec == 0) {
-    fprintf(stderr, "pthread_cond_timedwait is called. Please add tern_set_base_timespec() if possible.\n");
+    dprintf("pthread_cond_timedwait is called. Please add tern_set_base_timespec() if possible.\n");
     clock_gettime(CLOCK_REALTIME, &cur_time);
   } else {
     cur_time.tv_sec = my_base_time.tv_sec;
@@ -2919,29 +2919,42 @@ char *RecorderRT<_S>::__strtok(unsigned ins, int &error, char * str, const char 
   return ret;
 }
 
-void popSendOps(uint64_t conn_id, unsigned recv_len) { 
+void popSendOps(uint64_t conn_id, int recv_len) { 
   unsigned num_popped = 0;
   unsigned nbytes_recv = 0;
   const uint64_t delete_conn_id = (uint64_t)-1;
-  assert(paxq_size() > 0 && recv_len != 0);
+
+  /* First, do some check. Once this function is called, it means a recv*() is 
+    called, so the paxos queue head must have a matching send.*/
+  assert(paxq_size() > 0);
   paxos_op op = paxq_get_op(0);
   assert(op.connection_id == conn_id && op.type == PAXQ_SEND);
-  debugpaxos("popSendOps start: conn_id %lu, recv_len %u, head op (%lu, %d)\n",
+  debugpaxos("popSendOps start: conn_id %lu, recv_len %d, head op (%lu, %d)\n",
     (unsigned long)conn_id, recv_len, (unsigned long)op.connection_id, op.value);
+  if (recv_len == 0 || recv_len == -1)
+    return;
+
+  /* Do real action. If some bytes are received, then reduce the byte counts in 
+    the PAXQ_SEND op or pop it. */
   for (size_t i = 0; i < paxq_size(); i++) {// First pass, go over the whole pax queue and mark the deleted ones.
     op = paxq_get_op(i);
     if(op.connection_id == conn_id && op.type == PAXQ_SEND) {
-      if (nbytes_recv + op.value > recv_len) // If the server's recv() buffer is full, just stop.
+      if (nbytes_recv + op.value > (unsigned)recv_len) {// If the server's recv() buffer is full, but current op can not be popped yet.
+        unsigned left_val = nbytes_recv + (unsigned)op.value - recv_len;
+        paxq_update_op_val(i, left_val);
+        nbytes_recv += (op.value - left_val);
         break;
+      }
       num_popped++;
       nbytes_recv += op.value;
       debugpaxos("op deleted send value %d\n", op.value);
       paxq_set_conn_id(i, delete_conn_id); // Mark as deleted of the i th element.
     }
   }
-  paxq_delete_ops(delete_conn_id, num_popped);
-  debugpaxos("popSendOps() pself %u, recv(up to %u bytes), popped %u PAXQ_SEND operations for connection %lu, actual recv %u bytes\n",
+  paxq_delete_ops(delete_conn_id, num_popped);// Second pass, do the actual pop of send ops.
+  debugpaxos("popSendOps() pself %u, recv(up to %d bytes), popped %u PAXQ_SEND operations for connection %lu, actual recv %u bytes\n",
     PSELF, recv_len, num_popped, (unsigned long)conn_id, nbytes_recv);
+  assert(nbytes_recv == (unsigned)recv_len);
 }
 
 #if 1
@@ -3006,9 +3019,12 @@ paxos_op RecorderRT<_S>::schedSocketOp(const char *funcName, SyncType syncType, 
       } else if (op.type == PAXQ_SEND) {
         _S::signal((void *)(long)conns_get_server_sock(op.connection_id)); 
       } else if (op.type == PAXQ_CLOSE) {
-        _S::signal((void *)(long)conns_get_server_sock(op.connection_id));
-        assert(conns_exist_by_conn_id(op.connection_id));
-        conns_erase_by_conn_id(op.connection_id);
+        if (conns_exist_by_conn_id(op.connection_id)) {
+          /* Heming: used if(conns_exist...()) instead of assert() here, because the mysql 
+            client calls close() twice for closing each connection. */
+          _S::signal((void *)(long)conns_get_server_sock(op.connection_id));
+          conns_erase_by_conn_id(op.connection_id);
+        }
         paxq_pop_front(2);
       }
     }

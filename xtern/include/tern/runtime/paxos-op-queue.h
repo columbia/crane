@@ -74,6 +74,7 @@ void paxq_update_role(int is_leader);
 int paxq_role_is_leader();
 //void paxq_insert_front(int with_lock, uint64_t conn_id, uint64_t counter, PAXOS_OP_TYPE t, int value);
 void paxq_push_back(int with_lock, uint64_t conn_id, uint64_t counter, PAXOS_OP_TYPE t, int value);
+int paxq_update_op_val(unsigned index, uint64_t dec);
 paxos_op paxq_get_op(unsigned index);
 int paxq_get_op2(unsigned index, paxos_op *op);
 int paxq_dec_front_value();

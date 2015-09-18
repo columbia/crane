@@ -4,7 +4,7 @@ Crane
 Multi-threaded State Machine Replication
 
 Machines: three replicas to hold server programs, one client machine.
-Server machine: 24 hyperthreading cores (cat /proc/cpuinfo). The number of 
+Server machine: 12 cores with hyperthreading. The number of 
 cores on these server machines is critical, because our 
 crane/eval-container/configs/*.sh files specified 8~12 as the concurrency 
 level. If your servers do not have 24 cores, you had better decrease these 
@@ -25,7 +25,8 @@ Install depdendent libraries/tools. Use ubuntu 14.04 hardy, with amd64.
 
 0. Commands to checkout a brand-new project:
 Please make sure the absolute paths of the "crane" repo are the same on all the 
-machines, including the three replica machines and the client machine.
+machines, including the three replica machines and the client machine, because our script uses parallel-ssh to 
+run the whole system, so the same crane path setting on all these four machines is required.
 > git clone https://github.com/columbia/crane
 > cd $MSMR_ROOT
 > git pull

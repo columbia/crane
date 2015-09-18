@@ -30,7 +30,7 @@ if __name__ == "__main__":
     cmd += " --num-threads=" + str(args.t)
     cmd += " --max-requests=" + str(args.n)
     cmd += " --test=oltp"
-    cmd += " --oltp-table-size=20000"
+    cmd += " --oltp-table-size=2000000"
     cmd += " --oltp-table-name=sbtest"
     cmd += " --mysql-db=sysbench_db"
     cmd += " --oltp-test-mode=complex"

@@ -165,7 +165,7 @@ void conns_add_pair(uint64_t conn_id, int server_sock) {
   conn_id_map[conn_id] = server_sock;
   assert(server_sock_map.find(server_sock) == server_sock_map.end());
   server_sock_map[server_sock] = conn_id;
-  std::cerr << "conns_add_pair added pair: (connection_id "
+  DPRINT << "conns_add_pair added pair: (connection_id "
     << (unsigned long)conn_id << ", server_sock " << server_sock 
     << "), now conns size " << conns_get_conn_id_num() << std::endl;
 }
@@ -358,7 +358,7 @@ void paxq_push_back(int with_lock, uint64_t conn_id, uint64_t counter, PAXOS_OP_
 //#ifdef DEBUG_PAXOS_OP_QUEUE
   struct timeval tnow;
   gettimeofday(&tnow, NULL);
-  std::cerr << "paxq_push_back time <" << tnow.tv_sec << "." << tnow.tv_usec
+  DPRINT << "paxq_push_back time <" << tnow.tv_sec << "." << tnow.tv_usec
     << "> , op (" << (unsigned long)conn_id << ", " << counter << ", " << paxq_op_str[t] << ", " << value << ")." << std::endl;
 //#endif
 
@@ -373,6 +373,16 @@ void paxq_push_back(int with_lock, uint64_t conn_id, uint64_t counter, PAXOS_OP_
   if (with_lock) paxq_unlock();
 }
 
+int paxq_update_op_val(unsigned index, uint64_t new_val) {
+  assert(index < paxq_size());
+  assert((*circbuff)[index].value > new_val);
+  DPRINT << "paxq_update_op_val: update value (bytes to read) in current op[" 
+    << index << "] from "
+    << (unsigned)(*circbuff)[index].value << " to " << (unsigned)new_val << "."
+    << std::endl; 
+  (*circbuff)[index].value = new_val;
+  return 0;
+}
 paxos_op paxq_get_op(unsigned index) {
   assert(index < paxq_size());
   paxos_op ret = (*circbuff)[index];
@@ -406,7 +416,7 @@ paxos_op paxq_pop_front(int debugTag) {
   if (op.type == PAXQ_CONNECT)
     paxq_set_proxy_pid(op.counter);
   circbuff->pop_front();
-  std::cerr << "DEBUG TAG " << debugTag
+  DPRINT << "DEBUG TAG " << debugTag
     << ": paxq_pop_front time <" << tnow.tv_sec << "." << tnow.tv_usec 
     << ">: (" << (unsigned long)op.connection_id
     << ", " << (unsigned long)op.counter << ", " << paxq_op_str[op.type]
@@ -468,7 +478,7 @@ void paxq_notify_proxy(int timebubbleCnt) {
     DPRINT << "DMT server pid init timebubble connection, result " << ret << std::endl;
     assert(ret == 0);
   }
-  std::cerr << "paxq_notify_proxy sends timebubble req (" << buf << ") (" << 
+  DPRINT << "paxq_notify_proxy sends timebubble req (" << buf << ") (" << 
   timebubbleCnt << ")." << std::endl;
   ret = write(timebubble_sock, buf, buf_len+1);
   if (ret == -1) {
@@ -495,7 +505,7 @@ void paxq_proxy_give_clocks(int timebubble_cnt) {
   op.value = -1*op.value;
   paxos_op &op2 = (*circbuff)[0];
   assert(op2.value > 0);*/
-#if 1
+#ifdef DEBUG_PAXOS_OP_QUEUE
   struct timeval tnow;
   gettimeofday(&tnow, NULL);
   fflush(stderr);
@@ -518,7 +528,7 @@ void paxq_delete_ops(uint64_t conn_id, unsigned num_delete) {
     for (; itr != circbuff->end(); itr++, i++) {
       paxos_op op = (*circbuff)[i];
       if (op.connection_id == conn_id) {
-#if 1
+#ifdef DEBUG_PAXOS_OP_QUEUE
         struct timeval tnow;
         gettimeofday(&tnow, NULL);
         fprintf(stderr, "DEBUG TAG 1: paxq_pop_front time <%ld.%ld>: (%ld, %lu, %s, %d)\n",

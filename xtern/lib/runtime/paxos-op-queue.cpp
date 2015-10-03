@@ -445,6 +445,7 @@ void paxq_set_proxy_pid(int pid) {
 }
 
 int paxq_build_timebubble_conn() {
+  sleep(1);
   struct sockaddr_un address;
   DPRINT << "Server-app side timebubble connection: START!" << std::endl;
   timebubble_sock = socket(AF_UNIX, SOCK_STREAM, 0);

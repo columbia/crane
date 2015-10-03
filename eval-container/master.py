@@ -116,7 +116,7 @@ def restart_head(args):
     output, err = p.communicate()
     print output
 
-    time.sleep(2)
+    time.sleep(20)
     # We don't do checkpoint restore for now!
     return 
 
@@ -154,7 +154,7 @@ def run_clients(args, newIP=False):
         cur_env['LD_PRELOAD'] = MSMR_ROOT + '/libevent_paxos/client-ld-preload/libclilib.so'
     # Just a temporary hack on the new server ip 
     if(newIP):
-      args.ccmd = '/home/ruigu/Workspace/m-smr/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.172:9000/test.php'
+      args.ccmd = '/home/tianyu/workspace/crane/apps/apache/install/bin/ab -n 128 -c 8 http://128.59.17.172:9000/test.php'
     print "client cmd reply : " + args.ccmd
 
     p = subprocess.Popen(args.ccmd, env=cur_env, shell=True, stdout=subprocess.PIPE)
@@ -203,6 +203,15 @@ def run_criu(args):
     print output
     # 4. Restore proxy
 
+def checkpoint_worker(args):
+    print "deploying checkpoint..."
+    cmd = "cd $MSMR_ROOT/eval-container; ./checkpoint.py " + args.app
+    rcmd = "parallel-ssh -l {username} -v -p 3 -i -t 10 -h worker1 \"{command}\"".format(
+            username=USER, command=cmd)
+    print rcmd
+    p = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
+    output, err = p.communicate()
+    print output
 
 def main(args):
     """
@@ -220,6 +229,9 @@ def main(args):
     run_servers(args, "no", "yes") # Then start the servers.
     print "Deployment Done! Wait 10s for the servers to become stable!!!"
     time.sleep(10)
+
+    if args.enable_lxc == "yes":
+        checkpoint_worker(args)
     
     # Sending requests before the expriments
     print "Client starts : !!! Before checkpoint & leader election!!!"
@@ -258,8 +270,8 @@ def main(args):
         #print "Client starts : !!! After leader election!!!"
         #run_clients(args, True)
 
-    print "Wait for 20s to kill all the processes"
-    time.sleep(20)
+    print "Wait for 180s to kill all the processes"
+    time.sleep(180)
     kill_previous_process(args)
 
 

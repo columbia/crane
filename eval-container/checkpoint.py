@@ -19,7 +19,9 @@ def checkpoint_server(server_name, server_pid):
         # fout.write(output)
         p_checkpoint = subprocess.Popen("./checkpoint-restore.sh checkpoint " + server_name + " ./checkpoint", shell=True, stdout=subprocess.PIPE)
         output, err = p_checkpoint.communicate()
+        rc = p_checkpoint.returncode
         fout.write(output)
+        fout.write("return code: " + str(rc) + "\n")
     
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     server_name = sys.argv[1]
     os.system("rm checkpoint-output.txt")
     with open("checkpoint-output.txt", "a") as fout:
-        fout.write("server: " + server_name)
+        fout.write("server: " + server_name + "\n")
 
     while True:
         # if server quits

@@ -37,11 +37,22 @@ if [ "$OP" == "checkpoint" ]; then
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
     PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	echo "Checkpointing process with pid $PID into directory $DIR ..."
-	sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
-	sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
+	# sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
+	# sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
 	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-	# time this!
-    time ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/$DIR $CRIU_ARGS &> /tmp/dump.txt\" C-m"
+        sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/checkpoint_tmp
+        sudo lxc-attach -n $CONTAINER -- mkdir $HOME/checkpoint_tmp
+        ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/checkpoint_tmp $CRIU_ARGS &> /tmp/dump.txt\" C-m"
+        ERR_NUM=`sudo lxc-attach -n $CONTAINER -- cat /tmp/dump.txt | grep Error -c`
+        if [ $ERR_NUM -eq 0 ]; then
+            echo "Everything seems to be OK. "
+            sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
+            sudo lxc-attach -n $CONTAINER -- mv $HOME/checkpoint_tmp $HOME/$DIR 
+        else
+            echo "Oooops something went wrong. Exiting the checkpoint script. (LAST MSG) "
+            sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/checkpoint_tmp
+            exit 1
+        fi
 	#exit 0
 
 # Second, checkpoint the file system of the container, and bdb storage of the proxy process.
@@ -51,7 +62,7 @@ if [ "$OP" == "checkpoint" ]; then
       sudo ln -s $FS_BASE_DIR/rootfs/$HOME start
       sudo ln -s $SNAPS_DIR/../rootfs/$HOME end
       # time this!
-      time sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
+      sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
       echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
       cp -r $HOME/.db db
       cp $XTERN_ROOT/dync_hook/interpose.so .

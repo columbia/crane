@@ -230,20 +230,23 @@ def main(args):
     print "Deployment Done! Wait 10s for the servers to become stable!!!"
     time.sleep(10)
 
-    if args.enable_lxc == "yes":
+    if args.enable_lxc == "yes" and args.checkpoint == 1:
+        print "starting checkpoint on worker 1! "
         checkpoint_worker(args)
     
     # Sending requests before the expriments
-    print "Client starts : !!! Before checkpoint & leader election!!!"
-    run_clients(args)
-    client_sleep = 10
-    if args.sd == 1 and args.sp == 1 and args.dmt_log_output == 1:
-        client_sleep = 120
-    exit_print = "Client workload done. Please grab performance result. Wait %d seconds before exit. " % (client_sleep)
-    print exit_print
-    time.sleep(client_sleep)
+    benchmark_rounds = 3
+    for i in range(benchmark_rounds):
+        print "Client starts apache benchmark. This is round %d. " % (i)
+        run_clients(args)
+        client_sleep = 20
+        if args.sd == 1 and args.sp == 1 and args.dmt_log_output == 1:
+            client_sleep = 120
+        exit_print = "Client workload done. Please grab performance result. Wait %d seconds before exit. " % (client_sleep)
+        print exit_print
+        time.sleep(client_sleep)
 
-    if args.checkpoint == 1:
+    # if args.checkpoint == 1:
         # Start Qiushan's script
         # run CRIU only on bug02(Node 2)
         #run_criu(args)
@@ -252,8 +255,8 @@ def main(args):
         #time.sleep(20)
 
         # Start Heming's script
-        print "Start Heming's checkpoint"
-        run_criu(args)
+    #     print "Start Heming's checkpoint"
+    #     run_criu(args)
 
 
     # Sending requests after the expriments

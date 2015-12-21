@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# (Currently) DEPRECATED!!!
+
 # a new starter file that runs the test several times
 # ./run.sh configs/mongoose.sh no_build joint_sched 10
 # test runs mg-server, httpd, clamav and mediatomb

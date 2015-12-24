@@ -28,21 +28,26 @@ num_threads=8
 num_req=1000
 
 if [ $1"X" != "X" ]; then
-  if [ $1"X" == "joint_schedX" ]; then
-    use_joint_scheduling_plan;
-  elif [ $1"X" == "separate_schedX" ]; then
-    use_separate_scheduling_plan;
-  elif [ $1"X" == "xtern_onlyX" ]; then
-    use_xtern_only_plan;
-  elif [ $1"X" == "proxy_onlyX" ]; then
-    use_proxy_only_plan;
-  elif [ $1"X" == "origX" ]; then
-    use_orig_plan;
-  fi
-  echo "The plan to run is: $1";
+    if [ $1"X" == "backup_workerX" ]; then
+        use_worker_backup_plan;
+    elif [ $1"X" == "joint_sched_with_lxcX" ]; then
+        use_joint_scheduling_and_lxc_plan;
+    elif [ $1"X" == "joint_schedX" ]; then
+        use_joint_scheduling_plan;
+    elif [ $1"X" == "separate_schedX" ]; then
+        use_separate_scheduling_plan;
+    elif [ $1"X" == "xtern_onlyX" ]; then
+        use_xtern_only_plan;
+    elif [ $1"X" == "proxy_onlyX" ]; then
+        use_proxy_only_plan;
+    elif [ $1"X" == "origX" ]; then
+        use_orig_plan;
+    fi
+    echo "The plan to run is: $1";
 else
-  echo "No plan specified. The default plan to run is: proxy_only";
-  use_proxy_only_plan;
+    # Use default plan if no plan is specified
+    echo "No plan specified. The default plan to run is: proxy_only";
+    use_proxy_only_plan;
 fi
 sleep 1
 

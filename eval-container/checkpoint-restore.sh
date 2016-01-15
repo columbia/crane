@@ -32,44 +32,55 @@ echo "Running command: $0 $OP $PROG_NAME $DIR"
 
 if [ "$OP" == "checkpoint" ]; then
 
-# First, checkpoint the server application within the container.
-	# TBD: what if multiple processes?
+	# First, checkpoint the server application within the container.
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
-    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
+	PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	echo "Checkpointing process with pid $PID into directory $DIR ..."
-	# sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
-	# sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
+	sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
+	sudo lxc-attach -n $CONTAINER -- mkdir $HOME/$DIR
 	ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-        sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/checkpoint_tmp
-        sudo lxc-attach -n $CONTAINER -- mkdir $HOME/checkpoint_tmp
-        ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/checkpoint_tmp $CRIU_ARGS &> /tmp/dump.txt\" C-m"
-        ERR_NUM=`sudo lxc-attach -n $CONTAINER -- cat /tmp/dump.txt | grep Error -c`
+        ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu dump -t $PID -D $HOME/$DIR $CRIU_ARGS &> /tmp/dump.txt\" C-m"
+	date +"%T"
+        # sleep 1
+        DUMP_LOG=`sudo lxc-attach -n $CONTAINER -- cat /tmp/dump.txt`
+	echo $DUMP_LOG
+	ERR_NUM=`echo "$DUMP_LOG" | grep Error -c`
         if [ $ERR_NUM -eq 0 ]; then
-            echo "Everything seems to be OK. "
-            sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
-            sudo lxc-attach -n $CONTAINER -- mv $HOME/checkpoint_tmp $HOME/$DIR 
+            BACKUP_FILES=`sudo lxc-attach -n $CONTAINER -- ls $HOME/$DIR`
+            if [[ `echo "$BACKUP_FILES" | grep "core-"` != "" ]]; then  
+            	echo "Succeeded in dumping process. " 
+            else
+                echo "The dump directory is empty! "
+                exit 3
+            fi
+            # sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/$DIR
+            # sudo lxc-attach -n $CONTAINER -- mv $HOME/checkpoint_tmp $HOME/$DIR 
         else
-            echo "Oooops something went wrong. Exiting the checkpoint script. (LAST MSG) "
-            sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/checkpoint_tmp
+            echo "Oooops something went wrong when dumping. Exiting the checkpoint script. (LAST MSG) "
+            echo "$DUMP_LOG"
+            SERVER_PID=`pgrep mg-server`
+            sudo lsof -p $SERVER_PID
+	    sudo lxc-attach -n $CONTAINER -- sudo ss -ap | grep $PID
+	    # sudo lxc-attach -n $CONTAINER -- sudo lsof -p $PID
+            # sudo lxc-attach -n $CONTAINER -- sudo rm -rf $HOME/checkpoint_tmp
             exit 1
         fi
 	#exit 0
 
-# Second, checkpoint the file system of the container, and bdb storage of the proxy process.
-      sudo lxc-stop -n $CONTAINER
-      echo "Diffing base file system state: $FS_BASE_DIR/rootfs/$HOME, and current file system state: $SNAPS_DIR/../rootfs/$HOME"
-      sudo rm -rf start end
-      sudo ln -s $FS_BASE_DIR/rootfs/$HOME start
-      sudo ln -s $SNAPS_DIR/../rootfs/$HOME end
-      # time this!
-      sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
-      echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
-      cp -r $HOME/.db db
-      cp $XTERN_ROOT/dync_hook/interpose.so .
-      sudo tar zcf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock interpose.so &> /dev/null
-      sudo rm -rf db start end interpose.so
+	# Second, checkpoint the file system of the container, and bdb storage of the proxy process.
+	sudo lxc-stop -n $CONTAINER
+	echo "Diffing base file system state: $FS_BASE_DIR/rootfs/$HOME, and current file system state: $SNAPS_DIR/../rootfs/$HOME"
+	sudo rm -rf start end
+	sudo ln -s $FS_BASE_DIR/rootfs/$HOME start
+	sudo ln -s $SNAPS_DIR/../rootfs/$HOME end
+	sudo diff -ruN --text $EXCLUDES start end &> filesystem-checkpoint.patch
+	echo "Compressing process checkpoint and file system of the server, and bdb storage of the proxy at $HOME/.db into $HOME/checkpoint-$PID.tar.gz..."
+	cp -r $HOME/.db db
+	cp $XTERN_ROOT/dync_hook/interpose.so .
+	sudo tar zcf checkpoint-$PID.tar.gz filesystem-checkpoint.patch db /dev/shm/*$USER* /dev/shm/*.sock interpose.so &> /dev/null
+	sudo rm -rf db start end interpose.so
 
-# Resume process and the container.
+	# Resume process and the container.
 	sudo lxc-start -n $CONTAINER
 	sleep 10
 	i=1
@@ -79,7 +90,7 @@ if [ "$OP" == "checkpoint" ]; then
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
 		ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/$DIR $CRIU_ARGS &> /tmp/restore.txt\" C-m"
-		sleep 1
+		sleep 2
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
 		echo "Number of Errors: $RES"
 		if [ "$RES"X == "0X" ]; then
@@ -88,9 +99,10 @@ if [ "$OP" == "checkpoint" ]; then
 		fi
 	done
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
-    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
+	PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	if [ "$PID"X == "X" ]; then
 		echo "Process has been failed to checkpointed, please contact developers."
+		exit 2
 	else
 
 		echo "Process pid $PID has been successfully checkpointed with its file system at checkpoint-$PID.tar.gz in current directory."
@@ -119,7 +131,7 @@ if [ "$OP" == "restore" ]; then
 	cp filesystem-checkpoint.patch $HOME
 	sudo chmod 666 $HOME/filesystem-checkpoint.patch
 
-# Second, restore the file system of the container.
+	# Second, restore the file system of the container.
 	sudo lxc-stop -n $CONTAINER
 	sleep 1
 	echo "Restoring base file system in $FS_BASE_DIR, may take a few minutes..."
@@ -133,11 +145,11 @@ if [ "$OP" == "restore" ]; then
 	sudo patch -d $SNAPS_DIR/../rootfs/$HOME -p1 < $HOME/filesystem-checkpoint.patch
 	echo 'Patching complete. '
 
-# Resume process and the container.
+	# Resume process and the container.
 	#sync
 	sudo lxc-start -n $CONTAINER
 	#ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
-  parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "ls -l"
+	parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "ls -l"
 	RET=$?
 	i=1
 	echo "pssh return value: $RET"
@@ -147,7 +159,7 @@ if [ "$OP" == "restore" ]; then
 			echo "Please check you host OS: lxc $CONTAINER's static IP is not $CONTAINER_IP. Restarting lxc..."
 			sudo lxc-stop -n $CONTAINER -r -t 30
 			#ssh -i $KEY -t $USER@$CONTAINER_IP "ls -l"
-      parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "ls -l"
+			parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "ls -l"
 			RET=$?
 			echo "RET $RET"
 		else
@@ -165,13 +177,13 @@ if [ "$OP" == "restore" ]; then
 	CUR_IP=`sudo lxc-info -n $CONTAINER -Hi | grep $CONTAINER_IP`
 	echo "Start to restore, CUR_IP $CUR_IP:"
 	#ssh -i $KEY -t $USER@$CONTAINER_IP "tmux start-server; tmux new-session -d -s tmux_session"
-  parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "tmux start-server; tmux new-session -d -s tmux_session"
+	parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "tmux start-server; tmux new-session -d -s tmux_session"
 	while [ $i -le 10 ]
 	do
 		echo "Restoring process checkpoint in $DIR for the $i time (may need 2 times)..."
 		(( i++ ))
 		#ssh -i $KEY -t $USER@$CONTAINER_IP "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
-    parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
+		parallel-ssh -l $USER -p 1 -i -t 600 -H 10.0.3.111 "tmux send-keys -t tmux_session \"sudo criu restore -d -D $HOME/checkpoint $CRIU_ARGS &> /tmp/restore.txt\" C-m"
 		sleep 1
 		RES=`sudo lxc-attach -n $CONTAINER -- cat /tmp/restore.txt | grep Error -c`
 		echo "Number of Errors: $RES"
@@ -181,7 +193,7 @@ if [ "$OP" == "restore" ]; then
 		fi
 	done
 	# PID=`sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME | awk '{print $1}'`
-    PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
+	PID=`sudo lxc-attach -n $CONTAINER -- sudo netstat -lntp | grep $PROG_NAME | awk -F '[/ ]*' '{print $7}'`
 	if [ "$PID"X == "X" ]; then
 		echo "Process has been failed to restored from $DIR, please contact developers."
 	else
@@ -191,3 +203,4 @@ if [ "$OP" == "restore" ]; then
 		echo "> sudo lxc-attach -n $CONTAINER -- ps -e | grep $PROG_NAME"
 	fi
 fi
+
